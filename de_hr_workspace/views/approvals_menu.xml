@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <menuitem id="menu_my_employee_approvals"
+                  name="Approvals"
+                  sequence="60"
+                  groups="de_hr_workspace.group_hr_employee_approvals"
+                  web_icon="de_hr_workspace,static/img/approvals.png"
+        />
+
+    </data>
+</odoo>

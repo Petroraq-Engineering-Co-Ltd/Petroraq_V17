@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="portal_employee_shortage_requests" name="Employee Shortage Requests" customize_show="True"
+              inherit_id="portal.portal_my_home">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_service_category_enable" t-value="True"/>
+        </xpath>
+        <div id="portal_service_category" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/de_hr_workspace_attendance/static/src/img/shortage_request_portal.svg'"/>
+                <t t-set="title">Shortage Requests</t>
+                <t t-set="url" t-value="'/my/shortage_requests'"/>
+                <t t-set="text">Follow your shortage requests</t>
+                <t t-set="placeholder_count" t-value="'my_shortage_request_count'"/>
+            </t>
+        </div>
+    </template>
+
+    <template id="portal_my_shortage_requests" name="My Shortage Requests">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Shortage Requests</t>
+            </t>
+            <t t-if="not shortage_requests">
+                <div class="alert alert-warning" role="alert">
+                    There are no shortage requests.
+                </div>
+            </t>
+            <t t-if="shortage_requests">
+                <t t-call="portal.portal_table">
+                    <t t-set="loop_cycle_number" t-value="0" />
+                    <thead>
+                        <tr class="active" style="background-color: #009879;color: #ffffff;">
+                            <th>Date</th>
+                            <th>Check In</th>
+                            <th>Check Out</th>
+                            <th>Shortage Time</th>
+                            <th>Employee Reason</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="shortage_requests" t-as="shortage_request" t-att-style="'background-color: #ffffff' if loop_cycle_number % 2 == 0 else 'background-color: #f2f2f2;color: #009879;'">
+                            <t t-set="loop_cycle_number" t-value="loop_cycle_number + 1" />
+                            <td>
+                                <span t-esc="shortage_request.date"/>
+                            </td>
+                            <td>
+                                <span t-field="shortage_request.check_in"/>
+                            </td>
+                            <td>
+                                <span t-field="shortage_request.check_out"/>
+                            </td>
+                            <td>
+                                <span t-field="shortage_request.shortage_time"/>
+                            </td>
+                            <td>
+                                <span t-field="shortage_request.employee_reason"/>
+                            </td>
+                            <td>
+                                <span t-field="shortage_request.state" style="color: #fff !important;background-color: #008080 !important;border-color: #008080 !important;border-radius: 8px !important;padding: 6px !important;"/>
+                            </td>
+                            <t t-if="shortage_request.reject_reason">
+                                <td>
+                                    <span t-field="shortage_request.reject_reason"/>
+                                </td>
+                            </t>
+                        </tr>
+                    </tbody>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

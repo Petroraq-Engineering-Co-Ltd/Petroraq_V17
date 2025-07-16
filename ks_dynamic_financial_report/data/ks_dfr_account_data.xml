@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="ks_df_asset_current_main" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Current Assets</field>
+            <field name="ks_account_type">asset_current</field>
+            <field name="main_head">assets</field>
+            <field name="assets_main_head">asset_current</field>
+        </record>
+
+            <record id="ks_df_asset_cash_equivalent_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Cash &amp; Equivalents</field>
+                <field name="ks_account_type">asset_current</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_current</field>
+                <field name="current_assets_category">cash_equivalents</field>
+            </record>
+
+                <record id="ks_df_asset_petty_cash_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Petty Cash</field>
+                    <field name="ks_account_type">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">cash_equivalents</field>
+                    <field name="cash_equivalents_subcategory">petty_cash</field>
+                </record>
+
+            <record id="ks_df_asset_banks_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Banks</field>
+                <field name="assets_main_head">asset_current</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_current</field>
+                <field name="current_assets_category">banks</field>
+            </record>
+
+            <record id="ks_df_asset_accounts_receivable_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Accounts Receivable</field>
+                <field name="assets_main_head">asset_current</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_current</field>
+                <field name="current_assets_category">account_receivable</field>
+            </record>
+
+                <record id="ks_df_asset_employee_advances_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Employee Advances</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">account_receivable</field>
+                    <field name="accounts_receivable_subcategory">employee_advances</field>
+                </record>
+
+                <record id="ks_df_asset_customers_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Customers</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">account_receivable</field>
+                    <field name="accounts_receivable_subcategory">customers</field>
+                </record>
+
+                <record id="ks_df_asset_retention_receivable_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Retention-Receivable</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">account_receivable</field>
+                    <field name="accounts_receivable_subcategory">retention_receivable</field>
+                </record>
+
+            <record id="ks_df_asset_inventory_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Inventory</field>
+                <field name="assets_main_head">asset_current</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_current</field>
+                <field name="current_assets_category">inventory</field>
+            </record>
+
+                <record id="ks_df_asset_raw_materials_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Raw Materials</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">inventory</field>
+                    <field name="inventory_subcategory">raw_materials</field>
+                </record>
+
+                <record id="ks_df_asset_work_in_progress_wip_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Raw Materials</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">inventory</field>
+                    <field name="inventory_subcategory">work_in_progress_wip</field>
+                </record>
+
+                <record id="ks_df_asset_finished_goods_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Finished Goods</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">inventory</field>
+                    <field name="inventory_subcategory">finished_goods</field>
+                </record>
+
+            <record id="ks_df_asset_prepaid_expenses_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Prepaid Expenses</field>
+                <field name="assets_main_head">asset_current</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_current</field>
+                <field name="current_assets_category">prepaid_expenses</field>
+            </record>
+
+                <record id="ks_df_asset_prepaid_rent_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Prepaid Rent</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">prepaid_expenses</field>
+                    <field name="prepaid_expenses_subcategory">prepaid_rent</field>
+                </record>
+
+                <record id="ks_df_asset_insurance_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Insurance</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">prepaid_expenses</field>
+                    <field name="prepaid_expenses_subcategory">insurance</field>
+                </record>
+
+                <record id="ks_df_asset_subscriptions_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Subscriptions</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_current</field>
+                    <field name="current_assets_category">prepaid_expenses</field>
+                    <field name="prepaid_expenses_subcategory">subscriptions</field>
+                </record>
+
+        <record id="ks_df_asset_fixed_main" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Fixed Assets</field>
+            <field name="ks_account_type">asset_fixed</field>
+            <field name="main_head">assets</field>
+            <field name="assets_main_head">asset_fixed</field>
+        </record>
+            <record id="ks_df_asset_vehicles_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Vehicles</field>
+                <field name="ks_account_type">asset_fixed</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_fixed</field>
+                <field name="fixed_assets_category">vehicles</field>
+            </record>
+                <record id="ks_df_asset_cars_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Cars</field>
+                    <field name="ks_account_type">asset_fixed</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_fixed</field>
+                    <field name="fixed_assets_category">vehicles</field>
+                    <field name="vehicles_subcategory">cars</field>
+                </record>
+
+            <record id="ks_df_asset_furniture_fixture_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Furniture &amp; Fixture</field>
+                <field name="ks_account_type">asset_fixed</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_fixed</field>
+                <field name="fixed_assets_category">furniture_fixture</field>
+            </record>
+                <record id="ks_df_asset_furniture_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Furniture</field>
+                    <field name="ks_account_type">asset_fixed</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_fixed</field>
+                    <field name="fixed_assets_category">furniture_fixture</field>
+                    <field name="furniture_fixture_subcategory">furniture</field>
+                </record>
+
+            <record id="ks_df_asset_computer_printers_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Computer &amp; Printers</field>
+                <field name="ks_account_type">asset_fixed</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_fixed</field>
+                <field name="fixed_assets_category">computer_printers</field>
+            </record>
+
+                <record id="ks_df_asset_it_products_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">IT Products</field>
+                    <field name="ks_account_type">asset_fixed</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_fixed</field>
+                    <field name="fixed_assets_category">computer_printers</field>
+                    <field name="computer_printers_subcategory">it_products</field>
+                </record>
+
+            <record id="ks_df_asset_machinery_equipment_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Machinery &amp; Equipment</field>
+                <field name="ks_account_type">asset_fixed</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_fixed</field>
+                <field name="fixed_assets_category">machinery_equipment</field>
+            </record>
+
+                <record id="ks_df_asset_machinery_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Machinery</field>
+                    <field name="ks_account_type">asset_fixed</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_fixed</field>
+                    <field name="fixed_assets_category">machinery_equipment</field>
+                    <field name="machinery_equipment_subcategory">machinery</field>
+                </record>
+
+            <record id="ks_df_asset_land_buildings_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Land &amp; Buildings</field>
+                <field name="ks_account_type">asset_fixed</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_fixed</field>
+                <field name="fixed_assets_category">land_buildings</field>
+            </record>
+                <record id="ks_df_asset_buildings_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Buildings</field>
+                    <field name="ks_account_type">asset_fixed</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_fixed</field>
+                    <field name="fixed_assets_category">land_buildings</field>
+                    <field name="land_buildings_subcategory">buildings</field>
+                </record>
+
+        <record id="ks_df_asset_other_main" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Other Assets</field>
+            <field name="ks_account_type">asset_non_current</field>
+            <field name="main_head">assets</field>
+            <field name="assets_main_head">asset_non_current</field>
+        </record>
+
+            <record id="ks_df_asset_investment_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Investment</field>
+                <field name="ks_account_type">asset_non_current</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_non_current</field>
+                <field name="other_assets_category">investment</field>
+            </record>
+
+                <record id="ks_df_asset_investment_short_terms_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Short Terms</field>
+                    <field name="ks_account_type">asset_non_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_non_current</field>
+                    <field name="other_assets_category">investment</field>
+                    <field name="investment_subcategory">short_terms</field>
+                </record>
+
+                <record id="ks_df_asset_investment_long_terms_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Long Terms</field>
+                    <field name="ks_account_type">asset_non_current</field>
+                    <field name="main_head">assets</field>
+                    <field name="assets_main_head">asset_non_current</field>
+                    <field name="other_assets_category">investment</field>
+                    <field name="investment_subcategory">long_terms</field>
+                </record>
+
+            <record id="ks_df_asset_vat_receivable_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">VAT Receivable</field>
+                <field name="ks_account_type">asset_non_current</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_non_current</field>
+                <field name="other_assets_category">vat_receivable</field>
+            </record>
+
+            <record id="ks_df_asset_suspense_account_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Suspense Account</field>
+                <field name="ks_account_type">asset_non_current</field>
+                <field name="main_head">assets</field>
+                <field name="assets_main_head">asset_non_current</field>
+                <field name="other_assets_category">suspense_account</field>
+            </record>
+
+        <record id="ks_df_liability_current_main" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Current Liabilities</field>
+            <field name="ks_account_type">liability_current</field>
+            <field name="main_head">liabilities</field>
+            <field name="liability_main_head">liability_current</field>
+        </record>
+
+            <record id="ks_df_liability_current_accounts_payable_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Accounts Payable</field>
+                <field name="ks_account_type">liability_current</field>
+                <field name="main_head">liabilities</field>
+                <field name="liability_main_head">liability_current</field>
+                <field name="current_liability_category">accounts_payable</field>
+            </record>
+
+                <record id="ks_df_liability_current_accounts_payable_suppliers_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Suppliers</field>
+                    <field name="ks_account_type">liability_current</field>
+                    <field name="main_head">liabilities</field>
+                    <field name="liability_main_head">liability_current</field>
+                    <field name="current_liability_category">accounts_payable</field>
+                    <field name="accounts_payable_subcategory">suppliers</field>
+                </record>
+
+                <record id="ks_df_liability_current_accounts_payable_accrued_expenses_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Accrued Expenses</field>
+                    <field name="ks_account_type">liability_current</field>
+                    <field name="main_head">liabilities</field>
+                    <field name="liability_main_head">liability_current</field>
+                    <field name="current_liability_category">accounts_payable</field>
+                    <field name="accounts_payable_subcategory">accrued_expenses</field>
+                </record>
+
+                <record id="ks_df_liability_current_accounts_payable_bank_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Bank</field>
+                    <field name="ks_account_type">liability_current</field>
+                    <field name="main_head">liabilities</field>
+                    <field name="liability_main_head">liability_current</field>
+                    <field name="current_liability_category">accounts_payable</field>
+                    <field name="accounts_payable_subcategory">bank</field>
+                </record>
+
+            <record id="ks_df_liability_current_short_term_loans_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Short-Term Loans</field>
+                <field name="ks_account_type">liability_current</field>
+                <field name="main_head">liabilities</field>
+                <field name="liability_main_head">liability_current</field>
+                <field name="current_liability_category">short_term_loans</field>
+            </record>
+
+                <record id="ks_df_liability_current_bank_finance_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Bank Finance</field>
+                    <field name="ks_account_type">liability_current</field>
+                    <field name="main_head">liabilities</field>
+                    <field name="liability_main_head">liability_current</field>
+                    <field name="current_liability_category">short_term_loans</field>
+                    <field name="short_term_loans_subcategory">bank_finance</field>
+                </record>
+
+            <record id="ks_df_liability_current_other_liabilities_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Other Liabilities</field>
+                <field name="ks_account_type">liability_current</field>
+                <field name="main_head">liabilities</field>
+                <field name="liability_main_head">liability_current</field>
+                <field name="current_liability_category">other_liabilities</field>
+            </record>
+
+                <record id="ks_df_liability_current_vat_payable_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">VAT Payable</field>
+                    <field name="ks_account_type">liability_current</field>
+                    <field name="main_head">liabilities</field>
+                    <field name="liability_main_head">liability_current</field>
+                    <field name="current_liability_category">other_liabilities</field>
+                    <field name="other_liabilities_subcategory">vat_payable</field>
+                </record>
+
+        <record id="ks_df_liability_long_term_main" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Long-Term Liabilities</field>
+            <field name="ks_account_type">liability_non_current</field>
+            <field name="main_head">liabilities</field>
+            <field name="liability_main_head">liability_non_current</field>
+        </record>
+
+            <record id="ks_df_liability_long_term_loans_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Long-Term Loans</field>
+                <field name="ks_account_type">liability_non_current</field>
+                <field name="main_head">liabilities</field>
+                <field name="liability_main_head">liability_non_current</field>
+                <field name="liability_non_current_category">long_term_loans</field>
+            </record>
+
+                <record id="ks_df_liability_long_term_loans_loans_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Loans</field>
+                    <field name="ks_account_type">liability_non_current</field>
+                    <field name="main_head">liabilities</field>
+                    <field name="liability_main_head">liability_non_current</field>
+                    <field name="liability_non_current_category">long_term_loans</field>
+                    <field name="long_term_loans_subcategory">loans</field>
+                </record>
+
+            <record id="ks_df_liability_lease_obligations_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Lease Obligations</field>
+                <field name="ks_account_type">liability_non_current</field>
+                <field name="main_head">liabilities</field>
+                <field name="liability_main_head">liability_non_current</field>
+                <field name="liability_non_current_category">lease_obligations</field>
+            </record>
+
+                <record id="ks_df_liability_lease_subcateg" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Lease</field>
+                <field name="ks_account_type">liability_non_current</field>
+                <field name="main_head">liabilities</field>
+                <field name="liability_main_head">liability_non_current</field>
+                <field name="liability_non_current_category">lease_obligations</field>
+                <field name="lease_obligations_subcategory">lease</field>
+            </record>
+
+
+            <record id="ks_df_equity_capital_categ" model="ks.dynamic.financial.reports.account">
+                <field name="ks_name">Capital</field>
+                <field name="ks_account_type">equity</field>
+                <field name="main_head">equity</field>
+                <field name="equity_category">capital</field>
+            </record>
+
+                <record id="ks_df_equity_capital_petroraq_subcateg" model="ks.dynamic.financial.reports.account">
+                    <field name="ks_name">Petroraq</field>
+                    <field name="ks_account_type">equity</field>
+                    <field name="main_head">equity</field>
+                    <field name="equity_category">capital</field>
+                    <field name="capital_subcategory">petroraq</field>
+                </record>
+
+
+        <record id="ks_df_asset_current" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Current Assets</field>
+            <field name="ks_account_type">asset_current</field>
+        </record>
+        <record id="ks_df_asset_non_current" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Non-current Assets</field>
+            <field name="ks_account_type">asset_non_current</field>
+        </record>
+        <record id="ks_df_asset_prepayments" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Prepayments</field>
+            <field name="ks_account_type">asset_prepayments</field>
+        </record>
+        <record id="ks_df_asset_fixed" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Fixed Assets</field>
+            <field name="ks_account_type">asset_fixed</field>
+        </record>
+        <record id="ks_df_liability_payable" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Payable</field>
+            <field name="ks_account_type">liability_payable</field>
+        </record>
+        <record id="ks_df_liability_credit_card" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Credit Card</field>
+            <field name="ks_account_type">liability_credit_card</field>
+        </record>
+        <record id="ks_df_liability_current" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Current Liabilities</field>
+            <field name="ks_account_type">liability_current</field>
+        </record>
+        <record id="ks_df_liability_non_current" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Non-current Liabilities</field>
+            <field name="ks_account_type">liability_non_current</field>
+        </record>
+        <record id="ks_df_equity" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Equity</field>
+            <field name="ks_account_type">equity</field>
+        </record>
+        <record id="ks_df_equity_unaffected" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Current Year Earnings</field>
+            <field name="ks_account_type">equity_unaffected</field>
+        </record>
+        <record id="ks_df_income" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Income</field>
+            <field name="ks_account_type">income</field>
+        </record>
+        <record id="ks_df_income_other" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Other Income</field>
+            <field name="ks_account_type">income_other</field>
+        </record>
+        <record id="ks_df_expense_depreciation" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Depreciation</field>
+            <field name="ks_account_type">expense_depreciation</field>
+        </record>
+        <record id="ks_df_expense" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Expenses</field>
+            <field name="ks_account_type">expense</field>
+        </record>
+        <record id="ks_df_expense_direct_cost" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Cost of Revenue</field>
+            <field name="ks_account_type">expense_direct_cost</field>
+        </record>
+        <record id="ks_df_off_balance" model="ks.dynamic.financial.reports.account">
+            <field name="ks_name">Off-Balance Sheet</field>
+            <field name="ks_account_type">off_balance</field>
+        </record>
+    </data>
+</odoo>

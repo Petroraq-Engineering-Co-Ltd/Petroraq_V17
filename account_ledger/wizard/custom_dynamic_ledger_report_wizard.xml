@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    
+    <record model="ir.ui.view" id="custom_dynamic_ledger_report_wizard_view">
+        <field name="name">Balance Report</field>
+        <field name="model">custom.dynamic.ledger.report.wizard</field>
+        <field name="type">form</field>
+        <field name="arch" type="xml">
+            <form string="Balance Report">
+                <group>
+                    <group string="Filters">
+                            <!--        Accounts Filter            -->
+                            <!-- Main Head -->
+                            <field name="main_head"  string="Report Type" required="1" default_focus="1" widget="radio"/>
+                            <!--        Accounts Filter            -->
+
+                    </group>
+                    <group>
+                        <field name="account_id_domain" invisible="1"/>
+                        <!--    Invisible Fields    -->
+
+                        <label for="account_id" string="Account Code"/>
+                        <div class="o_row">
+                            <field name="account_id" width="25%"
+                                   class="oe_inline"
+                                   options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
+                                   style="font-size:16;font-weight:bold;color:green;" string="Code" domain="account_id_domain"/>
+                            <span><strong>Account Name</strong></span>
+                            <field name="account_name" width="40%"
+                                   class="oe_inline" string="Account Name" style="font-size:16;font-weight:bold;color:green;"/>
+                        </div>
+                        <field name="date_start"/>
+                        <field name="date_end"/>
+                    </group>
+                    <group>
+                        <field name="company_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
+                        <field name="department_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
+                        <field name="section_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
+                        <field name="project_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="print_report" string="PRINT" type="object" class="btn-teal-custom"/>
+                    <button string="CANCEL" special="cancel" class="btn-danger"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="custom_dynamic_ledger_report_wizard_action" model="ir.actions.act_window">
+        <field name="name">Balance Report</field>
+        <field name="res_model">custom.dynamic.ledger.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="help" type="html">
+            <p>Dynamic Report</p>
+        </field>
+    </record>
+
+    	
+    <menuitem action="custom_dynamic_ledger_report_wizard_action"
+              id="menu_custom_dynamic_ledger_report_wizard"
+              name = "Balance Report"
+              parent="pr_account.account_reports_main_menu"
+              sequence="3" />
+              
+</odoo>
