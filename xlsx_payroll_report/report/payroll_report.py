@@ -46,7 +46,7 @@ class PayrollReport(models.AbstractModel):
                      'Absence',
                      'HRA',
                      'Advance Allowances',
-                     'Saudi GOSI',
+                     'GOSI',
                      # 'Annual Time Off',
                      # 'Sick Time Off',
                      'Unpaid Leave',

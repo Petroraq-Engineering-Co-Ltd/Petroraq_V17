@@ -52,6 +52,57 @@ class HrPayslip(models.Model):
                         'slip_id': payslip.id,
                     })
 
+            else:
+                start_of_month = date_utils.start_of(payslip.date_to, 'month')
+                end_of_month = date_utils.end_of(payslip.date_to, 'month')
+                month_days = (end_of_month - start_of_month).days + 1
+                total_amount = 0
+                if end_of_month > contract_id.date_start > payslip.date_from:
+                    wage = contract_id.wage
+                    salary_month_days = (end_of_month - contract_id.date_start).days + 1
+                    total_amount = (salary_month_days * wage) / month_days
+                elif payslip.date_from >= contract_id.date_start:
+                    total_amount = contract_id.wage
+                salary_rule_ids = contract_id.contract_salary_rule_ids
+                if salary_rule_ids:
+                    acc_salary_rule_id = salary_rule_ids.filtered(lambda l: l.salary_rule_id.code == "ACCOMMODATION")
+                    if acc_salary_rule_id:
+                        rule_total_amount = acc_salary_rule_id.amount
+                        if end_of_month > contract_id.date_start > payslip.date_from:
+                            salary_month_days = (end_of_month - contract_id.date_start).days + 1
+                            rule_amount = (salary_month_days * rule_total_amount) / month_days
+                            total_amount += rule_amount
+                        elif payslip.date_from >= contract_id.date_start:
+                            total_amount += rule_total_amount
+                if gosi_salary_rule:
+                    line_vals.append({
+                        'sequence': gosi_salary_rule.sequence,
+                        'code': gosi_salary_rule.code,
+                        'name': gosi_salary_rule.name,
+                        'salary_rule_id': gosi_salary_rule.id,
+                        'contract_id': payslip.employee_id.contract_id.id,
+                        'employee_id': payslip.employee_id.id,
+                        'amount': (total_amount * 1 * .02) or 0,
+                        'quantity': 1,
+                        'rate': 100,
+                        'total': (total_amount * 1 * .02) or 0,
+                        'slip_id': payslip.id,
+                    })
+
+                    line_vals.append({
+                        'sequence': gosi_salary_rule.sequence,
+                        'code': gosi_salary_rule.code,
+                        'name': gosi_salary_rule.name,
+                        'salary_rule_id': gosi_salary_rule.id,
+                        'contract_id': payslip.employee_id.contract_id.id,
+                        'employee_id': payslip.employee_id.id,
+                        'amount': (total_amount * -1 * .02) or 0,
+                        'quantity': 1,
+                        'rate': 100,
+                        'total': (total_amount * -1 * .02) or 0,
+                        'slip_id': payslip.id,
+                    })
+
             # Check Other Payment Like: First Payslip Days
             if contract_id.other_first_payslip and contract_id.joining_date:
                 start_of_month = date_utils.start_of(contract_id.joining_date, 'month')
