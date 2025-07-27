@@ -46,7 +46,7 @@ class PayrollReport(models.AbstractModel):
                      'Absence',
                      'HRA',
                      'Advance Allowances',
-                     'Saudi GOSI',
+                     'GOSI',
                      # 'Annual Time Off',
                      # 'Sick Time Off',
                      'Unpaid Leave',
@@ -150,6 +150,5 @@ class PayrollReport(models.AbstractModel):
             for rule in rules:
                 sheet.set_column(rule[3],rule[4])
             sheet.set_column('C:C',20)
-            
             struct_count += 1
         
