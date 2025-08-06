@@ -14,15 +14,15 @@ class AccountBankPayment(models.Model):
 
     # region [Fields]
 
-    name = fields.Char(string="Bank Payment", required=False, tracking=True)
+    name = fields.Char(string="Number", required=False, tracking=True)
     company_id = fields.Many2one('res.company', string='Company', index=True, required=True,
                                  default=lambda self: self.env.company,
                                  tracking=True)
     currency_id = fields.Many2one('res.currency', string='Currency', related='company_id.currency_id', store=True,
                                   tracking=True)
-    account_id = fields.Many2one('account.account', string='Acc. Code', required=True,
+    account_id = fields.Many2one('account.account', string='Code', required=True,
                                  ondelete='restrict', tracking=True, index=True,)
-    account_name = fields.Char(string='Acc. Name', related="account_id.name", store=True,
+    account_name = fields.Char(string='Name', related="account_id.name", store=True,
                                      tracking=True)
     # === Analytic fields === #
     analytic_line_ids = fields.One2many(
@@ -129,6 +129,11 @@ class AccountBankPayment(models.Model):
             bank_payment.state = "draft"
             bank_payment.accounting_manager_state = "draft"
 
+    # def action_to_review(self):
+    #     for bank_payment in self:
+    #         bank_payment.state = "to_review"
+    #         bank_payment.accounting_manager_state = "to_review"
+
     def action_submit(self):
         for bank_payment in self:
             if bank_payment.bank_payment_line_ids:
@@ -153,8 +158,8 @@ class AccountBankPayment(models.Model):
                     line_ids = [
                             move_line.create(bank_payment.prepare_credit_move_line_vals(move_id=journal_entry_id))
                         ]
-                    # for line in bank_payment.bank_payment_line_ids.filtered(lambda l: l.state == "approve"):
-                    for line in bank_payment.bank_payment_line_ids:
+                    for line in bank_payment.bank_payment_line_ids.filtered(lambda l: l.state == "approve"):
+                    # for line in bank_payment.bank_payment_line_ids:
                         line_ids.append(move_line.create(line.prepare_debit_move_line_vals(move_id=journal_entry_id)))
                         if line.tax_id:
                             line_ids.append(move_line.create(line.prepare_debit_tax_move_line_vals(move_id=journal_entry_id)))
@@ -188,8 +193,8 @@ class AccountBankPayment(models.Model):
                 "account_id": bank_payment.account_id.id,
                 "name": bank_payment.description if bank_payment.description else f"Credit For {bank_payment.name}",
                 "analytic_distribution": bank_payment.analytic_distribution if bank_payment.analytic_distribution else False,
-                "credit": bank_payment.total_amount,
-                # "credit": bank_payment.approved_amount,
+                # "credit": bank_payment.total_amount,
+                "credit": bank_payment.approved_amount,
                 "debit": 0.0,
             }
             if move_id:
@@ -308,9 +313,9 @@ class AccountBankPaymentLine(models.Model):
     cs_project_id = fields.Many2one("account.analytic.account", string="Project",
                                  domain="[('analytic_plan_type', '=', 'project')]", tracking=True)
     partner_id = fields.Many2one('res.partner', string='Project Manager', tracking=True)
-    account_id = fields.Many2one('account.account', string='Acc. Code', required=True,
+    account_id = fields.Many2one('account.account', string='Code', required=True,
                                  ondelete='restrict', tracking=True, index=True)
-    account_name = fields.Char(string='Acc. Name', related="account_id.name", store=True,
+    account_name = fields.Char(string='Name', related="account_id.name", store=True,
                                tracking=True)
     description = fields.Text(string="Description", required=False, tracking=True)
     reference_number = fields.Char(string="Reference Number", required=False)

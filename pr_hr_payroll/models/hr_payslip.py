@@ -241,13 +241,21 @@ class HrPayslip(models.Model):
 
     def prepare_payslip_entry_line_vals(self, line):
         if (line.total != 0 or line.total > 0 or line.total < 0) and line.salary_rule_id.code not in ["GROSS", "NET"]:
-            analytic_distribution = {str(self.employee_id.employee_cost_center_id.id): 100}
-            if line.slip_id.employee_id.department_id and line.slip_id.employee_id.department_id.department_cost_center_id:
-                analytic_distribution.update({str(line.slip_id.employee_id.department_id.department_cost_center_id.id): 100})
+            analytic_distribution = {
+                str(self.employee_id.department_cost_center_id.id): 100,
+                str(self.employee_id.section_cost_center_id.id): 100,
+                str(self.employee_id.project_cost_center_id.id): 100,
+                str(self.employee_id.employee_cost_center_id.id): 100,
+                                     }
+            # if line.slip_id.employee_id.department_id and line.slip_id.employee_id.department_id.department_cost_center_id:
+            #     analytic_distribution.update({str(line.slip_id.employee_id.department_id.department_cost_center_id.id): 100})
             line_vals = {
                 "account_id": line.salary_rule_id.account_id.id,
                 "analytic_distribution": analytic_distribution,
             }
+            # Project Manager
+            if self.employee_id.project_cost_center_id and self.employee_id.project_cost_center_id.project_partner_id:
+                line_vals.update({"partner_id": self.employee_id.project_cost_center_id.project_partner_id.id})
             if line.salary_rule_id.code in ["LOAN", "ADVALL"]:
                 line_vals["account_id"] = line.slip_id.employee_id.employee_account_id.id
 

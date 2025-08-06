@@ -14,15 +14,15 @@ class AccountCashReceipt(models.Model):
 
     # region [Fields]
 
-    name = fields.Char(string="Cash Receipt", required=False, tracking=True)
+    name = fields.Char(string="Number", required=False, tracking=True)
     company_id = fields.Many2one('res.company', string='Company', index=True, required=True,
                                  default=lambda self: self.env.company,
                                  tracking=True)
     currency_id = fields.Many2one('res.currency', string='Currency', related='company_id.currency_id', store=True,
                                   tracking=True)
-    account_id = fields.Many2one('account.account', string='Acc. Code', required=True,
+    account_id = fields.Many2one('account.account', string='Code', required=True,
                                  ondelete='restrict', tracking=True, index=True,)
-    account_name = fields.Char(string='Acc. Name', related="account_id.name", store=True,
+    account_name = fields.Char(string='Name', related="account_id.name", store=True,
                                      tracking=True)
     # === Analytic fields === #
     analytic_line_ids = fields.One2many(
@@ -43,6 +43,7 @@ class AccountCashReceipt(models.Model):
     accounting_date = fields.Date(string="Date", required=True, tracking=True, default=fields.Date.today)
     state = fields.Selection([
         ("draft", "Draft"),
+        ("submit", "Submitted"),
         ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], string="Status", tracking=True, default="draft")
@@ -91,6 +92,9 @@ class AccountCashReceipt(models.Model):
                 cash_receipt.journal_entry_id.unlink()
             cash_receipt.state = "draft"
 
+    def action_submit(self):
+        for bank_payment in self:
+            bank_payment.state = "submit"
 
     def action_post(self):
         for cash_receipt in self:
@@ -247,9 +251,9 @@ class AccountCashReceiptLine(models.Model):
     cs_project_id = fields.Many2one("account.analytic.account", string="Project",
                                     domain="[('analytic_plan_type', '=', 'project')]", tracking=True)
     partner_id = fields.Many2one('res.partner', string='Project Manager', tracking=True)
-    account_id = fields.Many2one('account.account', string='Acc. Code', required=True,
+    account_id = fields.Many2one('account.account', string='Code', required=True,
                                  ondelete='restrict', tracking=True, index=True)
-    account_name = fields.Char(string='Acc. Name', related="account_id.name", store=True,
+    account_name = fields.Char(string='Name', related="account_id.name", store=True,
                                tracking=True)
     description = fields.Text(string="Description", required=False, tracking=True)
     reference_number = fields.Char(string="Reference Number", required=False)
@@ -272,6 +276,7 @@ class AccountCashReceiptLine(models.Model):
     total_amount = fields.Float(string="Total Amount", tracking=True, compute="_compute_amount", store=True)
     parent_state = fields.Selection([
         ("draft", "Draft"),
+        ("submit", "Submitted"),
         ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], related="cash_receipt_id.state", store=True, string="Parent Status")
