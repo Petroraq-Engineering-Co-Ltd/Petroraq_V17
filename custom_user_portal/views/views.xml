@@ -1,0 +1,64 @@
+<odoo>
+    <record id="view_employee_form_inherit_userid_fix" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.user_id_domain_fix</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='hr_settings']//group[@name='active_group']//div[@class='o_row']//field[@name='user_id']" position="replace">
+                <field name="user_id"
+                       string="Related User"
+                       domain="[]"
+                       context="{'default_create_employee_id': id}"
+                       widget="many2one_avatar_user"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- status field on PO -->
+    <record id="view_purchase_order_form_inherit_status" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.status</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_ref" position="after">
+                <!-- For Procurement Admin (≤ 10,000) -->
+                <field name="status"
+                   invisible="state != 'purchase' or amount_total &gt; 10000"
+                   groups="custom_user_portal.procurement_admin"/>
+                <!-- For Project Engineer (>10k and ≤ 100k) -->
+                <field name="status"
+                   invisible="state != 'purchase' or amount_total &lt;= 10000 or amount_total &gt; 100000"
+                   groups="custom_user_portal.project_engineer"/>
+                <!-- For Project Manager (>100k and ≤ 500k) -->
+                <field name="status"
+                   invisible="state != 'purchase' or amount_total &lt;= 100000 or amount_total &gt; 500000"
+                   groups="custom_user_portal.project_manager"/>
+                <!-- For Operations Director (>500k) -->
+                <field name="status"
+                   invisible="state != 'purchase' or amount_total &lt;= 500000"
+                   groups="custom_user_portal.operations_director"/>
+        </field>
+        </field>
+    </record>
+
+    <!-- RFQ untaxed Amount -->
+    <record id="view_purchase_order_form_inherit_hide_tax" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.hide.tax</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@class='oe_subtotal_footer']/field[@name='tax_totals']" position="replace">
+                <field name="tax_totals"
+             widget="account-tax-totals-field"
+             nolabel="1"
+             readonly="1"
+             invisible="state != 'purchase'"/>
+                <div class="d-flex"
+           invisible="state == 'purchase'">
+                    <div class="o_form_label">Untaxed Amount</div>
+                    <field name="amount_untaxed" readonly="1" class="o_form_field fw-bold"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
