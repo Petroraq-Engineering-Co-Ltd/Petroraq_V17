@@ -6,13 +6,13 @@ from hijri_converter import Gregorian
 from datetime import date
 
 
-class HREmployeeIqamaLineAddWizard(models.Model):
+class HREmployeeMedicalInsuranceLineAddWizard(models.Model):
     """
     """
 
     # region [Initial]
-    _name = 'hr.employee.iqama.line.add.wizard'
-    _description = 'Iqama Line Add'
+    _name = 'hr.employee.medical.insurance.line.add.wizard'
+    _description = 'Medical Insurance Line Add'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     # endregion [Initial]
 
@@ -20,12 +20,13 @@ class HREmployeeIqamaLineAddWizard(models.Model):
 
     from_date = fields.Date(string="From Date", required=True)
     to_date = fields.Date(string="To Date", required=True)
-    iqama_id = fields.Many2one('hr.employee.iqama', string='Iqama', required=True, readonly=True)
+    insurance_id = fields.Many2one('hr.employee.medical.insurance', string='Insurance', required=True, readonly=True)
     employee_id = fields.Many2one('hr.employee', string='Employee', required=True, readonly=True)
     relation_id = fields.Many2one('hr.employee.dependent.relation', string='Relation', required=True)
     country_id = fields.Many2one('res.country', string='Nationality', required=False)
     identification_id = fields.Char(string='Iqama No.', required=True)
-    place_of_issue = fields.Char(string="Place Of Issue")
+    insurance_company = fields.Char(string="Insurance Company", required=True, tracking=True)
+    insurance_category = fields.Char(string="Insurance Category", required=True, tracking=True)
     expiry_date = fields.Date(string="Expiry Date", required=True)
     expiry_date_hijri = fields.Char(string="Expiry Date Hijri", required=False, compute="_compute_expiry_date_hijri")
     birthday = fields.Date(string='Date Of Birth', required=False, tracking=True)
@@ -88,13 +89,14 @@ class HREmployeeIqamaLineAddWizard(models.Model):
     def action_renew(self):
         for rec in self:
             if rec.amount == 0:
-                raise ValidationError("Amount Of IQAMA Should Be Greater Than 0 (Zero)")
-            iqama_line_id = self.env["hr.employee.iqama.line"].sudo().create({
-                "iqama_id": rec.iqama_id.id,
+                raise ValidationError("Amount Of Medical Insurance Should Be Greater Than 0 (Zero)")
+            insurance_line_id = self.env["hr.employee.medical.insurance.line"].sudo().create({
+                "insurance_id": rec.insurance_id.id,
                 "employee_id": rec.employee_id.id,
                 "relation_id": rec.relation_id.id,
                 "identification_id": rec.identification_id,
-                "place_of_issue": rec.place_of_issue if rec.place_of_issue else False,
+                "insurance_company": rec.insurance_company,
+                "insurance_category": rec.insurance_category,
                 "from_date": rec.from_date,
                 "to_date": rec.to_date,
                 "expiry_date": rec.expiry_date,
@@ -106,7 +108,7 @@ class HREmployeeIqamaLineAddWizard(models.Model):
                 "amount": rec.amount if rec.amount else False,
                 "state": "initiated",
             })
-            return iqama_line_id
+            return insurance_line_id
 
 
 

@@ -7,14 +7,14 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 
 
-class HREmployeeIqama(models.Model):
+class HREmployeeMedicalInsurance(models.Model):
     """
 
     """
 
     # region [Initial]
-    _name = 'hr.employee.iqama'
-    _description = 'Employee Iqamas'
+    _name = 'hr.employee.medical.insurance'
+    _description = 'Employee Medical Insurance'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = "id"
     # endregion [Initial]
@@ -25,12 +25,13 @@ class HREmployeeIqama(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=False, ondelete='restrict', tracking=True,
                                  related="employee_id.company_id", store=True)
     identification_id = fields.Char(string='Iqama No.', required=True, tracking=True)
-    place_of_issue = fields.Char(string="Place Of Issue", tracking=True)
+    insurance_company = fields.Char(string="Insurance Company", required=True, tracking=True)
+    insurance_category = fields.Char(string="Insurance Category", required=True, tracking=True)
     expiry_date = fields.Date(string="Expiry Date", required=True, tracking=True)
     expiry_date_hijri = fields.Char(string="Expiry Date Hijri", required=False, compute="_compute_expiry_date_hijri", store=True, tracking=True)
     state = fields.Selection([('draft', 'Initiated'),('valid', 'Valid'), ('expired', 'Expired')], default="draft", required=False, string="Status", tracking=True)
     active = fields.Boolean(string="Active", default=True, tracking=True)
-    iqama_line_ids = fields.One2many("hr.employee.iqama.line", "iqama_id", string="Iqama Lines")
+    insurance_line_ids = fields.One2many("hr.employee.medical.insurance.line", "insurance_id", string="Insurance Lines")
     check_renews = fields.Boolean(compute="_compute_check_renews")
 
     # endregion [Fields]
@@ -41,7 +42,7 @@ class HREmployeeIqama(models.Model):
     def _check_identification_id(self):
         for employee in self:
             if employee.identification_id:
-                existing_employee_identification_id = self.env["hr.employee.iqama"].search(
+                existing_employee_identification_id = self.env["hr.employee.medical.insurance"].search(
                     [("identification_id", "=", employee.identification_id), ("id", "!=", employee.id)], limit=1)
                 if existing_employee_identification_id:
                     raise ValidationError(
@@ -65,30 +66,32 @@ class HREmployeeIqama(models.Model):
         self_relation_id = self.env.ref("pr_hr.employee_dependent_relationship_self")
         self.ensure_one()
         new_line_from_date = False
-        if self.iqama_line_ids:
-            to_date = max(self.iqama_line_ids.mapped("to_date"))
+        if self.insurance_line_ids:
+            to_date = max(self.insurance_line_ids.mapped("to_date"))
             new_line_from_date = to_date + relativedelta(days=1)
         return {
             'name': self.name,
             'type': 'ir.actions.act_window',
             'view_type': 'form',
             'view_mode': 'form',
-            'res_model': 'hr.employee.iqama.line.add.wizard',
+            'res_model': 'hr.employee.medical.insurance.line.add.wizard',
             'context': {
-                    'default_iqama_id': self.id,
+                    'default_insurance_id': self.id,
                     'default_employee_id': self.employee_id.id,
                     'default_relation_id': self_relation_id.id,
                     'default_identification_id': self.identification_id,
                     'default_check_renews': self.check_renews,
                     'default_from_date': new_line_from_date ,
+                    'default_insurance_company': self.insurance_company ,
+                    'default_insurance_category': self.insurance_category ,
                 },
             'target': 'new',
         }
 
-    @api.depends("iqama_line_ids")
+    @api.depends("insurance_line_ids")
     def _compute_check_renews(self):
         for iqama in self:
-            if iqama.iqama_line_ids or len(iqama.iqama_line_ids) >= 1:
+            if iqama.insurance_line_ids or len(iqama.insurance_line_ids) >= 1:
                 iqama.check_renews = True
             else:
                 iqama.check_renews = False
@@ -96,30 +99,31 @@ class HREmployeeIqama(models.Model):
     # endregion [Methods]
 
 
-class HREmployeeIqamaLine(models.Model):
+class HREmployeeMedicalInsureLine(models.Model):
     """
 
     """
 
     # region [Initial]
-    _name = 'hr.employee.iqama.line'
-    _description = 'Employee Iqama Lines'
+    _name = 'hr.employee.medical.insurance.line'
+    _description = 'Employee Medical Insurance Lines'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = "id"
     # endregion [Initial]
 
     # region [Fields]
     name = fields.Char(string='Description', required=False, tracking=True)
-    iqama_id = fields.Many2one('hr.employee.iqama', string='Employee Iqama', required=True, ondelete='restrict', tracking=True)
+    insurance_id = fields.Many2one('hr.employee.medical.insurance', string='Employee Insurance', required=True, ondelete='restrict', tracking=True)
     sequence_ref = fields.Integer('No', compute="_compute_sequence_ref", copy=False)
     employee_id = fields.Many2one('hr.employee', string='Employee', required=True, ondelete='restrict', tracking=True,
-                                  related="iqama_id.employee_id", store=True)
+                                  related="insurance_id.employee_id", store=True)
     company_id = fields.Many2one('res.company', string='Company', required=False, ondelete='restrict', tracking=True,
                                  related="employee_id.company_id", store=True)
     relation_id = fields.Many2one('hr.employee.dependent.relation', string='Relation', required=True, ondelete='restrict', tracking=True)
     country_id = fields.Many2one('res.country', string='Nationality', required=False, ondelete='restrict', tracking=True)
     identification_id = fields.Char(string='Iqama No.', required=True, tracking=True)
-    place_of_issue = fields.Char(string="Place Of Issue", tracking=True)
+    insurance_company = fields.Char(string="Insurance Company", required=True, tracking=True)
+    insurance_category = fields.Char(string="Insurance Category", required=True, tracking=True)
     from_date = fields.Date(string="From Date", required=True, tracking=True)
     to_date = fields.Date(string="To Date", required=True, tracking=True)
     expiry_date = fields.Date(string="Expiry Date", required=True, tracking=True)
@@ -136,12 +140,12 @@ class HREmployeeIqamaLine(models.Model):
 
     # region [Methods]
 
-    @api.depends('iqama_id.iqama_line_ids')
+    @api.depends('insurance_id.insurance_line_ids')
     def _compute_sequence_ref(self):
         for line in self:
             count = 0
-            if line.iqama_id.iqama_line_ids:
-                for ln in line.iqama_id.iqama_line_ids:
+            if line.insurance_id.insurance_line_ids:
+                for ln in line.insurance_id.insurance_line_ids:
                     count += 1
                     ln.sequence_ref = count
             else:
@@ -197,16 +201,16 @@ class HREmployeeIqamaLine(models.Model):
             if rec.employee_id:
                 rec.country_id = rec.employee_id.country_id and rec.employee_id.country_id.id or False
 
-    @api.onchange('iqama_id')
-    def _onchange_iqama_id(self):
+    @api.onchange('insurance_id')
+    def _onchange_insurance_id(self):
         """
         Method Description:
         - This method triggers when the employee field changes.
         - It automatically sets the country based on the selected employee’s nationality.
         """
         for rec in self:
-            if rec.iqama_id:
-                rec.identification_id = rec.iqama_id.identification_id.id if rec.iqama_id.identification_id else False
+            if rec.insurance_id:
+                rec.identification_id = rec.insurance_id.identification_id.id if rec.insurance_id.identification_id else False
 
     @api.constrains("state")
     def _check_state(self):
@@ -214,36 +218,18 @@ class HREmployeeIqamaLine(models.Model):
             if line.state == "issued":
                 self_relation_id = self.env.ref("pr_hr.employee_dependent_relationship_self")
                 if line.relation_id.id == self_relation_id.id:
-                    line.iqama_id.sudo().write({
+                    line.insurance_id.sudo().write({
                         "expiry_date": line.expiry_date,
                         "expiry_date_hijri": line.expiry_date_hijri,
-                        "place_of_issue": line.place_of_issue if line.place_of_issue else False,
+                        "insurance_company": line.insurance_company if line.insurance_company else False,
+                        "insurance_category": line.insurance_category if line.insurance_category else False,
                     })
-                line.iqama_id.state = "valid"
+                line.insurance_id.state = "valid"
 
     def action_post(self):
         for rec in self:
             print("POST")
 
     # endregion [Methods]
-
-
-class HREmployeeDependentRelation(models.Model):
-    """
-    This model stores the types of relations an employee may have with their dependents, such as spouse or child.
-    Field Description:
-        - `name`: Stores the name of the relationship type (e.g., Spouse, Child).
-                - `required=True`: This field is mandatory.
-    """
-
-    # region [Initial]
-    _name = 'hr.employee.dependent.relation'
-    # endregion [Initial]
-
-    # region [Fields]
-    name = fields.Char('Name', required=True)
-    company_id = fields.Many2one('res.company', string='Company', required=False, ondelete='restrict', tracking=True,
-                                 default=lambda self: self.env.company)
-    # endregion [Fields]
 
 

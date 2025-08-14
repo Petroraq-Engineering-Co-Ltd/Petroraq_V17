@@ -36,6 +36,7 @@ class HrEmployee(models.Model):
     signature = fields.Binary("Signature", attachment=True, max_width=150, max_height=150)
     signature_password = fields.Char(string='Signature Password', default='')
     iqama_count = fields.Integer(string="IQAMA", compute="_compute_iqama_count")
+    insurance_count = fields.Integer(string="Medical Insurance", compute="_compute_insurance_count")
     has_subrules = fields.Boolean(string="Has Subrules ?", related="department_id.has_subrules", store=True)
     subrule_department_domain = fields.Char(compute="_compute_subrule_department_domain")
     subrule_department_id = fields.Many2one('hr.department.subrule', string='Subrule', index=True, check_company=True)
@@ -159,6 +160,14 @@ class HrEmployee(models.Model):
                     [("employee_id", "=", employee.id)])
             employee.iqama_count = iqama_count
 
+    def _compute_insurance_count(self):
+        for employee in self:
+            insurance_count = self.env["hr.employee.medical.insurance.line"].sudo().search_count([("employee_id", "=", employee.id)])
+            if insurance_count == 0:
+                insurance_count = self.env["hr.employee.medical.insurance"].sudo().search_count(
+                    [("employee_id", "=", employee.id)])
+            employee.insurance_count = insurance_count
+
     # endregion [Compute Methods]
 
     # region [Onchange Methods]
@@ -195,6 +204,32 @@ class HrEmployee(models.Model):
             return {
                 "type": "ir.actions.act_window",
                 'res_model': 'hr.employee.iqama',
+                "views": [[False, "form"]],
+                "view_mode": 'form',
+                "context": {'default_employee_id': self.id},
+            }
+
+    def open_related_insurance(self):
+        self.ensure_one()
+        form_id = self.env.ref('pr_hr.hr_employee_medical_insurance_view_form').id
+        list_id = self.env.ref('pr_hr.hr_employee_medical_insurance_view_tree').id
+        action = {
+                'type': 'ir.actions.act_window',
+                'name': _(f'{self.name} Medical Insurance'),
+                'res_model': 'hr.employee.medical.insurance',
+                'view_type': 'list',
+                'view_mode': 'list',
+                'views': [[list_id, 'list'], [form_id, 'form']],
+                'domain': [('employee_id', '=', self.id)],
+            }
+        insurance_line_ids = self.env["hr.employee.medical.insurance.line"].sudo().search([("employee_id", "=", self.id)])
+        insurance_ids = self.env["hr.employee.medical.insurance"].sudo().search([("employee_id", "=", self.id)])
+        if insurance_line_ids or insurance_ids:
+            return action
+        else:
+            return {
+                "type": "ir.actions.act_window",
+                'res_model': 'hr.employee.medical.insurance',
                 "views": [[False, "form"]],
                 "view_mode": 'form',
                 "context": {'default_employee_id': self.id},
