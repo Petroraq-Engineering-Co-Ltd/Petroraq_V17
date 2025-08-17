@@ -16,10 +16,24 @@
         </xpath>
         <xpath expr="//t[@t-foreach='rfqs']/tr" position="inside">
             <td class="text-end">
-                <a t-att-href="'/my/rfq/%s/quotation' % rfq.id" class="btn btn-sm btn-primary" style="background-color: #122AA0 !important; border-color: #122AA0 !important; ">
-          Create Quotation
-        </a>
+                <t t-set="has_quotation"
+               t-value="request.env['purchase.quotation'].sudo().search_count([('rfq_origin', '=', rfq.name)]) > 0"/>
+                <t t-if="not has_quotation">
+                    <a t-att-href="'/my/rfq/%s/quotation' % rfq.id"
+                   class="btn btn-sm btn-primary"
+                   style="background-color: #122AA0 !important; border-color: #122AA0 !important;">
+                    Create Quotation
+                </a>
+                </t>
+                <t t-else="">
+                    <button class="btn btn-sm btn-secondary" disabled="true">Quotation Submitted</button>
+                </t>
             </td>
+        </xpath>
+    </template>
+    <template id="portal_my_purchase_rfqs_inherit_subtotal" inherit_id="purchase.portal_my_purchase_rfqs" name="Replace Total with Subtotal">
+        <xpath expr="//span[@t-field='rfq.amount_total']" position="replace">
+            <span t-field="rfq.subtotal" t-options="{'widget': 'monetary', 'display_currency': rfq.currency_id}"/>
         </xpath>
     </template>
     <!-- templates.xml -->
@@ -73,20 +87,18 @@
                     <div class='d-flex w-100 gap-4 flex-wrap'>
                         <div class="form-group mb-3" style='width: 49%;'>
                             <label>Quotation Ref No.</label>
-                            <input type="text" name="quotation_ref" class="form-control" placeholder="Quotation Reference No"/>
+                            <input type="text" name="quotation_ref" class="form-control" placeholder="Quotation Reference No"  t-att-value="(rfq.partner_id.company_registry or '') + ' - ' + (rfq.name or '')" readonly="1"/>
                         </div>
                         <div class="form-group mb-3" style='width: 49%;'>
                             <label>Quotation Date</label>
                             <input type="date" class="form-control"
                                 t-att-value="rfq.date_planned and rfq.date_planned.strftime('%Y-%m-%d')"
-                                readonly="readonly"/>
+                                readonly="1"/>
                         </div>
                     </div>
                     <div class="form-group mb-3" style='width: 49%;'>
                         <label>Quotation Valid till</label>
-                        <input type="date" class="form-control"
-                            t-att-value="rfq.date_order and rfq.date_order.strftime('%Y-%m-%d')"
-                            readonly="readonly"/>
+                        <input type="date" name="quotation_valid_till" class="form-control"/>
                     </div>
                     <table class="table table-bordered mt-4 text-center align-middle" id="quotation_table">
                         <thead class="table-light">
@@ -101,30 +113,34 @@
                         </thead>
                         <tbody id="quotation_lines">
                             <t t-set="idx" t-value="0"/>
-                            <t t-foreach="rfq.order_line" t-as="line">
+                            <t t-foreach="rfq.custom_line_ids" t-as="line">
                                 <tr>
                                     <td>
                                         <t t-esc="idx + 1"/>
                                     </td>
                                     <td>
-                                        <input type="text" t-att-name="'product_description_%s' % idx" class="form-control border-0 text-center"/>
+                                        <input type="text" t-att-name="'product_description_%s' % idx"
+                       t-att-value="line.name"
+                       class="form-control border-0 text-center" readonly="1"/>
                                     </td>
                                     <td>
                                         <input type="number" t-att-name="'product_quantity_%s' % idx"
                        class="form-control border-0 text-center qty-input"
-                       t-att-value="line.product_qty" step="0.01" readonly="1"/>
+                       t-att-value="line.quantity" step="0.01" readonly="1"/>
                                     </td>
                                     <td>
-                                        <input type="hidden" t-att-name="'product_id_%s' % idx" t-att-value="line.product_id.id"/>
-                                        <input type="text" t-att-name="'product_name_%s' % idx" t-att-value="line.product_id.display_name" readonly="1" class="form-control border-0 text-center"/>
-                                        <!-- <span class="form-control border-0 text-center" t-esc="line.product_id.display_name"/> -->
+                                        <input type="text" t-att-name="'product_unit_%s' % idx"
+                       t-att-value="line.unit"
+                       readonly="1" class="form-control border-0 text-center"/>
                                     </td>
                                     <td>
                                         <input type="number" t-att-name="'product_price_%s' % idx"
-                       class="form-control border-0 text-center price-input" step="0.01"/>
+                       t-att-value="line.price_unit"
+                       class="form-control border-0 text-center price-input" step="0.01" readonly="1"/>
                                     </td>
                                     <td>
                                         <input type="number" t-att-name="'product_total_%s' % idx"
+                       t-att-value="line.subtotal"
                        class="form-control border-0 text-center total-input" step="0.01" readonly="1"/>
                                     </td>
                                 </tr>

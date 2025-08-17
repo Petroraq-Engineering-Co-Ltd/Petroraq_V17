@@ -16,5 +16,9 @@
             <field name="name">Operations Director</field>
             <field name="category_id" ref="base.module_category_hidden"/>
         </record>
+         <record id="managing_director" model="res.groups">
+            <field name="name">Managing Director</field>
+            <field name="category_id" ref="base.module_category_hidden"/>
+        </record>
     </data>
 </odoo>

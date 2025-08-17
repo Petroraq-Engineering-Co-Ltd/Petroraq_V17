@@ -14,8 +14,15 @@
     'version': '0.1',
     'depends': ['base', 'portal', 'product', 'hr', 'mail', 'web', 'purchase', 'bus', 'project'],
     'license': 'LGPL-3',
+    'installable': True,
+    'application': True,
 
     'data': [
+        'security/groups.xml',
+        'security/ir.model.access.csv',
+        'security/purchase_requisition_security.xml',
+        'security/quotation.xml',
+        
         'views/views.xml',
         'views/templates.xml',
         'views/portal_pr_form_template.xml',
@@ -23,13 +30,10 @@
         'views/pr_odoo_ui.xml',
         'views/portal_quotation.xml',
         'views/project_view.xml',
+        'views/pr_portal_view.xml',
+        'views/cash_odoo_ui.xml',
 
         'data/ir_sequence_data.xml',
-        
-        'security/ir.model.access.csv',
-        'security/purchase_requisition_security.xml',
-        'security/groups.xml',
-        'security/quotation.xml',
     ],
     'demo': [
         'demo/demo.xml',
