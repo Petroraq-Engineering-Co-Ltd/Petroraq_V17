@@ -1,6 +1,5 @@
 from odoo import models, fields, api
 
-<<<<<<< HEAD
 
 class ProjectProject(models.Model):
     _inherit = "project.project"
@@ -8,16 +7,6 @@ class ProjectProject(models.Model):
     budget_type = fields.Selection(
         [("opex", "Opex"), ("capex", "Capex")], string="Budget Type"
     )
-=======
-
-class ProjectProject(models.Model):
-    _inherit = "project.project"
-
-    budget_type = fields.Selection(
-        [("opex", "Opex"), ("capex", "Capex")], string="Budget Type"
-    )
-
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
     budget_code = fields.Char(string="Cost Center Code")
     budget_allowance = fields.Float(string="Budget Allowance")
     all_bank_accounts = fields.Many2many(
@@ -27,18 +16,14 @@ class ProjectProject(models.Model):
     )
     budget_left = fields.Float(
         string="Budget Left", compute="_compute_budget_left", store=True
-<<<<<<< HEAD
     )
     purchase_order_ids = fields.One2many(
         'purchase.order', 'project_id', string='Purchase Orders'
-=======
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
     )
 
     @api.depends(
         "budget_allowance",
         "purchase_order_ids.amount_total",
-<<<<<<< HEAD
         "purchase_order_ids.pe_approved",   
         "purchase_order_ids.pm_approved",
         "purchase_order_ids.od_approved",
@@ -74,18 +59,3 @@ class ProjectProject(models.Model):
 
             project.budget_left = project.budget_allowance - spent
 
-=======
-        "purchase_order_ids.status",
-    )
-    def _compute_budget_left(self):
-        for project in self:
-            approved_pos = project.purchase_order_ids.filtered(
-                lambda po: po.status == "approved"
-            )
-            spent = sum(approved_po.amount_total for approved_po in approved_pos)
-            project.budget_left = project.budget_allowance - spent
-
-    purchase_order_ids = fields.One2many(
-        "purchase.order", "project_id", string="Purchase Orders"
-    )
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f

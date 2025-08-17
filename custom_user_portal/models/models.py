@@ -56,7 +56,6 @@ class PurchaseRequisition(models.Model):
         store=True,
         currency_field="currency_id",
     )
-<<<<<<< HEAD
     pr_type = fields.Selection([
         ('pr', 'PR'),
         ('cash', 'Cash PR'),
@@ -65,13 +64,10 @@ class PurchaseRequisition(models.Model):
         string="Is Supervisor",
         compute="_compute_is_supervisor",
     )
-=======
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
     # currency_id = fields.Many2one('res.currency', string='Currency', required=True,default=lambda self: self.env.ref('base.SAR').id)
     line_ids = fields.One2many(
         "purchase.requisition.line", "requisition_id", string="Line Items"
     )
-<<<<<<< HEAD
     
     # Computed fields for button visibility logic
     show_create_rfq_button = fields.Boolean(
@@ -91,26 +87,12 @@ class PurchaseRequisition(models.Model):
                     or "CPR0001"
                 )
             else:
-=======
-
-    # updating PR code
-    @api.model_create_multi
-    def create(self, vals_list):
-        records = super().create(vals_list)
-        for record in records:
-            if record.name == "New":
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
                 record.name = (
                     self.env["ir.sequence"].next_by_code("purchase.requisition")
                     or "PR0001"
                 )
-<<<<<<< HEAD
         record._notify_supervisor()
         return record
-=======
-            record._notify_supervisor()
-        return records
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
 
     # Checking when PR is approved
     def write(self, vals):
@@ -128,7 +110,6 @@ class PurchaseRequisition(models.Model):
             rec.vat_amount = total * 0.15
             rec.total_incl_vat = total + rec.vat_amount
 
-<<<<<<< HEAD
     @api.depends('pr_type', 'approval', 'name')
     def _compute_button_visibility(self):
         """Compute button visibility based on PR type, approval, and existing RFQs"""
@@ -142,8 +123,6 @@ class PurchaseRequisition(models.Model):
                 rec.pr_type == 'cash' and rec.approval == 'approved'
             )
 
-=======
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
     # sending activity to specific manager when PR is created
     def _notify_supervisor(self):
         try:
@@ -212,12 +191,7 @@ class PurchaseRequisition(models.Model):
                     pr.name,
                     str(e),
                 )
-<<<<<<< HEAD
     #create RFQ PR
-=======
-
-    # passing data to rfq form
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
     def action_create_rfq(self):
         """Create RFQ (purchase.order) from this PR and populate Custom Lines tab."""
         PurchaseOrder = self.env["purchase.order"]
@@ -273,11 +247,7 @@ class PurchaseRequisition(models.Model):
 
         po_lines = []
 
-<<<<<<< HEAD
         # Fetch 15% VAT tax
-=======
-        # Fetch 15% VAT tax (adjust domain as needed for your DB)
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
         vat_tax = self.env["account.tax"].search(
             [
                 ("type_tax_use", "=", "purchase"),
@@ -296,23 +266,15 @@ class PurchaseRequisition(models.Model):
                 limit=1,
             )
 
-<<<<<<< HEAD
             po_lines.append(
-=======
-            rfq_lines.append(
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
                 (
                     0,
                     0,
                     {
                         "product_id": product.id if product else False,
-<<<<<<< HEAD
                         #"name": f"{product.name} ({line.unit})" if product else f"{line.description} ({line.unit})",
                         "name": line.description,
                         "unit": line.unit,
-=======
-                        "name": line.description,
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
                         "product_qty": line.quantity,
                         "price_unit": line.unit_price,
                         "product_uom": (
@@ -334,42 +296,25 @@ class PurchaseRequisition(models.Model):
             limit=1,
         )
 
-<<<<<<< HEAD
         purchase_order = self.env["purchase.order"].create(
             {
                 "partner_id": self.vendor_id.id,
                 "order_line": po_lines,
-=======
-        rfq = self.env["purchase.order"].create(
-            {
-                "partner_id": self.vendor_id.id,
-                "order_line": rfq_lines,
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
                 "origin": self.name,
                 "notes": self.notes,
                 "budget_type": self.budget_type,
                 "budget_code": self.budget_details,
                 "project_id": matched_project.id if matched_project else False,
-<<<<<<< HEAD
                 "state": "purchase",  # set initial state as needed
-=======
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
             }
         )
 
         return {
             "type": "ir.actions.act_window",
-<<<<<<< HEAD
             "name": "Purchase Order",
             "view_mode": "form",
             "res_model": "purchase.order",
             "res_id": purchase_order.id,
-=======
-            "name": "Request for Quotation",
-            "view_mode": "form",
-            "res_model": "purchase.order",
-            "res_id": rfq.id,
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
             "target": "current",
         }
     
@@ -415,7 +360,6 @@ class PurchaseQuotation(models.Model):
 
     budget_code = fields.Char(string="Budget Code")
     project_id = fields.Many2one("project.project", string="Project")
-<<<<<<< HEAD
 
 class PurchaseOrderCustomLine(models.Model):
     _name = 'purchase.order.custom.line'
@@ -432,5 +376,3 @@ class PurchaseOrderCustomLine(models.Model):
     def _compute_subtotal(self):
         for line in self:
             line.subtotal = line.quantity * line.price_unit
-=======
->>>>>>> 88dd6242abcbcbf702324967f7ecb5db890c9d0f
