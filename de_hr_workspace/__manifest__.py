@@ -19,6 +19,8 @@
         'views/approvals_menu.xml',
         'views/hr_employee_views.xml',
         'views/hr_contract_views.xml',
+        'views/iqama_approvals.xml',
+        'views/medical_insurance_approvals.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

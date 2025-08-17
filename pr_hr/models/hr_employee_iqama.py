@@ -28,7 +28,11 @@ class HREmployeeIqama(models.Model):
     place_of_issue = fields.Char(string="Place Of Issue", tracking=True)
     expiry_date = fields.Date(string="Expiry Date", required=True, tracking=True)
     expiry_date_hijri = fields.Char(string="Expiry Date Hijri", required=False, compute="_compute_expiry_date_hijri", store=True, tracking=True)
-    state = fields.Selection([('draft', 'Initiated'),('valid', 'Valid'), ('expired', 'Expired')], default="draft", required=False, string="Status", tracking=True)
+    state = fields.Selection([('draft', 'Initiated'),
+                              ('pending_approval', 'Pending Approval'),
+                              ('approve', 'Approved'),
+                              ('valid', 'Valid'),
+                              ('expired', 'Expired')], default="draft", required=False, string="Status", tracking=True)
     active = fields.Boolean(string="Active", default=True, tracking=True)
     iqama_line_ids = fields.One2many("hr.employee.iqama.line", "iqama_id", string="Iqama Lines")
     check_renews = fields.Boolean(compute="_compute_check_renews")
@@ -58,6 +62,13 @@ class HREmployeeIqama(models.Model):
             else:
                 dependent.expiry_date_hijri = False
 
+    def action_request_approval(self):
+        for rec in self:
+            rec.state = "pending_approval"
+
+    def action_approve(self):
+        for rec in self:
+            rec.state = "approve"
 
     def action_renew(self):
         """

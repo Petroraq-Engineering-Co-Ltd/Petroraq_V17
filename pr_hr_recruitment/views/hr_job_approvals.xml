@@ -57,7 +57,7 @@
               parent="de_hr_workspace.menu_my_employee_approvals"
               name="Recruitment Jobs"
               action="hr_job_approvals_view_action"
-              sequence="50"
+              sequence="60"
               groups="de_hr_workspace.group_hr_employee_approvals,hr_recruitment.group_hr_recruitment_manager"
     />
 

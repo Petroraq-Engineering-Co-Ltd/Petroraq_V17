@@ -18,7 +18,7 @@
     'category': 'Human Resources/Employees/Recruitment',
     'version': '17.0.1.0.0',
     # any module necessary for this one to work correctly
-    'depends': ['pr_hr_account', 'website_hr_recruitment', 'de_hr_workspace'],
+    'depends': ['pr_hr_account', 'website_hr_recruitment', 'de_hr_workspace', 'mail'],
 
     # always loaded
     'data': [
