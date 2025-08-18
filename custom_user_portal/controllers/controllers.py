@@ -32,17 +32,28 @@ class PortalPR(http.Controller):
         # Decide prefix based on type
         prefix = "CPR" if req_type == "cash" else "PR"
 
-        last_pr = request.env["purchase.requisition"].sudo().search(
-            [("pr_type", "=", req_type)], 
-            order="id desc", limit=1
+        last_pr = (
+            request.env["purchase.requisition"]
+            .sudo()
+            .search([("pr_type", "=", req_type)], order="id desc", limit=1)
         )
 
         if last_pr and last_pr.name and last_pr.name.startswith(prefix):
             next_number = int(last_pr.name.replace(prefix, "")) + 1
         else:
-            seq_code = "cash.purchase.requisition" if req_type == "cash" else "purchase.requisition"
-            seq_obj = request.env["ir.sequence"].sudo().browse(
-                request.env.ref(f"custom_user_portal.seq_{seq_code.replace('.', '_')}").id
+            seq_code = (
+                "cash.purchase.requisition"
+                if req_type == "cash"
+                else "purchase.requisition"
+            )
+            seq_obj = (
+                request.env["ir.sequence"]
+                .sudo()
+                .browse(
+                    request.env.ref(
+                        f"custom_user_portal.seq_{seq_code.replace('.', '_')}"
+                    ).id
+                )
             )
             next_number = seq_obj.number_next if seq_obj and seq_obj.number_next else 1
 
@@ -59,7 +70,7 @@ class PortalPR(http.Controller):
             "supervisor": supervisor_name,
             "supervisor_partner_id": supervisor_partner_id,
             "pr_number_preview": pr_number_preview,
-            "req_type": req_type
+            "req_type": req_type,
         }
         return request.render("custom_user_portal.portal_pr_form_template", values)
 
@@ -121,53 +132,77 @@ class PortalPR(http.Controller):
             },
         )
 
-    #budget Check
-    @http.route('/check_budget', type='http', auth='user', methods=['POST'], csrf=False)
+    # budget Check
+    @http.route("/check_budget", type="http", auth="user", methods=["POST"], csrf=False)
     def check_budget(self, **post):
-        data = json.loads(request.httprequest.data or '{}')
-        budget_type = data.get('budget_type')
-        budget_code = data.get('budget_code')
+        data = json.loads(request.httprequest.data or "{}")
+        budget_type = data.get("budget_type")
+        budget_code = data.get("budget_code")
 
         if not budget_type or not budget_code:
             return request.make_response(
-                json.dumps({"success": False, "message": "Missing budget type or budget code."}),
-                headers=[('Content-Type', 'application/json')]
+                json.dumps(
+                    {"success": False, "message": "Missing budget type or budget code."}
+                ),
+                headers=[("Content-Type", "application/json")],
             )
 
-        project = request.env['project.project'].sudo().search([
-            ('budget_type', '=', budget_type),
-            ('budget_code', '=', budget_code)
-        ], limit=1)
+        project = (
+            request.env["project.project"]
+            .sudo()
+            .search(
+                [("budget_type", "=", budget_type), ("budget_code", "=", budget_code)],
+                limit=1,
+            )
+        )
 
         if not project:
             return request.make_response(
-                json.dumps({"success": False, "message": "No project found for given budget type and code."}),
-                headers=[('Content-Type', 'application/json')]
+                json.dumps(
+                    {
+                        "success": False,
+                        "message": "No project found for given budget type and code.",
+                    }
+                ),
+                headers=[("Content-Type", "application/json")],
             )
 
         if project.budget_left <= 0:
             return request.make_response(
-                json.dumps({"success": False, "message": f"No budget left. Remaining: {project.budget_left}"}),
-                headers=[('Content-Type', 'application/json')]
+                json.dumps(
+                    {
+                        "success": False,
+                        "message": f"No budget left. Remaining: {project.budget_left}",
+                    }
+                ),
+                headers=[("Content-Type", "application/json")],
             )
 
         return request.make_response(
-            json.dumps({"success": True, "budget_left": project.budget_left,
-                        "message": f"Budget available: {project.budget_left}"}),
-            headers=[('Content-Type', 'application/json')]
+            json.dumps(
+                {
+                    "success": True,
+                    "budget_left": project.budget_left,
+                    "message": f"Budget available: {project.budget_left}",
+                }
+            ),
+            headers=[("Content-Type", "application/json")],
         )
-    
-    #PR view
-    @http.route('/my/purchase_requisition/<int:pr_id>', auth='user', website=True)
+
+    # PR view
+    @http.route("/my/purchase_requisition/<int:pr_id>", auth="user", website=True)
     def portal_purchase_requisition_detail(self, pr_id, **kwargs):
-        pr = request.env['purchase.requisition'].sudo().browse(pr_id)
+        pr = request.env["purchase.requisition"].sudo().browse(pr_id)
         if not pr.exists():
             return request.not_found()
-        return request.render('custom_user_portal.portal_purchase_requisition_detail', {
-            'pr': pr,
-            'page_name': 'purchase_requisition_detail',
-        })
-    
+        return request.render(
+            "custom_user_portal.portal_purchase_requisition_detail",
+            {
+                "pr": pr,
+                "page_name": "purchase_requisition_detail",
+            },
+        )
+
     # Form submission
     @http.route(
         "/my/purchase-request/submit",

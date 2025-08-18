@@ -43,7 +43,46 @@ class PortalRFQ(http.Controller):
         rfq.custom_line_ids  # ensure it’s loaded
         company_registry = rfq.partner_id.company_registry
         return request.render(
-            "custom_user_portal.portal_create_rfq_quotation_form", {"rfq": rfq, "company_registry": company_registry}
+            "custom_user_portal.portal_create_rfq_quotation_form",
+            {"rfq": rfq, "company_registry": company_registry},
+        )
+    @http.route("/my/rfqs", type="http", auth="user", website=True)
+    def my_rfq(self):
+        partner = request.env.user.partner_id
+
+        rfqs_following = (
+            request.env["purchase.order"]
+            .sudo()
+            .search([
+                ("message_follower_ids.partner_id", "=", partner.id),
+                ("state", "in", ["draft", "sent"]),
+            ])
+        )
+
+        return request.render(
+            "custom_user_portal.portal_rfq_list_template",
+            {"rfqs": rfqs_following},
+        )
+    @http.route("/my/rfqs/<int:rfq_id>", type="http", auth="user", website=True)
+    def portal_rfq_view(self, rfq_id, **kw):
+        partner = request.env.user.partner_id
+        rfq = request.env["purchase.order"].sudo().browse(rfq_id)
+
+        # Security check: only followers or vendor can see
+        if partner not in rfq.message_follower_ids.mapped("partner_id") and partner.id != rfq.partner_id.id:
+            return request.redirect("/my")  # not authorized
+
+        rfq.custom_line_ids  # ensure lines are loaded
+
+        # Fetch all quotations related to this RFQ
+        quotations = request.env["purchase.quotation"].sudo().search([("rfq_origin", "=", rfq.name)])
+
+        return request.render(
+            "custom_user_portal.portal_rfq_view_template",
+            {
+                "rfq": rfq,
+                "quotations": quotations,
+            },
         )
 
     @http.route(
@@ -143,13 +182,15 @@ class PortalRFQ(http.Controller):
             if not description:
                 continue
 
-            request.env["purchase.quotation.line"].sudo().create({
-                "quotation_id": quotation.id,
-                "name": description,
-                "quantity": quantity,
-                "unit": unit,
-                "price_unit": price_unit,
-            })
+            request.env["purchase.quotation.line"].sudo().create(
+                {
+                    "quotation_id": quotation.id,
+                    "name": description,
+                    "quantity": quantity,
+                    "unit": unit,
+                    "price_unit": price_unit,
+                }
+            )
 
         all_quotations = (
             request.env["purchase.quotation"]
@@ -203,17 +244,25 @@ class PortalRFQ(http.Controller):
             ).send()
 
         # ---------------- Create Activity for Procurement Users ----------------
-        procurement_group = request.env.ref("custom_user_portal.procurement_admin").sudo()
+        procurement_group = request.env.ref(
+            "custom_user_portal.procurement_admin"
+        ).sudo()
         for user in procurement_group.users:
             if user.active:
-                request.env["mail.activity"].sudo().create({
-                    "res_model_id": request.env["ir.model"]._get("purchase.quotation").id,
-                    "res_id": quotation.id,
-                    "activity_type_id": request.env.ref("mail.mail_activity_data_todo").id,
-                    "summary": "Review Quotation",
-                    "user_id": user.id,
-                    "note": f"Please review the Quotation for RFQ {rfq.name}.",
-                    "date_deadline": quotation.order_deadline,
-                })
+                request.env["mail.activity"].sudo().create(
+                    {
+                        "res_model_id": request.env["ir.model"]
+                        ._get("purchase.quotation")
+                        .id,
+                        "res_id": quotation.id,
+                        "activity_type_id": request.env.ref(
+                            "mail.mail_activity_data_todo"
+                        ).id,
+                        "summary": "Review Quotation",
+                        "user_id": user.id,
+                        "note": f"Please review the Quotation for RFQ {rfq.name}.",
+                        "date_deadline": quotation.order_deadline,
+                    }
+                )
 
-        return request.redirect("/my/rfq?quotation_submitted=1")
+        return request.redirect("/my/rfqs?quotation_submitted=1")

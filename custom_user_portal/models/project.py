@@ -18,17 +18,17 @@ class ProjectProject(models.Model):
         string="Budget Left", compute="_compute_budget_left", store=True
     )
     purchase_order_ids = fields.One2many(
-        'purchase.order', 'project_id', string='Purchase Orders'
+        "purchase.order", "project_id", string="Purchase Orders"
     )
 
     @api.depends(
         "budget_allowance",
         "purchase_order_ids.amount_total",
-        "purchase_order_ids.pe_approved",   
+        "purchase_order_ids.pe_approved",
         "purchase_order_ids.pm_approved",
         "purchase_order_ids.od_approved",
         "purchase_order_ids.md_approved",
-        "purchase_order_ids.state",   
+        "purchase_order_ids.state",
     )
     def _compute_budget_left(self):
         for project in self:
@@ -46,13 +46,17 @@ class ProjectProject(models.Model):
                     approvals_given = sum([po.pe_approved, po.pm_approved])
                 elif po.amount_total < 500000:
                     approvals_needed = 3
-                    approvals_given = sum([po.pe_approved, po.pm_approved, po.od_approved])
+                    approvals_given = sum(
+                        [po.pe_approved, po.pm_approved, po.od_approved]
+                    )
                 else:
                     approvals_needed = 4
-                    approvals_given = sum([po.pe_approved, po.pm_approved, po.od_approved, po.md_approved])
+                    approvals_given = sum(
+                        [po.pe_approved, po.pm_approved, po.od_approved, po.md_approved]
+                    )
 
                 # Add to spent only if all required approvals are given
-                if approvals_given >= approvals_needed and po.state != 'cancel':
+                if approvals_given >= approvals_needed and po.state != "cancel":
                     spent += po.amount_total
 
                 # If rejected (state = cancel), do NOT add — budget remains restored automatically

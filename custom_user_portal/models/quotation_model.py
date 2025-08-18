@@ -79,7 +79,9 @@ class PurchaseQuotation(models.Model):
 
     # budget
     budget_type = fields.Selection(
-        [("opex", "Opex"), ("capex", "Capex")], string="Budget Type", related="project_id.budget_type",
+        [("opex", "Opex"), ("capex", "Capex")],
+        string="Budget Type",
+        related="project_id.budget_type",
     )
     budget_code = fields.Char(string="Budget Code", related="project_id.budget_code")
     project_id = fields.Many2one("project.project", string="Project")
@@ -127,26 +129,28 @@ class PurchaseQuotation(models.Model):
         for rec in self:
             rec.is_best_badge = "Best" if rec.is_best else ""
 
-#create purchase order
+    # create purchase order
     def action_create_purchase_order(self):
         """Create Purchase Order from this Quotation in pending state with Custom Lines."""
         PurchaseOrder = self.env["purchase.order"]
-        
+
         if self.budget_left < self.total_incl_vat:
-             raise UserError(
+            raise UserError(
                 "Insufficient budget. You cannot proceed with Purchase Order creation."
             )
 
         for quotation in self:
             if not quotation.line_ids:
-                raise UserError(_("This Quotation has no line items to create a Purchase Order."))
-            
+                raise UserError(
+                    _("This Quotation has no line items to create a Purchase Order.")
+                )
+
             matched_project = self.env["project.project"].search(
-            [
-                ("budget_type", "=", quotation.budget_type),
-                ("budget_code", "=", quotation.budget_code),
-            ],
-            limit=1,
+                [
+                    ("budget_type", "=", quotation.budget_type),
+                    ("budget_code", "=", quotation.budget_code),
+                ],
+                limit=1,
             )
 
             # Purchase Order values
@@ -155,19 +159,23 @@ class PurchaseQuotation(models.Model):
                 "partner_id": quotation.vendor_id.id if quotation.vendor_id else False,
                 "partner_ref": quotation.vendor_ref or "",
                 "date_planned": quotation.delivery_date or fields.Datetime.now(),
-                "project_id": matched_project.id if matched_project else False, 
+                "project_id": matched_project.id if matched_project else False,
                 "custom_line_ids": [],
-                "state": "pending", 
+                "state": "pending",
             }
 
             # Fill lines from Quotation Lines
             for line in quotation.line_ids:
-                line_vals = (0, 0, {
-                    "name": line.description or line.name,
-                    "quantity": line.quantity,
-                    "unit": line.unit,
-                    "price_unit": line.price_unit,
-                })
+                line_vals = (
+                    0,
+                    0,
+                    {
+                        "name": line.description or line.name,
+                        "quantity": line.quantity,
+                        "unit": line.unit,
+                        "price_unit": line.price_unit,
+                    },
+                )
                 po_vals["custom_line_ids"].append(line_vals)
 
             # Create Purchase Order
@@ -175,10 +183,13 @@ class PurchaseQuotation(models.Model):
 
             # Log in chatter
             quotation.message_post(
-                body=_("Purchase Order %s created from this Quotation and populated in Custom Lines tab.") % po.name,
+                body=_(
+                    "Purchase Order %s created from this Quotation and populated in Custom Lines tab."
+                )
+                % po.name,
                 message_type="notification",
             )
-            
+
         # 🔥 Approval workflow: assign reviewers based on amount
         amount = quotation.total_incl_vat
         group_xml_id = None
@@ -195,15 +206,19 @@ class PurchaseQuotation(models.Model):
         if group_xml_id:
             group = self.env.ref(group_xml_id)
             for user in group.users:
-                self.env["mail.activity"].create({
-                    "res_model_id": self.env["ir.model"]._get("purchase.order").id,
-                    "res_id": po.id,
-                    "activity_type_id": self.env.ref("mail.mail_activity_data_todo").id,
-                    "summary": "Review Purchase Order",
-                    "user_id": user.id,
-                    "note": f"Please review the Purchase Order for {po.name}.",
-                    "date_deadline": fields.Date.today(),
-                })
+                self.env["mail.activity"].create(
+                    {
+                        "res_model_id": self.env["ir.model"]._get("purchase.order").id,
+                        "res_id": po.id,
+                        "activity_type_id": self.env.ref(
+                            "mail.mail_activity_data_todo"
+                        ).id,
+                        "summary": "Review Purchase Order",
+                        "user_id": user.id,
+                        "note": f"Please review the Purchase Order for {po.name}.",
+                        "date_deadline": fields.Date.today(),
+                    }
+                )
 
         return {
             "type": "ir.actions.act_window",
@@ -213,7 +228,6 @@ class PurchaseQuotation(models.Model):
             "view_mode": "form",
             "target": "current",
         }
-
 
     @api.model
     def create(self, vals):
@@ -255,18 +269,23 @@ class PurchaseQuotation(models.Model):
 
         return record
 
+
 class PurchaseQuotationLine(models.Model):
     _name = "purchase.quotation.line"
     _description = "Purchase Quotation Line"
 
-    quotation_id = fields.Many2one("purchase.quotation", string="Quotation", ondelete="cascade")
+    quotation_id = fields.Many2one(
+        "purchase.quotation", string="Quotation", ondelete="cascade"
+    )
     name = fields.Char(string="Description")
     quantity = fields.Float(string="Quantity")
     unit = fields.Char(string="Unit")
     price_unit = fields.Float(string="Unit Price")
     subtotal = fields.Float(string="Subtotal", compute="_compute_subtotal", store=True)
     tax_15 = fields.Float(string="15% Tax", compute="_compute_subtotal", store=True)
-    grand_total = fields.Float(string="Grand Total", compute="_compute_subtotal", store=True)
+    grand_total = fields.Float(
+        string="Grand Total", compute="_compute_subtotal", store=True
+    )
     description = fields.Char(string="Description")
 
     @api.depends("quantity", "price_unit")
@@ -275,6 +294,7 @@ class PurchaseQuotationLine(models.Model):
             line.subtotal = line.quantity * line.price_unit
             line.tax_15 = line.subtotal * 0.15
             line.grand_total = line.subtotal + line.tax_15
+
 
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
@@ -300,30 +320,30 @@ class PurchaseOrder(models.Model):
         compute="_compute_can_confirm_order", store=False
     )
     # Computed fields for view visibility
-    show_pe_approved = fields.Boolean(
-        compute="_compute_show_approvals", store=False
+    show_pe_approved = fields.Boolean(compute="_compute_show_approvals", store=False)
+    show_pm_approved = fields.Boolean(compute="_compute_show_approvals", store=False)
+    show_od_approved = fields.Boolean(compute="_compute_show_approvals", store=False)
+    show_md_approved = fields.Boolean(compute="_compute_show_approvals", store=False)
+    subtotal = fields.Float(
+        string="Subtotal", compute="_compute_amount_untaxed_custom", store=True
     )
-    show_pm_approved = fields.Boolean(
-        compute="_compute_show_approvals", store=False
+    tax_15 = fields.Float(
+        string="15% Tax", compute="_compute_amount_untaxed_custom", store=True
     )
-    show_od_approved = fields.Boolean(
-        compute="_compute_show_approvals", store=False
+    grand_total = fields.Float(
+        string="Grand Total", compute="_compute_amount_untaxed_custom", store=True
     )
-    show_md_approved = fields.Boolean(
-        compute="_compute_show_approvals", store=False
+    vendor_ids = fields.Many2many(
+        "res.partner", string="All Vendors"
     )
-    subtotal = fields.Float(string="Subtotal", compute='_compute_amount_untaxed_custom', store=True)
-    tax_15 = fields.Float(string="15% Tax", compute='_compute_amount_untaxed_custom', store=True)
-    grand_total = fields.Float(string="Grand Total", compute='_compute_amount_untaxed_custom', store=True)
     custom_line_ids = fields.One2many(
-        'purchase.order.custom.line',
-        'order_id',                
-        string='Custom Lines'
+        "purchase.order.custom.line", "order_id", string="Custom Lines"
     )
-    @api.depends('custom_line_ids.subtotal')
+
+    @api.depends("custom_line_ids.subtotal")
     def _compute_amount_untaxed_custom(self):
         for order in self:
-            order.subtotal = sum(order.custom_line_ids.mapped('subtotal'))
+            order.subtotal = sum(order.custom_line_ids.mapped("subtotal"))
             order.tax_15 = order.subtotal * 0.15
             order.grand_total = order.subtotal + order.tax_15
 
@@ -456,21 +476,17 @@ class PurchaseOrder(models.Model):
         """Compute visibility of approval fields based on user groups and state"""
         for order in self:
             user = self.env.user
-            order.show_pe_approved = (
-                order.state == "pending" and 
-                user.has_group("custom_user_portal.project_engineer")
+            order.show_pe_approved = order.state == "pending" and user.has_group(
+                "custom_user_portal.project_engineer"
             )
-            order.show_pm_approved = (
-                order.state == "pending" and 
-                user.has_group("custom_user_portal.project_manager")
+            order.show_pm_approved = order.state == "pending" and user.has_group(
+                "custom_user_portal.project_manager"
             )
-            order.show_od_approved = (
-                order.state == "pending" and 
-                user.has_group("custom_user_portal.operations_director")
+            order.show_od_approved = order.state == "pending" and user.has_group(
+                "custom_user_portal.operations_director"
             )
-            order.show_md_approved = (
-                order.state == "pending" and 
-                user.has_group("custom_user_portal.managing_director")
+            order.show_md_approved = order.state == "pending" and user.has_group(
+                "custom_user_portal.managing_director"
             )
 
     def action_reject(self):
@@ -588,3 +604,23 @@ class PurchaseOrder(models.Model):
 
             # Final step: reject the current PO
             order.state = "cancel"
+
+    # PO send by Email in RFQ
+    def action_rfq_send(self):
+        """Override to include all vendors (partner_id + vendor_ids) in email wizard."""
+        self.ensure_one()
+        res = super(PurchaseOrder, self).action_rfq_send()
+
+        # Collect all vendors: partner_id + vendor_ids
+        all_vendors = self.vendor_ids.ids
+        if self.partner_id:
+            if self.partner_id.id not in all_vendors:
+                all_vendors = [self.partner_id.id] + all_vendors
+
+        # Update wizard context with all vendors
+        if res and isinstance(res, dict):
+            ctx = res.get("context", {})
+            ctx.update({"default_partner_ids": all_vendors})
+            res["context"] = ctx
+
+        return res

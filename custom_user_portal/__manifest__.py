@@ -32,6 +32,7 @@
         'views/project_view.xml',
         'views/pr_portal_view.xml',
         'views/cash_odoo_ui.xml',
+        'views/rfq_vendor.xml',
 
         'data/ir_sequence_data.xml',
     ],

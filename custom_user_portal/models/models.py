@@ -5,6 +5,7 @@ from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
+
 class PurchaseRequisition(models.Model):
     _name = "purchase.requisition"
     _description = "Purchase Requisition"
@@ -56,10 +57,14 @@ class PurchaseRequisition(models.Model):
         store=True,
         currency_field="currency_id",
     )
-    pr_type = fields.Selection([
-        ('pr', 'PR'),
-        ('cash', 'Cash PR'),
-    ], string="Type", default='pr')
+    pr_type = fields.Selection(
+        [
+            ("pr", "PR"),
+            ("cash", "Cash PR"),
+        ],
+        string="Type",
+        default="pr",
+    )
     is_supervisor = fields.Boolean(
         string="Is Supervisor",
         compute="_compute_is_supervisor",
@@ -68,7 +73,7 @@ class PurchaseRequisition(models.Model):
     line_ids = fields.One2many(
         "purchase.requisition.line", "requisition_id", string="Line Items"
     )
-    
+
     # Computed fields for button visibility logic
     show_create_rfq_button = fields.Boolean(
         compute="_compute_button_visibility", store=False
@@ -110,17 +115,23 @@ class PurchaseRequisition(models.Model):
             rec.vat_amount = total * 0.15
             rec.total_incl_vat = total + rec.vat_amount
 
-    @api.depends('pr_type', 'approval', 'name')
+    @api.depends("pr_type", "approval", "name")
     def _compute_button_visibility(self):
         """Compute button visibility based on PR type, approval, and existing RFQs"""
         for rec in self:
             # Check if any RFQ exists for this PR
-            rfq_exists = self.env['purchase.order'].search([('origin', '=', rec.name)], limit=1)
+            po_exists = self.env["purchase.order"].search(
+                [("origin", "=", rec.name)], limit=1
+            )
+
+            rfq_exists = self.env["purchase.order"].search(
+                [("origin", "=", rec.name)], limit=1
+            )
             rec.show_create_rfq_button = (
-                rec.pr_type != 'cash' and rec.approval == 'approved' and not rfq_exists
+                rec.pr_type != "cash" and rec.approval == "approved" and not rfq_exists
             )
             rec.show_create_po_button = (
-                rec.pr_type == 'cash' and rec.approval == 'approved'
+                rec.pr_type == "cash" and rec.approval == "approved" and not po_exists
             )
 
     # sending activity to specific manager when PR is created
@@ -191,6 +202,7 @@ class PurchaseRequisition(models.Model):
                     pr.name,
                     str(e),
                 )
+
     #create RFQ PR
     def action_create_rfq(self):
         """Create RFQ (purchase.order) from this PR and populate Custom Lines tab."""
@@ -199,13 +211,13 @@ class PurchaseRequisition(models.Model):
         for pr in self:
             if not pr.line_ids:
                 raise UserError(_("This PR has no line items to create an RFQ."))
-            
+
             matched_project = self.env["project.project"].search(
-            [
-                ("budget_type", "=", pr.budget_type),
-                ("budget_code", "=", pr.budget_details),
-            ],
-            limit=1,
+                [
+                    ("budget_type", "=", pr.budget_type),
+                    ("budget_code", "=", pr.budget_details),
+                ],
+                limit=1,
             )
 
             # Create RFQ without normal order_line
@@ -213,18 +225,22 @@ class PurchaseRequisition(models.Model):
                 "origin": pr.name,
                 "partner_id": pr.vendor_id.id if pr.vendor_id else False,
                 "date_planned": pr.required_date,
-                "project_id": matched_project.id if matched_project else False, 
+                "project_id": matched_project.id if matched_project else False,
                 "custom_line_ids": [],  # Populate custom tab instead
             }
 
             # Fill custom_line_ids from PR lines
             for line in pr.line_ids:
-                line_vals = (0, 0, {
-                    "name": line.description,
-                    "quantity": line.quantity,
-                    "unit": line.unit,  # ✅ Added this
-                    "price_unit": line.unit_price,
-                })
+                line_vals = (
+                    0,
+                    0,
+                    {
+                        "name": line.description,
+                        "quantity": line.quantity,
+                        "unit": line.unit,  # ✅ Added this
+                        "price_unit": line.unit_price,
+                    },
+                )
                 rfq_vals["custom_line_ids"].append(line_vals)
 
             # Create RFQ
@@ -232,104 +248,165 @@ class PurchaseRequisition(models.Model):
 
             # Log in PR chatter
             pr.message_post(
-                body=_("RFQ %s created from this PR and populated in Custom Lines tab.") % rfq.name,
+                body=_("RFQ %s created from this PR and populated in Custom Lines tab.")
+                % rfq.name,
                 message_type="notification",
             )
 
-        return True
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Purchase Order"),
+            "res_model": "purchase.order",
+            "res_id": rfq.id,
+            "view_mode": "form",
+            "target": "current",
+        }
 
-    #create cash PR
+    # def action_create_rfq(self):
+    #     """Create RFQ (purchase.order) from this PR and populate Custom Lines tab."""
+    #     PurchaseOrder = self.env["purchase.order"]
+
+    #     for pr in self:
+    #         if not pr.line_ids:
+    #             raise UserError(_("This PR has no line items to create an RFQ."))
+
+    #         matched_project = self.env["project.project"].search(
+    #             [
+    #                 ("budget_type", "=", pr.budget_type),
+    #                 ("budget_code", "=", pr.budget_details),
+    #             ],
+    #             limit=1,
+    #         )
+
+    #         # Determine partner_id (first vendor) and other vendors
+    #         partner_id = pr.vendor_ids[:1].id if pr.vendor_ids else False
+    #         other_vendors = [(6, 0, pr.vendor_ids.ids)] if pr.vendor_ids else False
+
+    #         # Create RFQ without normal order_line
+    #         rfq_vals = {
+    #             "origin": pr.name,
+    #             "partner_id": partner_id,
+    #             "vendor_ids": other_vendors,  # fill remaining vendors
+    #             "date_planned": pr.required_date,
+    #             "project_id": matched_project.id if matched_project else False,
+    #             "custom_line_ids": [],  # Populate custom tab instead
+    #         }
+
+    #         # Fill custom_line_ids from PR lines
+    #         for line in pr.line_ids:
+    #             line_vals = (
+    #                 0,
+    #                 0,
+    #                 {
+    #                     "name": line.description,
+    #                     "quantity": line.quantity,
+    #                     "unit": line.unit,
+    #                     "price_unit": line.unit_price,
+    #                 },
+    #             )
+    #             rfq_vals["custom_line_ids"].append(line_vals)
+
+    #         # Create RFQ
+    #         rfq = PurchaseOrder.sudo().create(rfq_vals)
+
+    #         # Log in PR chatter
+    #         pr.message_post(
+    #             body=_("RFQ %s created from this PR and populated in Custom Lines tab.") % rfq.name,
+    #             message_type="notification",
+    #         )
+
+    #     return {
+    #         "type": "ir.actions.act_window",
+    #         "name": _("Purchase Order"),
+    #         "res_model": "purchase.order",
+    #         "res_id": rfq.id,
+    #         "view_mode": "form",
+    #         "target": "current",
+    #     }
+
+    # create cash PR
     def action_create_purchase_order(self):
-        self.ensure_one()
+        """Create Purchase Order directly (confirmed) from this PR and populate Custom Lines tab."""
+        PurchaseOrder = self.env["purchase.order"]
 
-        if not self.vendor_id:
-            raise ValidationError("Please select a Vendor before creating Purchase Order.")
+        for pr in self:
+            if not pr.line_ids:
+                raise UserError(
+                    _("This PR has no line items to create a Purchase Order.")
+                )
 
-        po_lines = []
-
-        # Fetch 15% VAT tax
-        vat_tax = self.env["account.tax"].search(
-            [
-                ("type_tax_use", "=", "purchase"),
-                ("amount", "=", 15),
-                ("amount_type", "=", "percent"),
-            ],
-            limit=1,
-        )
-
-        for line in self.line_ids:
-            product = self.env["product.product"].search(
+            matched_project = self.env["project.project"].search(
                 [
-                    ("name", "=", line.unit),
-                    ("type", "in", ["product", "consu", "service"]),
+                    ("budget_type", "=", pr.budget_type),
+                    ("budget_code", "=", pr.budget_details),
                 ],
                 limit=1,
             )
 
-            po_lines.append(
-                (
+            # Create PO values
+            po_vals = {
+                "origin": pr.name,
+                "partner_id": pr.vendor_id.id if pr.vendor_id else False,
+                "date_planned": pr.required_date,
+                "project_id": matched_project.id if matched_project else False,
+                "custom_line_ids": [],
+            }
+
+            # Fill custom_line_ids from PR lines
+            for line in pr.line_ids:
+                line_vals = (
                     0,
                     0,
                     {
-                        "product_id": product.id if product else False,
-                        #"name": f"{product.name} ({line.unit})" if product else f"{line.description} ({line.unit})",
                         "name": line.description,
+                        "quantity": line.quantity,
                         "unit": line.unit,
-                        "product_qty": line.quantity,
                         "price_unit": line.unit_price,
-                        "product_uom": (
-                            product.uom_id.id
-                            if product
-                            else self.env.ref("uom.product_uom_unit").id
-                        ),
-                        "date_planned": fields.Date.context_today(self),
-                        "taxes_id": [(6, 0, [vat_tax.id])] if vat_tax else [],
                     },
                 )
+                po_vals["custom_line_ids"].append(line_vals)
+
+            # Create Purchase Order
+            po = PurchaseOrder.sudo().create(po_vals)
+
+            # Confirm it → changes state from draft (RFQ) to purchase
+            po.button_confirm()
+
+            # Log in PR chatter
+            pr.message_post(
+                body=_(
+                    "Purchase Order %s created and confirmed from this PR (Custom Lines populated)."
+                )
+                % po.name,
+                message_type="notification",
             )
-
-        matched_project = self.env["project.project"].search(
-            [
-                ("budget_type", "=", self.budget_type),
-                ("budget_code", "=", self.budget_details),
-            ],
-            limit=1,
-        )
-
-        purchase_order = self.env["purchase.order"].create(
-            {
-                "partner_id": self.vendor_id.id,
-                "order_line": po_lines,
-                "origin": self.name,
-                "notes": self.notes,
-                "budget_type": self.budget_type,
-                "budget_code": self.budget_details,
-                "project_id": matched_project.id if matched_project else False,
-                "state": "purchase",  # set initial state as needed
-            }
-        )
 
         return {
             "type": "ir.actions.act_window",
-            "name": "Purchase Order",
-            "view_mode": "form",
+            "name": _("Purchase Order"),
             "res_model": "purchase.order",
-            "res_id": purchase_order.id,
+            "res_id": po.id,
+            "view_mode": "form",
             "target": "current",
         }
-    
-    #check user if he/she is supervisor
-    @api.depends('supervisor_partner_id')
+
+    # check user if he/she is supervisor
+    @api.depends("supervisor_partner_id")
     def _compute_is_supervisor(self):
         for rec in self:
             try:
-                supervisor_partner_id = int(rec.supervisor_partner_id) if rec.supervisor_partner_id else 0
+                supervisor_partner_id = (
+                    int(rec.supervisor_partner_id) if rec.supervisor_partner_id else 0
+                )
             except ValueError:
                 supervisor_partner_id = 0
 
-            current_partner_id = self.env.user.partner_id.id if self.env.user.partner_id else 0
+            current_partner_id = (
+                self.env.user.partner_id.id if self.env.user.partner_id else 0
+            )
 
             rec.is_supervisor = supervisor_partner_id == current_partner_id
+
 
 class PurchaseRequisitionLine(models.Model):
     _name = "purchase.requisition.line"
@@ -350,6 +427,7 @@ class PurchaseRequisitionLine(models.Model):
         for rec in self:
             rec.total_price = rec.quantity * rec.unit_price
 
+
 class PurchaseQuotation(models.Model):
     _inherit = "purchase.order"
 
@@ -361,18 +439,21 @@ class PurchaseQuotation(models.Model):
     budget_code = fields.Char(string="Budget Code")
     project_id = fields.Many2one("project.project", string="Project")
 
+
 class PurchaseOrderCustomLine(models.Model):
-    _name = 'purchase.order.custom.line'
-    _description = 'Custom Purchase Order Line'
+    _name = "purchase.order.custom.line"
+    _description = "Custom Purchase Order Line"
 
-    order_id = fields.Many2one('purchase.order', string='Purchase Order', ondelete='cascade')
-    name = fields.Char(string='Description')
-    quantity = fields.Float(string='Quantity')
-    unit = fields.Char(string='Unit')
-    price_unit = fields.Float(string='Unit Price')
-    subtotal = fields.Float(string='Subtotal', compute='_compute_subtotal', store=True)
+    order_id = fields.Many2one(
+        "purchase.order", string="Purchase Order", ondelete="cascade"
+    )
+    name = fields.Char(string="Description")
+    quantity = fields.Float(string="Quantity")
+    unit = fields.Char(string="Unit")
+    price_unit = fields.Float(string="Unit Price")
+    subtotal = fields.Float(string="Subtotal", compute="_compute_subtotal", store=True)
 
-    @api.depends('quantity', 'price_unit')
+    @api.depends("quantity", "price_unit")
     def _compute_subtotal(self):
         for line in self:
             line.subtotal = line.quantity * line.price_unit
