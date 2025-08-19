@@ -44,12 +44,14 @@ class AccountCashPayment(models.Model):
     state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Submitted"),
+        ("finance_approve", "Finance Approved"),
         ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], string="Status", tracking=True, default="draft")
     accounting_manager_state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Pending Approval"),
+        ("finance_approve", "Pending Approval"),
         ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], string="Acc Man Status", tracking=True, default="draft")
@@ -139,6 +141,11 @@ class AccountCashPayment(models.Model):
                     line.sudo().write({"state": "submit"})
             rec.state = "submit"
             rec.accounting_manager_state = "submit"
+
+    def action_finance_approve(self):
+        for bank_payment in self:
+            bank_payment.state = "finance_approve"
+            bank_payment.accounting_manager_state = "finance_approve"
 
     def action_post(self):
         for cash_payment in self:

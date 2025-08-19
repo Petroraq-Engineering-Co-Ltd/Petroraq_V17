@@ -51,19 +51,27 @@
 <!--                            groups="pr_account.custom_group_accounting_manager"-->
 <!--                    />-->
                     <button
-                            string="POST"
-                            name="action_post"
+                            string="Approve"
+                            name="action_finance_approve"
                             type="object"
                             class="btn-teal-custom"
                             invisible="state != 'submit' or check_process_state == False"
-                            groups="pr_account.custom_group_accounting_manager,account.group_account_manager"
+                            groups="account.group_account_manager"
+                    />
+                    <button
+                            string="Final Approve"
+                            name="action_post"
+                            type="object"
+                            class="btn-teal-custom"
+                            invisible="state != 'finance_approve' or check_process_state == False"
+                            groups="pr_account.custom_group_accounting_manager"
                     />
                     <button
                             string="REJECT"
                             name="action_draft"
                             type="object"
                             class="btn-danger"
-                            invisible="state != 'submit' or check_process_state == False"
+                            invisible="state not in ['draft', 'finance_approve'] or check_process_state == False"
                             groups="pr_account.custom_group_accounting_manager,account.group_account_manager"
                     />
 <!--                    invisible="state != 'submit' or check_process_state == False"-->

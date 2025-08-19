@@ -44,12 +44,14 @@ class AccountBankPayment(models.Model):
     state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Submitted"),
+        ("finance_approve", "Finance Approved"),
         ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], string="Status", tracking=True, default="draft")
     accounting_manager_state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Pending Approval"),
+        ("finance_approve", "Pending Approval"),
         ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], string="Acc Man Status", tracking=True, default="draft")
@@ -129,11 +131,6 @@ class AccountBankPayment(models.Model):
             bank_payment.state = "draft"
             bank_payment.accounting_manager_state = "draft"
 
-    # def action_to_review(self):
-    #     for bank_payment in self:
-    #         bank_payment.state = "to_review"
-    #         bank_payment.accounting_manager_state = "to_review"
-
     def action_submit(self):
         for bank_payment in self:
             if bank_payment.bank_payment_line_ids:
@@ -141,6 +138,11 @@ class AccountBankPayment(models.Model):
                     line.sudo().write({"state": "submit"})
             bank_payment.state = "submit"
             bank_payment.accounting_manager_state = "submit"
+
+    def action_finance_approve(self):
+        for bank_payment in self:
+            bank_payment.state = "finance_approve"
+            bank_payment.accounting_manager_state = "finance_approve"
 
     def action_post(self):
         for bank_payment in self:
@@ -345,6 +347,7 @@ class AccountBankPaymentLine(models.Model):
     parent_state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Submitted"),
+        ("finance_approve", "Finance Approved"),
         ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], related="bank_payment_id.state", store=True, string="Parent Status")
