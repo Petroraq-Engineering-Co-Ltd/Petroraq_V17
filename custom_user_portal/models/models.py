@@ -69,7 +69,11 @@ class PurchaseRequisition(models.Model):
         string="Is Supervisor",
         compute="_compute_is_supervisor",
     )
-    # currency_id = fields.Many2one('res.currency', string='Currency', required=True,default=lambda self: self.env.ref('base.SAR').id)
+    status = fields.Selection(
+        [("pr", "Pr"), ("rfq", "Rfq")],
+        default="pr",
+        string="PR Status",
+    )
     line_ids = fields.One2many(
         "purchase.requisition.line", "requisition_id", string="Line Items"
     )
@@ -115,23 +119,16 @@ class PurchaseRequisition(models.Model):
             rec.vat_amount = total * 0.15
             rec.total_incl_vat = total + rec.vat_amount
 
-    @api.depends("pr_type", "approval", "name")
+    @api.depends("pr_type", "approval", "status")
     def _compute_button_visibility(self):
-        """Compute button visibility based on PR type, approval, and existing RFQs"""
+        """Compute button visibility based on PR type, approval, and status"""
         for rec in self:
-            # Check if any RFQ exists for this PR
-            po_exists = self.env["purchase.order"].search(
-                [("origin", "=", rec.name)], limit=1
+            rec.show_create_rfq_button = (
+                rec.pr_type != "cash" and rec.approval == "approved" and rec.status == "pr"
             )
 
-            rfq_exists = self.env["purchase.order"].search(
-                [("origin", "=", rec.name)], limit=1
-            )
-            rec.show_create_rfq_button = (
-                rec.pr_type != "cash" and rec.approval == "approved" and not rfq_exists
-            )
             rec.show_create_po_button = (
-                rec.pr_type == "cash" and rec.approval == "approved" and not po_exists
+                rec.pr_type == "cash" and rec.approval == "approved" and rec.status == "pr"
             )
 
     # sending activity to specific manager when PR is created
@@ -245,6 +242,9 @@ class PurchaseRequisition(models.Model):
 
             # Create RFQ
             rfq = PurchaseOrder.sudo().create(rfq_vals)
+
+            # Update PR status
+            pr.status = "rfq"
 
             # Log in PR chatter
             pr.message_post(
@@ -371,7 +371,8 @@ class PurchaseRequisition(models.Model):
 
             # Confirm it → changes state from draft (RFQ) to purchase
             po.button_confirm()
-
+            # Update PR status
+            pr.status = "rfq"
             # Log in PR chatter
             pr.message_post(
                 body=_(

@@ -624,3 +624,19 @@ class PurchaseOrder(models.Model):
             res["context"] = ctx
 
         return res
+
+    def unlink(self):
+        # Before deleting, store PRs that this RFQ belongs to
+        prs_to_update = self.mapped('origin')  # origin = PR.name
+
+        res = super(PurchaseOrder, self).unlink()  # Delete the RFQ
+
+        # Update status back to 'pr' for related PRs
+        pr_model = self.env["purchase.requisition"]
+        for pr_name in prs_to_update:
+            pr = pr_model.search([("name", "=", pr_name)], limit=1)
+            if pr:
+                pr.status = "pr"
+                pr.message_post(body=_("RFQ deleted, status reverted to PR."))
+
+        return res
