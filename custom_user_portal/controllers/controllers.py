@@ -2,125 +2,268 @@ from odoo import http
 from odoo.http import request
 from datetime import datetime
 import logging
+import json
+
 _logger = logging.getLogger(__name__)
 
 
 class PortalPR(http.Controller):
 
-#showing page and getting manager name with id
-    @http.route('/my/purchase-request/create', type='http', auth='user', website=True)
+    # showing page and getting manager name with id
+    @http.route("/my/purchase-request/create", type="http", auth="user", website=True)
     def create_purchase_request(self, **kwargs):
-        user = request.env.user
-        employee = request.env['hr.employee'].sudo().search([('user_id', '=', user.id)], limit=1)
+        req_type = kwargs.get("type", "pr")
 
-        supervisor_name = ''
-        supervisor_partner_id = ''
+        user = request.env.user
+        employee = (
+            request.env["hr.employee"]
+            .sudo()
+            .search([("user_id", "=", user.id)], limit=1)
+        )
+
+        supervisor_name = ""
+        supervisor_partner_id = ""
         if employee and employee.parent_id:
             supervisor = employee.parent_id
             if supervisor.user_id and supervisor.user_id.partner_id:
                 supervisor_name = supervisor.user_id.partner_id.name
                 supervisor_partner_id = supervisor.user_id.partner_id.id
 
-        values = {
-            'page_name': 'create_pr',
-            'requested_by': employee.name if employee else user.name,
-            'department': employee.department_id.name if employee and employee.department_id else '',
-            'supervisor': supervisor_name,
-            'supervisor_partner_id': supervisor_partner_id,
-        }
-        return request.render('custom_user_portal.portal_pr_form_template', values)
+        # Decide prefix based on type
+        prefix = "CPR" if req_type == "cash" else "PR"
 
-#getting all the products in inventory
-    @http.route('/products', auth='public', type='json', website=True)
+        last_pr = (
+            request.env["purchase.requisition"]
+            .sudo()
+            .search([("pr_type", "=", req_type)], order="id desc", limit=1)
+        )
+
+        if last_pr and last_pr.name and last_pr.name.startswith(prefix):
+            next_number = int(last_pr.name.replace(prefix, "")) + 1
+        else:
+            seq_code = (
+                "cash.purchase.requisition"
+                if req_type == "cash"
+                else "purchase.requisition"
+            )
+            seq_obj = (
+                request.env["ir.sequence"]
+                .sudo()
+                .browse(
+                    request.env.ref(
+                        f"custom_user_portal.seq_{seq_code.replace('.', '_')}"
+                    ).id
+                )
+            )
+            next_number = seq_obj.number_next if seq_obj and seq_obj.number_next else 1
+
+        pr_number_preview = f"{prefix}{str(next_number).zfill(4)}"
+
+        values = {
+            "page_name": "create_pr",
+            "requested_by": employee.name if employee else user.name,
+            "department": (
+                employee.department_id.name
+                if employee and employee.department_id
+                else ""
+            ),
+            "supervisor": supervisor_name,
+            "supervisor_partner_id": supervisor_partner_id,
+            "pr_number_preview": pr_number_preview,
+            "req_type": req_type,
+        }
+        return request.render("custom_user_portal.portal_pr_form_template", values)
+
+    # getting all the products in inventory
+    @http.route("/products", auth="public", type="json", website=True)
     def get_all_products(self, **kwargs):
         try:
-            # Search for products with sudo() to ensure access
-            products = request.env['product.template'].sudo().search([])
-            product_list = [{
-                'id': p.id,
-                'name': p.name,
-                'price': p.list_price,
-                'type': p.type,
-            } for p in products]
-            
-            # Add some default units if no products found
+            products = request.env["product.template"].sudo().search([])
+            product_list = [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "price": p.list_price,
+                    "type": p.type,
+                }
+                for p in products
+            ]
+
             if not product_list:
                 product_list = [
-                    {'id': 1, 'name': 'Pieces', 'price': 0.0, 'type': 'consu'},
-                    {'id': 2, 'name': 'Units', 'price': 0.0, 'type': 'consu'},
-                    {'id': 3, 'name': 'Boxes', 'price': 0.0, 'type': 'consu'},
-                    {'id': 4, 'name': 'Kilos', 'price': 0.0, 'type': 'consu'},
-                    {'id': 5, 'name': 'Liters', 'price': 0.0, 'type': 'consu'},
+                    {"id": 1, "name": "Pieces", "price": 0.0, "type": "consu"},
+                    {"id": 2, "name": "Units", "price": 0.0, "type": "consu"},
+                    {"id": 3, "name": "Boxes", "price": 0.0, "type": "consu"},
+                    {"id": 4, "name": "Kilos", "price": 0.0, "type": "consu"},
+                    {"id": 5, "name": "Liters", "price": 0.0, "type": "consu"},
                 ]
-            
-            return {'products': product_list}
+
+            return {"products": product_list}
         except Exception as e:
-            return {'products': [], 'error': str(e)}
+            return {"products": [], "error": str(e)}
 
-#getting the requested_by user and show all PR on portal
-    @http.route('/my/purchase-request', type='http', auth='user', website=True)
+    # getting the requested_by user and show all PR on portal
+    @http.route("/my/purchase-request", type="http", auth="user", website=True)
     def portal_pr_list(self, **kwargs):
-        employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.env.user.id)], limit=1)
+        employee = (
+            request.env["hr.employee"]
+            .sudo()
+            .search([("user_id", "=", request.env.user.id)], limit=1)
+        )
 
-        pr_records = request.env['purchase.requisition'].sudo().search([
-            ('requested_by', '=', employee.name)
-        ])
+        pr_records = (
+            request.env["purchase.requisition"]
+            .sudo()
+            .search([("requested_by", "=", employee.name)])
+        )
 
-        # Count by approval status
-        pending_count = sum(1 for pr in pr_records if pr.approval == 'pending')
-        approved_count = sum(1 for pr in pr_records if pr.approval == 'approved')
-        rejected_count = sum(1 for pr in pr_records if pr.approval == 'rejected')
+        pending_count = sum(1 for pr in pr_records if pr.approval == "pending")
+        approved_count = sum(1 for pr in pr_records if pr.approval == "approved")
+        rejected_count = sum(1 for pr in pr_records if pr.approval == "rejected")
 
-        return request.render('custom_user_portal.portal_purchase_request_list', {
-            'prs': pr_records,
-            'page_name': 'purchase_request',
-            'pending_count': pending_count,
-            'approved_count': approved_count,
-            'rejected_count': rejected_count,
-        })
-    
-#Form submission
-    @http.route('/my/purchase-request/submit', type='http', auth='user', methods=['POST'], csrf=True, website=True)
+        return request.render(
+            "custom_user_portal.portal_purchase_request_list",
+            {
+                "prs": pr_records,
+                "page_name": "purchase_request",
+                "pending_count": pending_count,
+                "approved_count": approved_count,
+                "rejected_count": rejected_count,
+            },
+        )
+
+    # budget Check
+    @http.route("/check_budget", type="http", auth="user", methods=["POST"], csrf=False)
+    def check_budget(self, **post):
+        data = json.loads(request.httprequest.data or "{}")
+        budget_type = data.get("budget_type")
+        budget_code = data.get("budget_code")
+
+        if not budget_type or not budget_code:
+            return request.make_response(
+                json.dumps(
+                    {"success": False, "message": "Missing budget type or budget code."}
+                ),
+                headers=[("Content-Type", "application/json")],
+            )
+
+        project = (
+            request.env["project.project"]
+            .sudo()
+            .search(
+                [("budget_type", "=", budget_type), ("budget_code", "=", budget_code)],
+                limit=1,
+            )
+        )
+
+        if not project:
+            return request.make_response(
+                json.dumps(
+                    {
+                        "success": False,
+                        "message": "No project found for given budget type and code.",
+                    }
+                ),
+                headers=[("Content-Type", "application/json")],
+            )
+
+        if project.budget_left <= 0:
+            return request.make_response(
+                json.dumps(
+                    {
+                        "success": False,
+                        "message": f"No budget left. Remaining: {project.budget_left}",
+                    }
+                ),
+                headers=[("Content-Type", "application/json")],
+            )
+
+        return request.make_response(
+            json.dumps(
+                {
+                    "success": True,
+                    "budget_left": project.budget_left,
+                    "message": f"Budget available: {project.budget_left}",
+                }
+            ),
+            headers=[("Content-Type", "application/json")],
+        )
+
+    # PR view
+    @http.route("/my/purchase_requisition/<int:pr_id>", auth="user", website=True)
+    def portal_purchase_requisition_detail(self, pr_id, **kwargs):
+        pr = request.env["purchase.requisition"].sudo().browse(pr_id)
+        if not pr.exists():
+            return request.not_found()
+        return request.render(
+            "custom_user_portal.portal_purchase_requisition_detail",
+            {
+                "pr": pr,
+                "page_name": "purchase_requisition_detail",
+            },
+        )
+
+    # Form submission
+    @http.route(
+        "/my/purchase-request/submit",
+        type="http",
+        auth="user",
+        methods=["POST"],
+        csrf=True,
+        website=True,
+    )
     def submit_purchase_request(self, **post):
-        employee = request.env['hr.employee'].sudo().search([('user_id', '=', request.env.user.id)], limit=1)
+        employee = (
+            request.env["hr.employee"]
+            .sudo()
+            .search([("user_id", "=", request.env.user.id)], limit=1)
+        )
 
-        requisition = request.env['purchase.requisition'].sudo().create({
-            'requested_by': post.get('requested_by'),
-            'department': post.get('department'),
-            'supervisor': post.get('supervisor'),
-            'supervisor_partner_id': int(post.get('supervisor_partner_id') or 0),
-            'required_date': post.get('required_date'),
-            'priority': post.get('priority'),
-            'budget_type': post.get('budget_type_selector'),
-            'budget_details': post.get('budget_input_field'),
-            'notes': post.get('notes'),
-        })
+        requisition = (
+            request.env["purchase.requisition"]
+            .sudo()
+            .create(
+                {
+                    "requested_by": post.get("requested_by"),
+                    "department": post.get("department"),
+                    "supervisor": post.get("supervisor"),
+                    "supervisor_partner_id": int(
+                        post.get("supervisor_partner_id") or 0
+                    ),
+                    "required_date": post.get("required_date"),
+                    "priority": post.get("priority"),
+                    "budget_type": post.get("budget_type_selector"),
+                    "budget_details": post.get("budget_input_field"),
+                    "notes": post.get("notes"),
+                    "pr_type": post.get("pr_type") or "pr",
+                }
+            )
+        )
 
         line_items = []
         index = 1
-        while f'item_description_{index}' in post:
+        while f"item_description_{index}" in post:
             item = {
-                'description': post.get(f'item_description_{index}'),
-                'type': post.get(f'item_type_{index}'),
-                'quantity': float(post.get(f'quantity_{index}') or 0),
-                'unit': post.get(f'unit_{index}'),
-                'unit_price': float(post.get(f'unit_price_{index}') or 0),
+                "description": post.get(f"item_description_{index}"),
+                "type": post.get(f"item_type_{index}"),
+                "quantity": float(post.get(f"quantity_{index}") or 0),
+                "unit": post.get(f"unit_{index}"),
+                "unit_price": float(post.get(f"unit_price_{index}") or 0),
             }
             line_items.append(item)
-            request.env['purchase.requisition.line'].sudo().create({
-                'requisition_id': requisition.id,
-                **item
-            })
+            request.env["purchase.requisition.line"].sudo().create(
+                {"requisition_id": requisition.id, **item}
+            )
             index += 1
 
         manager = employee.parent_id if employee else False
-        current_date = datetime.today().strftime('%Y-%m-%d')
+        current_date = datetime.today().strftime("%Y-%m-%d")
 
         if manager and manager.work_email:
             line_rows = ""
             subtotal = 0
             for i, item in enumerate(line_items, 1):
-                total_price = item['quantity'] * item['unit_price']
+                total_price = item["quantity"] * item["unit_price"]
                 subtotal += total_price
                 line_rows += f"""
                     <tr>
@@ -193,12 +336,13 @@ class PortalPR(http.Controller):
             """
 
             # Send email
-            request.env['mail.mail'].sudo().create({
-                'subject': subject,
-                'body_html': body_html,
-                'email_to': manager.work_email,
-                'email_from': request.env.user.email or 'noreply@yourcompany.com',
-            }).send()
+            request.env["mail.mail"].sudo().create(
+                {
+                    "subject": subject,
+                    "body_html": body_html,
+                    "email_to": manager.work_email,
+                    "email_from": request.env.user.email or "noreply@yourcompany.com",
+                }
+            ).send()
 
-        return request.redirect('/my/purchase-request?pr_submitted=1')
-
+        return request.redirect("/my/purchase-request?pr_submitted=1")

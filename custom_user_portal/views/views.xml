@@ -4,7 +4,7 @@
         <field name="model">hr.employee</field>
         <field name="inherit_id" ref="hr.view_employee_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//page[@name='hr_settings']//group[@name='active_group']//div[@class='o_row']//field[@name='user_id']" position="replace">
+            <xpath expr="//page[@name='hr_settings']//group[@name='active_group']//field[@name='user_id']" position="replace">
                 <field name="user_id"
                        string="Related User"
                        domain="[]"
@@ -13,51 +13,148 @@
             </xpath>
         </field>
     </record>
-
     <!-- status field on PO -->
-    <record id="view_purchase_order_form_inherit_status" model="ir.ui.view">
-        <field name="name">purchase.order.form.inherit.status</field>
+    <record id="view_purchase_order_form_inherit_approvals" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.approvals</field>
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
             <field name="partner_ref" position="after">
-                <!-- For Procurement Admin (≤ 10,000) -->
-                <field name="status"
-                   invisible="state != 'purchase' or amount_total &gt; 10000"
-                   groups="custom_user_portal.procurement_admin"/>
-                <!-- For Project Engineer (>10k and ≤ 100k) -->
-                <field name="status"
-                   invisible="state != 'purchase' or amount_total &lt;= 10000 or amount_total &gt; 100000"
-                   groups="custom_user_portal.project_engineer"/>
-                <!-- For Project Manager (>100k and ≤ 500k) -->
-                <field name="status"
-                   invisible="state != 'purchase' or amount_total &lt;= 100000 or amount_total &gt; 500000"
-                   groups="custom_user_portal.project_manager"/>
-                <!-- For Operations Director (>500k) -->
-                <field name="status"
-                   invisible="state != 'purchase' or amount_total &lt;= 500000"
-                   groups="custom_user_portal.operations_director"/>
-        </field>
+                <!-- Hidden computed fields for visibility logic -->
+                <field name="show_pe_approved" invisible="1"/>
+                <field name="show_pm_approved" invisible="1"/>
+                <field name="show_od_approved" invisible="1"/>
+                <field name="show_md_approved" invisible="1"/>
+                <field name="can_confirm_order" invisible="1"/>
+                <!-- Project Engineer Approval -->
+                <field name="pe_approved"
+                groups="custom_user_portal.project_engineer"
+                invisible="not show_pe_approved"/>
+                <!-- Project Manager Approval -->
+                <field name="pm_approved"
+                groups="custom_user_portal.project_manager"
+                invisible="not show_pm_approved"/>
+                <!-- Operations Director Approval -->
+                <field name="od_approved"
+                groups="custom_user_portal.operations_director"
+                invisible="not show_od_approved"/>
+                <!-- Managing Director Approval -->
+                <field name="md_approved"
+                groups="custom_user_portal.managing_director"
+                invisible="not show_md_approved"/>
+            </field>
         </field>
     </record>
-
-    <!-- RFQ untaxed Amount -->
-    <record id="view_purchase_order_form_inherit_hide_tax" model="ir.ui.view">
-        <field name="name">purchase.order.form.inherit.hide.tax</field>
+    <!-- confirm order button -->
+    <record id="purchase_order_form_inherit_hide_confirm" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.hide.confirm</field>
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//group[@class='oe_subtotal_footer']/field[@name='tax_totals']" position="replace">
-                <field name="tax_totals"
-             widget="account-tax-totals-field"
-             nolabel="1"
-             readonly="1"
-             invisible="state != 'purchase'"/>
-                <div class="d-flex"
-           invisible="state == 'purchase'">
-                    <div class="o_form_label">Untaxed Amount</div>
-                    <field name="amount_untaxed" readonly="1" class="o_form_field fw-bold"/>
-                </div>
+            <!-- Add the can_confirm_order field so it can be used in button visibility -->
+            <xpath expr="//field[@name='partner_ref']" position="after">
+                <field name="can_confirm_order" invisible="1"/>
+            </xpath>
+            <!-- Hide Confirm button with id 'bid_confirm' -->
+            <xpath expr="//header/button[@id='bid_confirm']" position="attributes">
+                <attribute name="invisible">state != 'pending' or not can_confirm_order</attribute>
+                <attribute name="groups">custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director</attribute>
+            </xpath>
+            <!-- Hide Confirm button with id 'draft_confirm' -->
+            <xpath expr="//header/button[@id='draft_confirm']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="action_reject"
+            type="object"
+            string="Reject"
+            class="btn btn-danger"
+            invisible="state != 'pending'"
+            groups="custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director"/>
+            </xpath>
+        </field>
+    </record>
+    <!-- states in purhcase order -->
+    <record id="purchase_order_form_inherit_pending" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.pending</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Extend the statusbar to show 'pending' before 'purchase' -->
+            <xpath expr="//field[@name='state']" position="attributes">
+                <attribute name="statusbar_visible">draft,sent,pending,purchase</attribute>
+            </xpath>
+        </field>
+    </record>
+    <!-- purchase order custom line view -->
+    <record id="view_purchase_order_form_inherit_custom" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.custom</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+                    <!-- Insert inside the 'other_info' group -->
+            <!-- <xpath expr="//page[@name='purchase_delivery_invoice']/group/group[@name='other_info']" position="inside">
+                <field name="vendor_ids" widget="many2many_tags" options="{'no_create': True}"/>
+            </xpath> -->
+            <!-- Hide the existing Products page -->
+            <xpath expr="//page[@name='products']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <!-- Add a new custom page after Products -->
+            <xpath expr="//notebook/page[@name='products']" position="after">
+                <page string="Products Information" name="custom_lines">
+                    <field name="custom_line_ids">
+                        <tree editable="bottom">
+                            <field name="name"/>
+                            <field name="unit"/>
+                            <field name="quantity"/>
+                            <field name="price_unit"/>
+                            <!-- <field name="subtotal" readonly="1"/> -->
+                        </tree>
+                    </field>
+                    <div class="total_amount_main">
+                        <div class="total_amount_quotation">
+                            <div class="total_padding total-amount-highlight">
+                                <label for="subtotal">SubTotal</label>
+                                <!-- Use computed field on purchase.order -->
+                                <field name="subtotal" readonly="1" class="oe_inline"/>
+                            </div>
+                            <div class="total_padding total-amount-highlight" invisible="state != 'purchase'">
+                                <label for="tax_15">15% Tax:</label>
+                                <!-- Use computed field on purchase.order -->
+                                <field name="tax_15" readonly="1" class="oe_inline"/>
+                            </div>
+                            <div class="total_padding total-amount-highlight" invisible="state != 'purchase'">
+                                <label for="grand_total">Grand Total:</label>
+                                <!-- Use computed field on purchase.order -->
+                                <field name="grand_total" readonly="1" class="oe_inline"/>
+                            </div>
+                        </div>
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    <!-- Project Field in purchase order -->
+    <record id="view_purchase_order_form_inherit_project" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.project</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="priority">16</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_ref']" position="after">
+                <field name="project_id"/>
+            </xpath>
+        </field>
+    </record>
+    <!-- RFQ and PO list view -->
+    <record id="purchase_order_inherit_tree" model="ir.ui.view">
+        <field name="name">purchase.order.inherit.purchase.order.tree</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_total']" position="replace">
+                <field name="subtotal" string="Subtotal" widget="monetary"/>
             </xpath>
         </field>
     </record>

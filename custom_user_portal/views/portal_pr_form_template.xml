@@ -6,11 +6,12 @@
                 <h3 class="text-center mb-4">Purchase Requisition (PR)</h3>
                 <form method="POST" action="/my/purchase-request/submit" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <input type="hidden" name="pr_type" t-att-value="request.params.get('type', 'pr')" />
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <p>
                                 <strong>PR Number:</strong>
-                                <span class="text-danger">(System Generated)</span>
+                                <span class="text-danger" t-esc="pr_number_preview"></span>
                             </p>
                             <div class="mb-2">
                                 <label>Requested By:</label>
@@ -99,7 +100,7 @@
                                         <span id="subtotal">0.00</span>
                                     </td>
                                 </tr>
-                                <!-- <tr>
+                                <tr class="d-none">
                                     <td colspan="6" class="text-end">
                                         <strong>VAT Amount @ 15%</strong>
                                     </td>
@@ -107,14 +108,14 @@
                                         <span id="vat">0.00</span>
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr class="d-none">
                                     <td colspan="6" class="text-end">
                                         <strong>Total Amount Including VAT</strong>
                                     </td>
                                     <td>
                                         <span id="total">0.00</span>
                                     </td>
-                                </tr> -->
+                                </tr>
                             </tfoot>
                             <!-- Add Product Button -->
                             <div class="mb-3">
@@ -213,70 +214,124 @@
                         rowIndex++;
                         const row = document.createElement("tr");
                         const unitOptions = products.map(p => `
-                    <option value="${p.name}" data-price="${p.price}" data-type="${p.type}">${p.name}</option>`).join("");
+                <option value="${p.name}" data-price="${p.price}" data-type="${p.type}">${p.name}</option>`).join("");
 
                         row.innerHTML = `
-                    <td>${rowIndex}</td>
-                    <td>
-                        <input type="text" name="item_description_${rowIndex}" class="form-control" />
-                    </td>
-                    <td>
-                        <input type="text" name="item_type_${rowIndex}" class="form-control" readonly='1'/>
-                    </td>
-                    <td>
-                        <input type="number" name="quantity_${rowIndex}" class="form-control quantity-field" />
-                    </td>
-                    <td>
-                        <select name="unit_${rowIndex}" class="form-select product-selector">
-                            <option value="">Select Unit</option>
-                                    ${unitOptions}
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" name="unit_price_${rowIndex}" class="form-control unit-price-field" readonly='1' />
-                    </td>
-                    <td>
-                        <input type="text" class="form-control-plaintext" value="0.00" readonly='1' />
-                    </td>
+                <td>${rowIndex}</td>
+                <td>
+                    <input type="text" name="item_description_${rowIndex}" class="form-control" />
+                </td>
+                <td>
+                    <!-- <input type="text" name="item_type_${rowIndex}" class="form-control"/> -->
+                    <select name="item_type_${rowIndex}" class="form-select">
+                        <option value="Select Type">Select Type</option>
+                        <option value="material">Material</option>
+                        <option value="service">Service</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="quantity_${rowIndex}" class="form-control quantity-field" />
+                </td>
+                <td>
+                    <!-- <input type="text" name="unit_${rowIndex}" class="form-control product-selector"/> -->
+                    <select name="unit_${rowIndex}" class="form-select product-selector">
+                        <option value="Select Unit">Select Unit</option>
+                        <option value="kg">Kilogram (kg)</option>
+                        <option value="g">Gram (g)</option>
+                        <option value="l">Litre (L)</option>
+                        <option value="ml">Millilitre (ml)</option>
+                        <option value="m">Metre (m)</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" step="0.01" name="unit_price_${rowIndex}" class="form-control unit-price-field" />
+                </td>
+                <td>
+                    <input type="text" class="form-control-plaintext" value="0.00" readonly='1' />
+                </td>
                         `;
 
                         tableBody.appendChild(row);
 
                         const productSelector = row.querySelector('.product-selector');
-                        const typeField = row.querySelector(`input[name="item_type_${rowIndex}"]`);
+                        const typeField = row.querySelector(`select[name="item_type_${rowIndex}"]`);
                         const priceField = row.querySelector('.unit-price-field');
                         const quantityField = row.querySelector('.quantity-field');
 
                         productSelector.addEventListener('change', function () {
-                            const selectedProduct = products.find(p => p.name === this.value);
-                            if (selectedProduct) {
-                                typeField.value = selectedProduct.type;
-                                priceField.value = selectedProduct.price;
-                            } else {
-                                typeField.value = '';
-                                priceField.value = '';
-                            }
                             recalculateTotals();
                         });
 
                         priceField.addEventListener('input', recalculateTotals);
                         quantityField.addEventListener('input', recalculateTotals);
+                        row.querySelector(`input[name="item_description_${rowIndex}"]`).focus();
                     }
 
-                    // Handle click on Add Product button
-                    addProductBtn.addEventListener("click", function () {
-                        if (products.length > 0) {
-                            addProductRow();
-                        } else {
-                            fetchProducts().then(() => {
-                                if (products.length > 0) {
-                                    addProductRow();
-                                } else {
-                                    alert("Unable to load products. Please refresh the page and try again.");
-                                }
-                            });
+                    let budgetLeft = 0;
+                    addProductBtn.addEventListener("click", async function () {
+                    const budgetType = selector.value;
+                    const budgetCode = inputField.value.trim();
+
+                    if (!budgetType || !budgetCode) {
+                        alert("Please select budget type and enter budget code first.");
+                        return;
+                    }
+                        // Check if last row (if exists) is fully filled before adding new one
+                    const lastRow = tableBody.querySelector("tr:last-child");
+                    if (lastRow) {
+                        const inputs = lastRow.querySelectorAll('input, select');
+                        for (let input of inputs) {
+                            if (input.type !== "text" &amp;&amp; input.type !== "number" &amp;&amp; input.tagName !== "SELECT") continue;
+                            if (!input.value.trim()) {
+                                alert("Please fill all fields in the current row before adding a new product.");
+                                return;
+                            }
                         }
-                    });
+                    }
+
+                    try {
+                        const response = await fetch('/check_budget', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                budget_type: budgetType,
+                                budget_code: budgetCode
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (!data.success) {
+                            alert(data.message);
+                            return;
+                        }
+                           // ✅ Show budget_left in console
+                        budgetLeft = parseFloat(data.budget_left) || 0;
+                        console.log("Budget Left:", data.budget_left);
+
+                        addProductRow();
+
+                    } catch (error) {
+                        console.error("Error checking budget:", error);
+                        alert("Error checking budget. Please try again.");
+                    }
+                });
+                function checkBudgetBeforeSubmit() {
+                    const subtotal = parseFloat(subtotalSpan.textContent) || 0;
+                    if (subtotal > budgetLeft) {
+                        alert(`Cannot submit. Subtotal (${subtotal}) exceeds budget left (${budgetLeft}).`);
+                        return false;
+                    }
+                    return true;
+                }
+                document.querySelector("form").addEventListener("submit", function (event) {
+                    if (!checkBudgetBeforeSubmit()) {
+                        event.preventDefault(); // stop submit
+                    }
+                });
 
                     setTimeout(() => {
                         fetchProducts();
@@ -286,9 +341,7 @@
                         const today = new Date().toISOString().split('T')[0];
                         document.getElementById('request_date').textContent = today;
                     });
-
             </script>
         </t>
     </template>
-
 </odoo>
