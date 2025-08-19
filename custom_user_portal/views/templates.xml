@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="portal_purchase_requisition_card" inherit_id="portal.portal_my_home">
+    <template id="portal_purchase_requisition_custom_card" inherit_id="portal.portal_my_home">
         <xpath expr="//div[@id='portal_client_category']" position="after">
             <t t-if="request.env.user.employee_id">
                 <div class="o_portal_category row g-2 mt-3" id="portal_pr_category">
