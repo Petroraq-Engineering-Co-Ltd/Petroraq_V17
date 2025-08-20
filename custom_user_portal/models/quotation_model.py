@@ -94,6 +94,15 @@ class PurchaseQuotation(models.Model):
     budget_left = fields.Float(
         string="Budget Left", related="project_id.budget_left", store=False
     )
+    status = fields.Selection(
+        [("quote", "Quote"), ("po", "Purchase")],
+        default="quote",
+        string="Status",
+    )
+
+    show_create_po_button = fields.Boolean(
+        compute="_compute_button_visibility", store=False
+    )
 
     # Lines
     line_ids = fields.One2many(
@@ -128,6 +137,20 @@ class PurchaseQuotation(models.Model):
     def _compute_is_best_badge(self):
         for rec in self:
             rec.is_best_badge = "Best" if rec.is_best else ""
+
+    @api.depends("status")
+    def _compute_button_visibility(self):
+        """Button visible only if status is 'quote' 
+           AND no PO exists in pending/purchase state."""
+        for rec in self:
+            show_button = False
+            if rec.status == "quote":
+                po_exists = self.env["purchase.order"].search_count([
+                    ("origin", "=", rec.rfq_origin),
+                    ("state", "in", ["pending", "purchase"]),
+                ])
+                show_button = po_exists == 0
+            rec.show_create_po_button = show_button
 
     # create purchase order
     def action_create_purchase_order(self):
@@ -180,6 +203,7 @@ class PurchaseQuotation(models.Model):
 
             # Create Purchase Order
             po = PurchaseOrder.sudo().create(po_vals)
+            quotation.status = "po"
 
             # Log in chatter
             quotation.message_post(
@@ -626,17 +650,33 @@ class PurchaseOrder(models.Model):
         return res
 
     def unlink(self):
-        # Before deleting, store PRs that this RFQ belongs to
-        prs_to_update = self.mapped('origin')  # origin = PR.name
+        # Before deleting, store PRs and Quotations linked to this PO
+        prs_to_update = self.mapped("origin")  # origin = PR.name
+        quotations_to_update = self.mapped("origin")  # origin also used for RFQ/Quotation
 
-        res = super(PurchaseOrder, self).unlink()  # Delete the RFQ
+        res = super(PurchaseOrder, self).unlink()  # Delete the PO
 
-        # Update status back to 'pr' for related PRs
         pr_model = self.env["purchase.requisition"]
+        quotation_model = self.env["purchase.quotation"]
+
+        # Update related PRs
         for pr_name in prs_to_update:
             pr = pr_model.search([("name", "=", pr_name)], limit=1)
             if pr:
                 pr.status = "pr"
-                pr.message_post(body=_("RFQ deleted, status reverted to PR."))
+                pr.message_post(body=_("PO deleted, status reverted to PR."))
+
+        # Update related Quotations
+        for rfq_origin in quotations_to_update:
+            quotation = quotation_model.search([("rfq_origin", "=", rfq_origin)], limit=1)
+            if quotation:
+                # Only set back if no active PO exists anymore
+                po_exists = self.env["purchase.order"].search_count([
+                    ("origin", "=", quotation.rfq_origin),
+                    ("state", "in", ["pending", "purchase"]),
+                ])
+                if po_exists == 0:
+                    quotation.status = "quote"
+                    quotation.message_post(body=_("PO deleted, status reverted to Quote."))
 
         return res

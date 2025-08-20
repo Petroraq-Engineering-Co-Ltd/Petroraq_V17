@@ -29,35 +29,17 @@ class PortalPR(http.Controller):
                 supervisor_name = supervisor.user_id.partner_id.name
                 supervisor_partner_id = supervisor.user_id.partner_id.id
 
-        # Decide prefix based on type
-        prefix = "CPR" if req_type == "cash" else "PR"
+        seq_code = "cash.purchase.requisition" if req_type == "cash" else "purchase.requisition"
+        sequence = request.env["ir.sequence"].sudo().search([("code", "=", seq_code)], limit=1)
 
-        last_pr = (
-            request.env["purchase.requisition"]
-            .sudo()
-            .search([("pr_type", "=", req_type)], order="id desc", limit=1)
-        )
-
-        if last_pr and last_pr.name and last_pr.name.startswith(prefix):
-            next_number = int(last_pr.name.replace(prefix, "")) + 1
+        if sequence:
+            # Peek the next number, do not consume it
+            prefix = sequence.prefix or ""
+            next_number = sequence.number_next_actual
+            pr_number_preview = f"{prefix}{str(next_number).zfill(sequence.padding)}"
         else:
-            seq_code = (
-                "cash.purchase.requisition"
-                if req_type == "cash"
-                else "purchase.requisition"
-            )
-            seq_obj = (
-                request.env["ir.sequence"]
-                .sudo()
-                .browse(
-                    request.env.ref(
-                        f"custom_user_portal.seq_{seq_code.replace('.', '_')}"
-                    ).id
-                )
-            )
-            next_number = seq_obj.number_next if seq_obj and seq_obj.number_next else 1
+            pr_number_preview = "New"
 
-        pr_number_preview = f"{prefix}{str(next_number).zfill(4)}"
 
         values = {
             "page_name": "create_pr",

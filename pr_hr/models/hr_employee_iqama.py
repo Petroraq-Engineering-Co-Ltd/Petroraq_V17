@@ -28,12 +28,6 @@ class HREmployeeIqama(models.Model):
     place_of_issue = fields.Char(string="Place Of Issue", tracking=True)
     expiry_date = fields.Date(string="Expiry Date", required=True, tracking=True)
     expiry_date_hijri = fields.Char(string="Expiry Date Hijri", required=False, compute="_compute_expiry_date_hijri", store=True, tracking=True)
-    duration = fields.Selection([
-        ('3_months', '3 Months'),
-        ('6_months', '6 Months'),
-        ('9_months', '9 Months'),
-        ('12_months', '12 Months'),
-        ], string="Duration", tracking=True)
     state = fields.Selection([('draft', 'Initiated'),
                               ('pending_approval', 'Pending Approval'),
                               ('approve', 'Approved'),
@@ -96,7 +90,6 @@ class HREmployeeIqama(models.Model):
                     'default_employee_id': self.employee_id.id,
                     'default_relation_id': self_relation_id.id,
                     'default_identification_id': self.identification_id,
-                    'default_duration': self.duration if self.duration else False,
                     'default_check_renews': self.check_renews,
                     'default_from_date': new_line_from_date ,
                 },
@@ -137,12 +130,6 @@ class HREmployeeIqamaLine(models.Model):
     relation_id = fields.Many2one('hr.employee.dependent.relation', string='Relation', required=True, ondelete='restrict', tracking=True)
     country_id = fields.Many2one('res.country', string='Nationality', required=False, ondelete='restrict', tracking=True)
     identification_id = fields.Char(string='Iqama No.', required=True, tracking=True)
-    duration = fields.Selection([
-        ('3_months', '3 Months'),
-        ('6_months', '6 Months'),
-        ('9_months', '9 Months'),
-        ('12_months', '12 Months'),
-    ], string="Duration", tracking=True)
     place_of_issue = fields.Char(string="Place Of Issue", tracking=True)
     from_date = fields.Date(string="From Date", required=True, tracking=True)
     to_date = fields.Date(string="To Date", required=True, tracking=True)
