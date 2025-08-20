@@ -20,13 +20,11 @@ class HrJob(models.Model):
         ("initialize", "Initialized"),
         ("review", "Reviewed"),
         ("post", "Posted"),
-        ("reject", "Rejected"),
     ], string="Status", default="initialize")
     approval_state = fields.Selection([
         ("initialize", "Initialized"),
         ("review", "Reviewed / Pending Approval"),
         ("post", "Posted"),
-        ("reject", "Rejected"),
     ], string="Status", default="initialize")
 
     # endregion [Fields]
@@ -41,8 +39,3 @@ class HrJob(models.Model):
             rec.website_published = True
             rec.job_state = "post"
             rec.approval_state = "post"
-
-    def action_reject(self):
-        for rec in self:
-            rec.job_state = "reject"
-            rec.approval_state = "reject"

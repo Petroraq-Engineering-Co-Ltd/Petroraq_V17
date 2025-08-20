@@ -28,7 +28,6 @@
         'views/hr_applicant_onboarding.xml',
         'views/hr_applicant.xml',
         'views/hr_work_permit.xml',
-        'views/hr_work_permit_approvals.xml',
         'views/bank_payment.xml',
         'data/ir_cron.xml',
     ],

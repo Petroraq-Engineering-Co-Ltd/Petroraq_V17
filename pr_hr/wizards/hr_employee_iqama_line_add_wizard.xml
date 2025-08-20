@@ -20,7 +20,6 @@
                                 <i class="fa fa-long-arrow-right mx-2 oe_edit_only" aria-label="Arrow icon" title="Arrow"/>
                                 <field name="to_date" style="width:45%%"/>
                             </div>
-                            <field name="duration"/>
                             <field name="place_of_issue"/>
                             <field name="expiry_date"/>
                             <field name="expiry_date_hijri"/>

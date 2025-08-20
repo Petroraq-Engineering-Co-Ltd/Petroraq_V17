@@ -12,7 +12,7 @@
                     <button name="generate_checklist" string="CHECKLIST" class="btn-info"
                             invisible="state != 'initialize'"
                             type="object" groups="hr_recruitment.group_hr_recruitment_user"/>
-                    <button name="action_generate_work_permit" string="WORK PERMIT &amp; IQAMA" class="btn-primary"
+                    <button name="action_generate_work_permit" string="WORK PERMIT" class="btn-primary"
                             invisible="state != 'checklist'"
                             type="object" groups="hr_recruitment.group_hr_recruitment_user"/>
                     <field name="state" widget="statusbar"/>
