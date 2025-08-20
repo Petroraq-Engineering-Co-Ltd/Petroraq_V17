@@ -8,6 +8,8 @@
       <field name="number_next">1</field>
       <field name="number_increment">1</field>
       <field name="implementation">standard</field>
+      <field name="implementation">no_gap</field>
+      <field name="use_date_range">False</field>
     </record>
         <!-- Cash PR Sequence -->
     <record id="seq_cash_purchase_requisition" model="ir.sequence">
@@ -18,6 +20,8 @@
       <field name="number_next">1</field>
       <field name="number_increment">1</field>
       <field name="implementation">standard</field>
+      <field name="implementation">no_gap</field>
+      <field name="use_date_range">False</field>
     </record>
   </data>
 </odoo>
