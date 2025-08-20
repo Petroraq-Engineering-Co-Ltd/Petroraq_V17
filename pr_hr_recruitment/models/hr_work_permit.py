@@ -18,14 +18,18 @@ class HRWorkPermit(models.Model):
     name = fields.Char(string='Name', required=True)
     employee_id = fields.Many2one("hr.employee", string="Employee", required=True)
     visa_number = fields.Char(string='Visa Number', required=True)
-    iqama_profession = fields.Char(string='Iqama Profession', required=True)
-    work_permit_fees = fields.Float(string='Work Permit Fees', required=True)
-    iqama_issuance_date = fields.Date(string='Iqama Issuance Date', required=True)
-    iqama_expiry_date = fields.Date(string='Iqama Expiry Date', required=True)
-    work_permit_expiry_date = fields.Date(string='Work Permit Expiry Date', required=True)
-    work_permit_renewal_date = fields.Date('Work Permit Renewal Date', compute="_compute_work_permit_renewal_date")
+    iqama_profession = fields.Char(string='Iqama & Work Permit Profession', required=True)
+    work_permit_fees = fields.Float(string='Iqama & Work Permit Fees', required=True)
+    iqama_issuance_date = fields.Date(string='Iqama & Work Permit Issuance Date', required=True)
+    iqama_expiry_date = fields.Date(string='Iqama & Work Permit Expiry Date', required=True)
+    work_permit_expiry_date = fields.Date(string='Iqama & Work Permit Expiry Date', required=True)
+    work_permit_renewal_date = fields.Date('Iqama & Work Permit Renewal Date')
     state = fields.Selection(
-        [('draft', 'Draft'), ('approved', 'Approved'), ('issued', 'Issued')],
+        [('draft', 'Draft'),
+         ('submit', 'Pending Approval'),
+         ('approved', 'Approved'),
+         ('issued', 'Issued'),
+         ('reject', 'Rejected')],
         string='Status', default='draft')
     payment_state = fields.Selection(
         [('draft', 'Draft'), ('pending', 'Pending'), ('paid', 'Paid')],
@@ -35,14 +39,16 @@ class HRWorkPermit(models.Model):
 
     # endregion [Fields]
 
-    @api.depends("work_permit_expiry_date")
-    def _compute_work_permit_renewal_date(self):
+    @api.omchange("work_permit_expiry_date")
+    def _set_work_permit_renewal_date(self):
         for rec in self:
             if rec.work_permit_expiry_date:
                 rec.work_permit_renewal_date = rec.work_permit_expiry_date - timedelta(
                     days=30)  # 30 days before expiry
-            else:
-                rec.work_permit_renewal_date = False
+
+    def action_submit(self):
+        for rec in self:
+            rec.state = "submit"
 
     def action_approve(self):
         for rec in self:
@@ -60,6 +66,10 @@ class HRWorkPermit(models.Model):
                 rec.applicant_onboarding_id.state = "work_permit"
             rec.state = "approved"
             rec.payment_state = "pending"
+
+    def action_reject(self):
+        for rec in self:
+            rec.state = "reject"
 
     def open_bank_payment_view_form(self):
         self.ensure_one()

@@ -25,6 +25,12 @@ class HREmployeeIqamaLineAddWizard(models.Model):
     relation_id = fields.Many2one('hr.employee.dependent.relation', string='Relation', required=True)
     country_id = fields.Many2one('res.country', string='Nationality', required=False)
     identification_id = fields.Char(string='Iqama No.', required=True)
+    duration = fields.Selection([
+        ('3_months', '3 Months'),
+        ('6_months', '6 Months'),
+        ('9_months', '9 Months'),
+        ('12_months', '12 Months'),
+    ], string="Duration", tracking=True)
     place_of_issue = fields.Char(string="Place Of Issue")
     expiry_date = fields.Date(string="Expiry Date", required=True)
     expiry_date_hijri = fields.Char(string="Expiry Date Hijri", required=False, compute="_compute_expiry_date_hijri")
@@ -94,6 +100,7 @@ class HREmployeeIqamaLineAddWizard(models.Model):
                 "employee_id": rec.employee_id.id,
                 "relation_id": rec.relation_id.id,
                 "identification_id": rec.identification_id,
+                "duration": rec.duration if rec.duration else False,
                 "place_of_issue": rec.place_of_issue if rec.place_of_issue else False,
                 "from_date": rec.from_date,
                 "to_date": rec.to_date,

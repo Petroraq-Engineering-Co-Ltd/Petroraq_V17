@@ -17,7 +17,10 @@
                         type="object" groups="hr_recruitment.group_hr_recruitment_user"
                         invisible="job_state != 'initialize'"
                 />
-                <button name="action_post" string="POST" class="btn-success" type="object"
+                <button name="action_post" string="Approve" class="btn-success" type="object"
+                        invisible="job_state != 'review'"
+                        groups="hr_recruitment.group_hr_recruitment_manager"/>
+                <button name="action_reject" string="Reject" class="btn-danger" type="object"
                         invisible="job_state != 'review'"
                         groups="hr_recruitment.group_hr_recruitment_manager"/>
                 <field name="job_state" widget="statusbar"/>
