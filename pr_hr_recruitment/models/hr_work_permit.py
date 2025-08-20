@@ -39,7 +39,7 @@ class HRWorkPermit(models.Model):
 
     # endregion [Fields]
 
-    @api.omchange("work_permit_expiry_date")
+    @api.onchange("work_permit_expiry_date")
     def _set_work_permit_renewal_date(self):
         for rec in self:
             if rec.work_permit_expiry_date:
