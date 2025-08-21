@@ -44,8 +44,8 @@ class AccountCashPayment(models.Model):
     state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Submitted"),
-        ("finance_approve", "Finance Approved"),
-        ("posted", "Posted"),
+        ("finance_approve", "Accounts Approval"),
+        ("posted", "Finance Approval"),
         ("cancel", "Cancelled"),
     ], string="Status", tracking=True, default="draft")
     accounting_manager_state = fields.Selection([
@@ -350,7 +350,8 @@ class AccountCashPaymentLine(models.Model):
     parent_state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Submitted"),
-        ("posted", "Posted"),
+        ("finance_approve", "Accounts Approval"),
+        ("posted", "Finance Approval"),
         ("cancel", "Cancelled"),
     ], related="cash_payment_id.state", store=True, string="Parent Status")
     check_cost_centers_block = fields.Boolean(compute="_compute_check_cost_centers_block")

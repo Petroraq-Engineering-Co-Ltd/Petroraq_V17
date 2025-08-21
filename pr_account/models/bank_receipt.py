@@ -44,7 +44,7 @@ class AccountBankReceipt(models.Model):
     state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Submitted"),
-        ("posted", "Posted"),
+        ("posted", "Finance Approval"),
         ("cancel", "Cancelled"),
     ], string="Status", tracking=True, default="draft")
     bank_receipt_line_ids = fields.One2many("pr.account.bank.receipt.line", "bank_receipt_id", string="Bank Receipt Lines")
@@ -277,7 +277,7 @@ class AccountBankReceiptLine(models.Model):
     parent_state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Submitted"),
-        ("posted", "Posted"),
+        ("posted", "Finance Approval"),
         ("cancel", "Cancelled"),
     ], related="bank_receipt_id.state", store=True, string="Parent Status")
     check_cost_centers_block = fields.Boolean(compute="_compute_check_cost_centers_block")
