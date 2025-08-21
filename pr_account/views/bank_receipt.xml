@@ -41,7 +41,7 @@
                             invisible="state != 'draft'"
                     />
                     <button
-                            string="POST"
+                            string="APPROVE"
                             name="action_post"
                             type="object"
                             class="oe_highlight"
