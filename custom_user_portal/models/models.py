@@ -108,6 +108,14 @@ class PurchaseRequisition(models.Model):
         approval_changed = "approval" in vals and vals["approval"] == "approved"
         res = super().write(vals)
         if approval_changed:
+            # Sync approval to corresponding Custom PR (matched by name)
+            for requisition in self:
+                custom_pr = (
+                    self.env["custom.pr"].sudo().search([("name", "=", requisition.name)], limit=1)
+                )
+                if custom_pr and custom_pr.approval != "approved":
+                    custom_pr.write({"approval": "approved"})
+
             self._notify_procurement_admins()
         return res
 
@@ -243,8 +251,13 @@ class PurchaseRequisition(models.Model):
             # Create RFQ
             rfq = PurchaseOrder.sudo().create(rfq_vals)
 
+            #sequence for Rfq
+            if rfq.state == "draft":
+                rfq.name = self.env["ir.sequence"].next_by_code("purchase.order.rfq") or "RFQ0001"
+
             # Update PR status
             pr.status = "rfq"
+            
 
             # Log in PR chatter
             pr.message_post(
@@ -261,68 +274,6 @@ class PurchaseRequisition(models.Model):
             "view_mode": "form",
             "target": "current",
         }
-
-    # def action_create_rfq(self):
-    #     """Create RFQ (purchase.order) from this PR and populate Custom Lines tab."""
-    #     PurchaseOrder = self.env["purchase.order"]
-
-    #     for pr in self:
-    #         if not pr.line_ids:
-    #             raise UserError(_("This PR has no line items to create an RFQ."))
-
-    #         matched_project = self.env["project.project"].search(
-    #             [
-    #                 ("budget_type", "=", pr.budget_type),
-    #                 ("budget_code", "=", pr.budget_details),
-    #             ],
-    #             limit=1,
-    #         )
-
-    #         # Determine partner_id (first vendor) and other vendors
-    #         partner_id = pr.vendor_ids[:1].id if pr.vendor_ids else False
-    #         other_vendors = [(6, 0, pr.vendor_ids.ids)] if pr.vendor_ids else False
-
-    #         # Create RFQ without normal order_line
-    #         rfq_vals = {
-    #             "origin": pr.name,
-    #             "partner_id": partner_id,
-    #             "vendor_ids": other_vendors,  # fill remaining vendors
-    #             "date_planned": pr.required_date,
-    #             "project_id": matched_project.id if matched_project else False,
-    #             "custom_line_ids": [],  # Populate custom tab instead
-    #         }
-
-    #         # Fill custom_line_ids from PR lines
-    #         for line in pr.line_ids:
-    #             line_vals = (
-    #                 0,
-    #                 0,
-    #                 {
-    #                     "name": line.description,
-    #                     "quantity": line.quantity,
-    #                     "unit": line.unit,
-    #                     "price_unit": line.unit_price,
-    #                 },
-    #             )
-    #             rfq_vals["custom_line_ids"].append(line_vals)
-
-    #         # Create RFQ
-    #         rfq = PurchaseOrder.sudo().create(rfq_vals)
-
-    #         # Log in PR chatter
-    #         pr.message_post(
-    #             body=_("RFQ %s created from this PR and populated in Custom Lines tab.") % rfq.name,
-    #             message_type="notification",
-    #         )
-
-    #     return {
-    #         "type": "ir.actions.act_window",
-    #         "name": _("Purchase Order"),
-    #         "res_model": "purchase.order",
-    #         "res_id": rfq.id,
-    #         "view_mode": "form",
-    #         "target": "current",
-    #     }
 
     # create cash PR
     def action_create_purchase_order(self):
@@ -407,7 +358,6 @@ class PurchaseRequisition(models.Model):
             )
 
             rec.is_supervisor = supervisor_partner_id == current_partner_id
-
 
 class PurchaseRequisitionLine(models.Model):
     _name = "purchase.requisition.line"

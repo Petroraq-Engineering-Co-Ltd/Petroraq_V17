@@ -216,18 +216,30 @@ class PurchaseQuotation(models.Model):
 
         # 🔥 Approval workflow: assign reviewers based on amount
         amount = quotation.total_incl_vat
-        group_xml_id = None
+        group_xml_ids = []
 
         if amount <= 10000:
-            group_xml_id = "custom_user_portal.project_engineer"
+            group_xml_ids = ["custom_user_portal.project_engineer"]
         elif amount <= 100000:
-            group_xml_id = "custom_user_portal.project_manager"
+            group_xml_ids = [
+                "custom_user_portal.project_engineer",
+                "custom_user_portal.project_manager",
+            ]
         elif amount <= 500000:
-            group_xml_id = "custom_user_portal.operations_director"
+            group_xml_ids = [
+                "custom_user_portal.project_engineer",
+                "custom_user_portal.project_manager",
+                "custom_user_portal.operations_director",
+            ]
         else:
-            group_xml_id = "custom_user_portal.managing_director"
+            group_xml_ids = [
+                "custom_user_portal.project_engineer",
+                "custom_user_portal.project_manager",
+                "custom_user_portal.operations_director",
+                "custom_user_portal.managing_director",
+            ]
 
-        if group_xml_id:
+        for group_xml_id in group_xml_ids:
             group = self.env.ref(group_xml_id)
             for user in group.users:
                 self.env["mail.activity"].create(
@@ -257,42 +269,22 @@ class PurchaseQuotation(models.Model):
     def create(self, vals):
         record = super(PurchaseQuotation, self).create(vals)
 
-        # Define group references
-        project_engineer_group = self.env.ref(
-            "custom_user_portal.project_engineer", raise_if_not_found=False
-        )
-        project_manager_group = self.env.ref(
-            "custom_user_portal.project_manager", raise_if_not_found=False
-        )
-        operations_director_group = self.env.ref(
-            "custom_user_portal.operations_director", raise_if_not_found=False
-        )
-        managing_director_group = self.env.ref(
-            "custom_user_portal.managing_director", raise_if_not_found=False
+        # Always target procurement_admin group
+        procurement_admin_group = self.env.ref(
+            "custom_user_portal.procurement_admin", raise_if_not_found=False
         )
 
-        target_group = None
-
-        if record.total_incl_vat <= 10000:
-            target_group = project_engineer_group
-        elif 10000 < record.total_incl_vat <= 100000:
-            target_group = project_manager_group
-        elif 100000 < record.total_incl_vat <= 500000:
-            target_group = operations_director_group
-        elif record.total_incl_vat > 500000:
-            target_group = managing_director_group
-
-        if target_group:
-            for user in target_group.users:
+        if procurement_admin_group:
+            for user in procurement_admin_group.users:
                 record.activity_schedule(
                     "mail.mail_activity_data_todo",
                     summary="New Purchase Quotation Created",
-                    note=f"A new purchase quotation (ID: {record.id}) has been created with a total amount of {record.total_incl_vat:.2f}.",
+                    note=f"A new purchase quotation (ID: {record.id}) has been created "
+                        f"with a total amount of {record.total_incl_vat:.2f}.",
                     user_id=user.id,
                 )
 
         return record
-
 
 class PurchaseQuotationLine(models.Model):
     _name = "purchase.quotation.line"
@@ -371,8 +363,20 @@ class PurchaseOrder(models.Model):
             order.tax_15 = order.subtotal * 0.15
             order.grand_total = order.subtotal + order.tax_15
 
+    # def button_confirm(self):
+    #     for order in self:
+    #         if order.state == "pending":
+    #             order.write({"state": "purchase"})
+    #         else:
+    #             super(PurchaseOrder, order).button_confirm()
+
     def button_confirm(self):
         for order in self:
+            # If the order is still using RFQ sequence, switch to PO sequence
+            if order.name.startswith("RFQ"):
+                order.name = self.env["ir.sequence"].next_by_code("purchase.order") or "P0001"
+
+            # Handle "pending" state → move to purchase
             if order.state == "pending":
                 order.write({"state": "purchase"})
             else:
@@ -390,6 +394,7 @@ class PurchaseOrder(models.Model):
                 user_id=user.id,
             )
 
+#main approval logic
     def action_approve(self):
         self.ensure_one()
         amount = self.subtotal
@@ -464,6 +469,7 @@ class PurchaseOrder(models.Model):
                 self.write({"md_approved": True})
                 self.message_post(body="Approved by Managing Director.")
 
+#confirm order button visibility
     @api.depends(
         "state",
         "pe_approved",
@@ -680,3 +686,11 @@ class PurchaseOrder(models.Model):
                     quotation.message_post(body=_("PO deleted, status reverted to Quote."))
 
         return res
+    
+    def action_confirm(self):
+        """Custom confirm: set state from pending → purchase"""
+        for order in self:
+            if order.state == "pending":
+                order.state = "purchase"
+        return True
+

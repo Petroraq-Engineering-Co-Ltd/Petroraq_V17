@@ -56,10 +56,29 @@
                 <field name="can_confirm_order" invisible="1"/>
             </xpath>
             <!-- Hide Confirm button with id 'bid_confirm' -->
-            <xpath expr="//header/button[@id='bid_confirm']" position="attributes">
+            <!-- <xpath expr="//header/button[@id='bid_confirm']" position="attributes">
                 <attribute name="invisible">state != 'pending' or not can_confirm_order</attribute>
                 <attribute name="groups">custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director</attribute>
+            </xpath> -->
+            <xpath expr="//header/button[@id='bid_confirm']" position="replace">
+                <!-- Confirm for Project Engineer (≤ 10k) -->
+                <button name="action_confirm" type="object" string="Confirm Order" class="btn btn-primary"
+        invisible="state != 'pending' or subtotal &gt; 10000 or not can_confirm_order"
+        groups="custom_user_portal.project_engineer"/>
+                <!-- Confirm for Project Manager (10k–100k) -->
+                <button name="action_confirm" type="object" string="Confirm Order" class="btn btn-primary"
+        invisible="state != 'pending' or subtotal &lt;= 10000 or subtotal &gt; 100000 or not can_confirm_order"
+        groups="custom_user_portal.project_manager"/>
+                <!-- Confirm for Operations Director (100k–500k) -->
+                <button name="action_confirm" type="object" string="Confirm Order" class="btn btn-primary"
+        invisible="state != 'pending' or subtotal &lt;= 100000 or subtotal &gt; 500000 or not can_confirm_order"
+        groups="custom_user_portal.operations_director"/>
+                <!-- Confirm for Managing Director (> 500k) -->
+                <button name="action_confirm" type="object" string="Confirm Order" class="btn btn-primary"
+        invisible="state != 'pending' or subtotal &lt;= 500000 or not can_confirm_order"
+        groups="custom_user_portal.managing_director"/>
             </xpath>
+
             <!-- Hide Confirm button with id 'draft_confirm' -->
             <xpath expr="//header/button[@id='draft_confirm']" position="attributes">
                 <attribute name="invisible">1</attribute>
@@ -92,7 +111,7 @@
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
-                    <!-- Insert inside the 'other_info' group -->
+            <!-- Insert inside the 'other_info' group -->
             <!-- <xpath expr="//page[@name='purchase_delivery_invoice']/group/group[@name='other_info']" position="inside">
                 <field name="vendor_ids" widget="many2many_tags" options="{'no_create': True}"/>
             </xpath> -->
