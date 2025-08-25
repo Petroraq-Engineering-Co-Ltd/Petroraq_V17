@@ -54,7 +54,9 @@ class CustomPR(models.Model):
         store=True,
         currency_field="currency_id",
     )
-    
+    has_valid_project = fields.Boolean(
+        string="Has Valid Project", compute="_compute_has_valid_project", store=False
+    )
     line_ids = fields.One2many('custom.pr.line', 'pr_id', string="PR Lines")
 
     @api.depends('line_ids.total_price')
@@ -144,6 +146,18 @@ class CustomPR(models.Model):
 
         return True
 
+    @api.depends('budget_type', 'budget_details')
+    def _compute_has_valid_project(self):
+        for rec in self:
+            rec.has_valid_project = False
+            if rec.budget_type and rec.budget_details:
+                project = self.env['project.project'].search([
+                    ('budget_type', '=', rec.budget_type),
+                    ('budget_code', '=', rec.budget_details),
+                ], limit=1)
+                # must exist and budget_left must be greater than 0
+                if project and project.budget_left > 0:
+                    rec.has_valid_project = True
 
 class CustomPRLine(models.Model):
     _name = 'custom.pr.line'

@@ -92,12 +92,12 @@ class PurchaseRequisition(models.Model):
         if record.name == "New":
             if record.pr_type == "cash":
                 record.name = (
-                    self.env["ir.sequence"].next_by_code("cash.purchase.requisition")
+                    self.env["ir.sequence"].sudo().next_by_code("cash.purchase.requisition")
                     or "CPR0001"
                 )
             else:
                 record.name = (
-                    self.env["ir.sequence"].next_by_code("purchase.requisition")
+                    self.env["ir.sequence"].sudo().next_by_code("purchase.requisition")
                     or "PR0001"
                 )
         record._notify_supervisor()

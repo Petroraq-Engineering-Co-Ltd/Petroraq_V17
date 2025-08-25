@@ -12,8 +12,9 @@
         'security/ir.ui.menu.xml',
         'security/ir.model.access.csv',
 
-        'views/templates.xml',
+        # 'views/templates.xml',
         'views/views.xml',
+        # 'views/quotations.xml',
 
         'data/ir_sequence_data.xml'
 

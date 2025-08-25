@@ -80,11 +80,13 @@
                 <field name="date_request"/>
                 <field name="required_date"/>
                 <field name="priority"/>
+                <field name='has_valid_project' invisible='1'/>
               </group>
             </group>
+            
             <notebook>
               <page string="Products">
-                <field name="line_ids" invisible="not budget_type or not budget_details">
+                <field name="line_ids" invisible="not has_valid_project">
                   <tree editable="bottom">
                     <field name="description"/>
                     <field name="type"/>
