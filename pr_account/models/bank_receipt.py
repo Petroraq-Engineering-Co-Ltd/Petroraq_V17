@@ -43,12 +43,7 @@ class AccountBankReceipt(models.Model):
     accounting_date = fields.Date(string="Date", required=True, tracking=True, default=fields.Date.today)
     state = fields.Selection([
         ("draft", "Draft"),
-<<<<<<< HEAD
         ("posted", "Posted"),
-=======
-        ("submit", "Submitted"),
-        ("posted", "Finance Approval"),
->>>>>>> eef4bf8 (updates account)
         ("cancel", "Cancelled"),
     ], string="Status", tracking=True, default="draft")
     bank_receipt_line_ids = fields.One2many("pr.account.bank.receipt.line", "bank_receipt_id", string="Bank Receipt Lines")
@@ -277,12 +272,7 @@ class AccountBankReceiptLine(models.Model):
     total_amount = fields.Float(string="Total Amount", tracking=True, compute="_compute_amount", store=True)
     parent_state = fields.Selection([
         ("draft", "Draft"),
-<<<<<<< HEAD
         ("posted", "Posted"),
-=======
-        ("submit", "Submitted"),
-        ("posted", "Finance Approval"),
->>>>>>> eef4bf8 (updates account)
         ("cancel", "Cancelled"),
     ], related="bank_receipt_id.state", store=True, string="Parent Status")
     check_cost_centers_block = fields.Boolean(compute="_compute_check_cost_centers_block")
