@@ -65,11 +65,12 @@
             type="object"
             string="Create PR"
             class="btn btn-primary"
-            invisible="pr_created"/>
+            invisible="approval == 'approved'"/>
           </header>
           <sheet>
             <group>
               <group>
+                <field name="approval" invisible='1'/>
                 <field name="pr_created" invisible='1'/>
                 <field name="name" invisible='1'/>
                 <field name="pr_type"/>

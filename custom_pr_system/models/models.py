@@ -99,63 +99,73 @@ class CustomPR(models.Model):
             })
 
         return res
-    
-    def action_create_pr(self):
-        for rec in self:
-            # Check if PR has at least one line
-            if not rec.supervisor or not rec.department:
-                raise ValidationError("Supervisor and Department must be filled before creating PR.")
-            
-            if not rec.line_ids:
-                raise ValidationError("You must add at least one line before submitting the Purchase Requisition.")
 
-            # Check if related project exists
-            project = self.env['project.project'].search([('budget_code', '=', rec.budget_details)], limit=1)
-            if not project:
-                raise ValidationError("No project found for the selected cost center / budget details.")
-            
-            # Budget validation
-            if rec.total_excl_vat > project.budget_left:
-                raise ValidationError(
-                    f"You are out of budget! Total amount ({rec.total_excl_vat}) exceeds remaining budget ({project.budget_left})."
-                )
-            
-            # Create Purchase Requisition
-            requisition = self.env['purchase.requisition'].create({
-                'name': rec.name,
-                'date_request': rec.date_request,
-                'requested_by': rec.requested_by,
-                'department': rec.department,
-                'supervisor': rec.supervisor,
-                'supervisor_partner_id': rec.supervisor_partner_id,
-                'required_date': rec.required_date,
-                'priority': rec.priority,
-                'budget_type': rec.budget_type,
-                'budget_details': rec.budget_details,
-                'notes': rec.notes,
-                'comments': rec.comments,
-                'pr_type': 'cash' if rec.pr_type == 'cash' else 'pr',
+    def action_create_pr(self):
+        self.ensure_one()
+        rec = self
+
+        # Check required fields
+        if not rec.supervisor or not rec.department:
+            raise ValidationError("Supervisor and Department must be filled before creating PR.")
+        if not rec.line_ids:
+            raise ValidationError("You must add at least one line before submitting the Purchase Requisition.")
+
+        # Check if related project exists
+        project = self.env['project.project'].search([('budget_code', '=', rec.budget_details)], limit=1)
+        if not project:
+            raise ValidationError("No project found for the selected cost center / budget details.")
+        
+        # Budget validation
+        if rec.total_excl_vat > project.budget_left:
+            raise ValidationError(
+                f"You are out of budget! Total amount ({rec.total_excl_vat}) exceeds remaining budget ({project.budget_left})."
+            )
+
+        # Validation: prevent 0 amount PR
+        if rec.total_excl_vat == 0.00:
+            raise ValidationError("Add Unit Price First.")
+
+        # Check if an old PR exists for this record name
+        existing_pr = self.env['purchase.requisition'].sudo().search([('name', '=', rec.name)], limit=1)
+        if existing_pr:
+            existing_pr.sudo().unlink()
+
+        # Create new Purchase Requisition
+        requisition = self.env['purchase.requisition'].sudo().create({
+            'name': rec.name,
+            'date_request': rec.date_request,
+            'requested_by': rec.requested_by,
+            'department': rec.department,
+            'supervisor': rec.supervisor,
+            'supervisor_partner_id': rec.supervisor_partner_id,
+            'required_date': rec.required_date,
+            'priority': rec.priority,
+            'budget_type': rec.budget_type,
+            'budget_details': rec.budget_details,
+            'notes': rec.notes,
+            'comments': rec.comments,
+            'pr_type': 'cash' if rec.pr_type == 'cash' else 'pr',
+        })
+
+        # Create Lines
+        for line in rec.line_ids:
+            self.env['purchase.requisition.line'].sudo().create({
+                'requisition_id': requisition.id,
+                'description': line.description,
+                'type': line.type,
+                'quantity': line.quantity,
+                'unit': line.unit,
+                'unit_price': line.unit_price,
             })
 
-            # Create Lines
-            for line in rec.line_ids:
-                self.env['purchase.requisition.line'].create({
-                    'requisition_id': requisition.id,
-                    'description': line.description,
-                    'type': line.type,
-                    'quantity': line.quantity,
-                    'unit': line.unit,
-                    'unit_price': line.unit_price,
-                })
-            
-            rec.pr_created = True
+        rec.pr_created = True
 
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': "Success",
-                'message': "PR is created",
+                'message': f"PR {requisition.name} has been created (old one replaced if existed).",
                 'sticky': False,
             }
         }
