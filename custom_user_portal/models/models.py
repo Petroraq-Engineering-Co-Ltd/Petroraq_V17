@@ -358,6 +358,13 @@ class PurchaseRequisition(models.Model):
             )
 
             rec.is_supervisor = supervisor_partner_id == current_partner_id
+    
+    def unlink(self):
+        for rec in self:
+            custom_pr = self.env['custom.pr'].search([('name', '=', rec.name)], limit=1)
+            if custom_pr:
+                custom_pr.pr_created = False
+        return super(PurchaseRequisition, self).unlink()
 
 class PurchaseRequisitionLine(models.Model):
     _name = "purchase.requisition.line"

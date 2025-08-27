@@ -14,12 +14,12 @@ class CustomPR(models.Model):
     )
     requested_by = fields.Char(string="Requested By")
     requested_user_id = fields.Many2one('res.users', string="Requested User", readonly=True)
-    date_request = fields.Datetime(string="Request Date", default=fields.Datetime.now)
+    date_request = fields.Datetime(string="Request Date", default=fields.Datetime.now, required=True, readonly=True)
     description = fields.Text(string="Description")
     department = fields.Char(string="Department")
     supervisor = fields.Char(string="Supervisor")
     supervisor_partner_id = fields.Char(string="supervisor_partner_id")
-    required_date = fields.Date(string="Required Date")
+    required_date = fields.Date(string="Required Date", required=True)
     priority = fields.Selection(
         [("low", "Low"), ("medium", "Medium"), ("high", "High"), ("urgent", "Urgent")],
         string="Priority",
@@ -57,6 +57,7 @@ class CustomPR(models.Model):
     has_valid_project = fields.Boolean(
         string="Has Valid Project", compute="_compute_has_valid_project", store=False
     )
+    pr_created = fields.Boolean(string="PR Created", default=False)
     line_ids = fields.One2many('custom.pr.line', 'pr_id', string="PR Lines")
 
     @api.depends('line_ids.total_price')
@@ -102,6 +103,9 @@ class CustomPR(models.Model):
     def action_create_pr(self):
         for rec in self:
             # Check if PR has at least one line
+            if not rec.supervisor or not rec.department:
+                raise ValidationError("Supervisor and Department must be filled before creating PR.")
+            
             if not rec.line_ids:
                 raise ValidationError("You must add at least one line before submitting the Purchase Requisition.")
 
@@ -143,8 +147,18 @@ class CustomPR(models.Model):
                     'unit': line.unit,
                     'unit_price': line.unit_price,
                 })
+            
+            rec.pr_created = True
 
-        return True
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': "Success",
+                'message': "PR is created",
+                'sticky': False,
+            }
+        }
 
     @api.depends('budget_type', 'budget_details')
     def _compute_has_valid_project(self):

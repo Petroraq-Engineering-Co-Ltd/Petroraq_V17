@@ -5,7 +5,6 @@
         <field name="code">custom.pr</field>
         <field name="prefix">NPR</field>
         <field name="padding">4</field>
-        <field name="number_next">1</field>
         <field name="implementation">no_gap</field>
     </record>
 
@@ -15,7 +14,6 @@
         <field name="code">custom.cash.pr</field>
         <field name="prefix">NCPR</field>
         <field name="padding">4</field>
-        <field name="number_next">1</field>
         <field name="implementation">no_gap</field>
     </record>
 </odoo>
