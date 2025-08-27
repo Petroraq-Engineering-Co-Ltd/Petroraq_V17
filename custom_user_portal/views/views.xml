@@ -79,7 +79,6 @@
         invisible="state != 'pending' or subtotal &lt;= 500000 or not can_confirm_order"
         groups="custom_user_portal.managing_director"/>
             </xpath>
-
             <!-- Hide Confirm button with id 'draft_confirm' -->
             <xpath expr="//header/button[@id='draft_confirm']" position="attributes">
                 <attribute name="invisible">1</attribute>
@@ -167,40 +166,36 @@
             </xpath>
         </field>
     </record>
-    <!-- RFQ and PO list view -->
-<!-- RFQ and PO KPI list view -->
-<record id="purchase_order_inherit_tree_kpis" model="ir.ui.view">
-    <field name="name">purchase.order.inherit.purchase.order.tree.kpis</field>
-    <field name="model">purchase.order</field>
-    <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
-    <field name="arch" type="xml">
-        <xpath expr="//field[@name='amount_total']" position="replace">
-            <field name="subtotal" string="Subtotal" widget="monetary"/>
-        </xpath>
-    </field>
-</record>
-
-<!-- Main PO list view -->
-<record id="purchase_order_inherit_tree_main" model="ir.ui.view">
-    <field name="name">purchase.order.inherit.purchase.order.tree.main</field>
-    <field name="model">purchase.order</field>
-    <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
-    <field name="arch" type="xml">
-        <xpath expr="//field[@name='amount_total']" position="replace">
-            <field name="grand_total" string="Total" widget="monetary"/>
-        </xpath>
-    </field>
-</record>
-
-<record id="purchase_order_inherit_tree_activity" model="ir.ui.view">
-    <field name="name">purchase.order.inherit.tree.activity</field>
-    <field name="model">purchase.order</field>
-    <field name="inherit_id" ref="purchase.purchase_order_tree"/>
-    <field name="arch" type="xml">
-        <xpath expr="//field[@name='amount_total']" position="replace">
-            <field name="subtotal" string="Total" widget="monetary"/>
-        </xpath>
-    </field>
-</record>
-
+    <!-- RFQ and PO KPI list view -->
+    <record id="purchase_order_inherit_tree_kpis" model="ir.ui.view">
+        <field name="name">purchase.order.inherit.purchase.order.tree.kpis</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_total' and @widget='monetary']" position="replace">
+                <field name="subtotal" string="Subtotal" widget="monetary"/>
+            </xpath>
+        </field>
+    </record>
+    <!-- Main PO list view -->
+    <record id="purchase_order_inherit_tree_main" model="ir.ui.view">
+        <field name="name">purchase.order.inherit.purchase.order.tree.main</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_total' and @widget='monetary']" position="replace">
+                <field name="grand_total" string="Total" widget="monetary"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="purchase_order_inherit_tree_activity" model="ir.ui.view">
+        <field name="name">purchase.order.inherit.tree.activity</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='amount_total' and @widget='monetary']" position="replace">
+                <field name="subtotal" string="Total" widget="monetary"/>
+            </xpath>
+        </field>
+    </record>
 </odoo>
