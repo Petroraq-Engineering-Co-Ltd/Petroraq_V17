@@ -1,5 +1,5 @@
 <odoo>
-  <data noupdate="1">
+  <!-- <data noupdate="1">
 
     <record id="contacts.menu_contacts" model="ir.ui.menu">
         <field name="groups_id" eval="[(6,0,[ref('base.group_user')])]"/>
@@ -9,5 +9,5 @@
         <field name="groups_id" eval="[(6,0,[ref('base.group_user')])]"/>
     </record>
 
-  </data>
+  </data> -->
 </odoo>

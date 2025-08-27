@@ -105,18 +105,28 @@ class PurchaseRequisition(models.Model):
 
     # Checking when PR is approved
     def write(self, vals):
-        approval_changed = "approval" in vals and vals["approval"] == "approved"
+        approval_changed = "approval" in vals
         res = super().write(vals)
-        if approval_changed:
-            # Sync approval to corresponding Custom PR (matched by name)
-            for requisition in self:
-                custom_pr = (
-                    self.env["custom.pr"].sudo().search([("name", "=", requisition.name)], limit=1)
-                )
-                if custom_pr and custom_pr.approval != "approved":
-                    custom_pr.write({"approval": "approved"})
 
-            self._notify_procurement_admins()
+        if approval_changed:
+            for requisition in self:
+                new_approval = vals.get("approval", requisition.approval)
+                custom_pr = self.env["custom.pr"].sudo().search(
+                    [("name", "=", requisition.name)], limit=1
+                )
+
+                if custom_pr:
+                    # Sync approval → state
+                    if new_approval == "approved" and custom_pr.approval != "approved":
+                        custom_pr.write({"approval": "approved", "approval": "approved"})
+                        self._notify_procurement_admins()
+
+                    elif new_approval == "rejected" and custom_pr.approval != "rejected":
+                        custom_pr.write({"approval": "rejected", "approval": "rejected"})
+
+                    elif new_approval == "pending" and custom_pr.approval != "pending":
+                        custom_pr.write({"approval": "pending", "approval": "pending"})
+
         return res
 
     @api.depends("line_ids.total_price")
@@ -358,13 +368,6 @@ class PurchaseRequisition(models.Model):
             )
 
             rec.is_supervisor = supervisor_partner_id == current_partner_id
-    
-    def unlink(self):
-        for rec in self:
-            custom_pr = self.env['custom.pr'].search([('name', '=', rec.name)], limit=1)
-            if custom_pr:
-                custom_pr.pr_created = False
-        return super(PurchaseRequisition, self).unlink()
 
 class PurchaseRequisitionLine(models.Model):
     _name = "purchase.requisition.line"
