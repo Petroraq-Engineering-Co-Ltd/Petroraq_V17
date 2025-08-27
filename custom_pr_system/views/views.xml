@@ -64,11 +64,13 @@
             <button name="action_create_pr"
             type="object"
             string="Create PR"
-            class="btn btn-primary"/>
+            class="btn btn-primary"
+            invisible="pr_created"/>
           </header>
           <sheet>
             <group>
               <group>
+                <field name="pr_created" invisible='1'/>
                 <field name="name" invisible='1'/>
                 <field name="pr_type"/>
                 <field name="requested_by" readonly='1'/>
@@ -83,7 +85,6 @@
                 <field name='has_valid_project' invisible='1'/>
               </group>
             </group>
-            
             <notebook>
               <page string="Products">
                 <field name="line_ids" invisible="not has_valid_project">

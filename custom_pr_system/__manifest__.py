@@ -20,6 +20,6 @@
 
     ],
     'installable': True,
-    'application': True,  # important to show in Apps
+    'application': False,
     'auto_install': False,
 }
