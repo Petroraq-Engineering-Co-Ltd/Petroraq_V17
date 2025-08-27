@@ -11,6 +11,11 @@
                 <field name="cs_employee_id" options="{'no_create_edit': True, 'no_create': True}" optional="show" readonly="check_cost_centers_block == False"/>
             </xpath>
 
+            <xpath expr="//header" position="inside">
+                <field name="iqama_line_id" invisible="1"/>
+                <field name="insurance_line_id" invisible="1"/>
+            </xpath>
+
         </field>
     </record>
 </odoo>
