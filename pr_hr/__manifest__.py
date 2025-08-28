@@ -36,10 +36,13 @@
         'views/res_country.xml',
         'views/hr_employee_iqama.xml',
         'views/hr_employee_iqama_line.xml',
+        'views/hr_employee_medical_insurance.xml',
+        'views/hr_employee_medical_insurance_line.xml',
         # 'views/hr_employee_signature.xml',
         'views/res_config_settings.xml',
         'wizards/hr_employee_iqama_expiry_check_wizard.xml',
         'wizards/hr_employee_iqama_line_add_wizard.xml',
+        'wizards/hr_employee_insurance_line_add_wizard.xml',
 
     ],
     # only loaded in demonstration mode

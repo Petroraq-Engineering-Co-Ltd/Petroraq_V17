@@ -84,7 +84,7 @@
               name="Leave Requests"
               parent="de_hr_workspace.menu_my_employee_approvals"
               action="action_my_leave_request_approvals"
-              sequence="20"
+              sequence="30"
               groups="de_hr_workspace.group_hr_employee_approvals"/>
 
 </odoo>

@@ -8,5 +8,12 @@
                   web_icon="de_hr_workspace,static/img/approvals.png"
         />
 
+        <menuitem id="hr_approvals_menu_root"
+              parent="de_hr_workspace.menu_my_employee_approvals"
+              name="HR"
+              sequence="10"
+              groups="de_hr_workspace.group_hr_employee_approvals,hr.group_hr_manager"
+        />
+
     </data>
 </odoo>

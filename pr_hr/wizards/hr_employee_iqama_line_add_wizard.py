@@ -89,7 +89,7 @@ class HREmployeeIqamaLineAddWizard(models.Model):
         for rec in self:
             if rec.amount == 0:
                 raise ValidationError("Amount Of IQAMA Should Be Greater Than 0 (Zero)")
-            iqama_line_id = self.env["hr.employee.iqama.line"].create({
+            iqama_line_id = self.env["hr.employee.iqama.line"].sudo().create({
                 "iqama_id": rec.iqama_id.id,
                 "employee_id": rec.employee_id.id,
                 "relation_id": rec.relation_id.id,
@@ -104,14 +104,9 @@ class HREmployeeIqamaLineAddWizard(models.Model):
                 "age": rec.age if rec.age else False,
                 "phone": rec.phone if rec.phone else False,
                 "amount": rec.amount if rec.amount else False,
+                "state": "initiated",
             })
-            self_relation_id = self.env.ref("pr_hr.employee_dependent_relationship_self")
-            if rec.relation_id.id == self_relation_id.id:
-                rec.iqama_id.sudo().write({
-                    "expiry_date": rec.expiry_date,
-                    "expiry_date_hijri": rec.expiry_date_hijri,
-                    "place_of_issue": rec.place_of_issue if rec.place_of_issue else False,
-                })
+            return iqama_line_id
 
 
 

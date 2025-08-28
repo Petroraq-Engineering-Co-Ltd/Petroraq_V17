@@ -25,7 +25,11 @@
         'report/vat_ledger_report.xml',
         'report/custom_dynamic_ledger_report.xml',
         'report/account_ledger_xlsx_report.xml',
-        'report/vat_ledger_xlsx_report.xml'
+        'report/vat_ledger_xlsx_report.xml',
+        'views/bank_payment.xml',
+        'views/bank_receipt.xml',
+        'views/cash_payment.xml',
+        'views/cash_receipt.xml',
     ],
     # 'assets': {
     #         'web.assets_backend': [

@@ -19,7 +19,7 @@
     'version': '17.0.1.0.0',
     "license": "LGPL-3",
     # any module necessary for this one to work correctly
-    'depends': ['account_accountant'],
+    'depends': ['account_accountant', 'account_reports'],
 
     # always loaded
     'data': [

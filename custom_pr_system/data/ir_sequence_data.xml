@@ -1,0 +1,19 @@
+<odoo>
+    <!-- Sequence for Normal PR -->
+    <record id="seq_custom_pr" model="ir.sequence">
+        <field name="name">Custom Purchase Requisition</field>
+        <field name="code">custom.pr</field>
+        <field name="prefix">NPR</field>
+        <field name="padding">4</field>
+        <field name="implementation">no_gap</field>
+    </record>
+
+    <!-- Sequence for Cash PR -->
+    <record id="seq_custom_cash_pr" model="ir.sequence">
+        <field name="name">Custom Cash Purchase Requisition</field>
+        <field name="code">custom.cash.pr</field>
+        <field name="prefix">NCPR</field>
+        <field name="padding">4</field>
+        <field name="implementation">no_gap</field>
+    </record>
+</odoo>

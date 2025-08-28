@@ -86,7 +86,7 @@
               name="Shortage Requests"
               parent="de_hr_workspace.menu_my_employee_approvals"
               action="action_my_shortage_request_approvals"
-              sequence="10"
+              sequence="20"
               groups="de_hr_workspace.group_hr_employee_approvals"/>
 
 </odoo>
