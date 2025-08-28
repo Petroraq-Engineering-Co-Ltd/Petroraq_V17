@@ -12,4 +12,3 @@ from . import cash_payment
 from . import bank_receipt
 from . import bank_payment
 from . import account_analytic_line
-from . import account_general_ledger

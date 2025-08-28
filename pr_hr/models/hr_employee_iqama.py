@@ -28,11 +28,7 @@ class HREmployeeIqama(models.Model):
     place_of_issue = fields.Char(string="Place Of Issue", tracking=True)
     expiry_date = fields.Date(string="Expiry Date", required=True, tracking=True)
     expiry_date_hijri = fields.Char(string="Expiry Date Hijri", required=False, compute="_compute_expiry_date_hijri", store=True, tracking=True)
-    state = fields.Selection([('draft', 'Initiated'),
-                              ('pending_approval', 'Pending Approval'),
-                              ('approve', 'Approved'),
-                              ('valid', 'Valid'),
-                              ('expired', 'Expired')], default="draft", required=False, string="Status", tracking=True)
+    state = fields.Selection([('draft', 'Draft'),('valid', 'Valid'), ('expired', 'Expired')], default="draft", required=True, string="Status", tracking=True)
     active = fields.Boolean(string="Active", default=True, tracking=True)
     iqama_line_ids = fields.One2many("hr.employee.iqama.line", "iqama_id", string="Iqama Lines")
     check_renews = fields.Boolean(compute="_compute_check_renews")
@@ -62,13 +58,6 @@ class HREmployeeIqama(models.Model):
             else:
                 dependent.expiry_date_hijri = False
 
-    def action_request_approval(self):
-        for rec in self:
-            rec.state = "pending_approval"
-
-    def action_approve(self):
-        for rec in self:
-            rec.state = "approve"
 
     def action_renew(self):
         """
@@ -89,7 +78,6 @@ class HREmployeeIqama(models.Model):
                     'default_iqama_id': self.id,
                     'default_employee_id': self.employee_id.id,
                     'default_relation_id': self_relation_id.id,
-                    'default_identification_id': self.identification_id,
                     'default_check_renews': self.check_renews,
                     'default_from_date': new_line_from_date ,
                 },
@@ -139,8 +127,8 @@ class HREmployeeIqamaLine(models.Model):
     age = fields.Float(string='Age', digits=(16, 2), compute='get_employee_age', tracking=True)
     phone = fields.Char(string='Phone', tracking=True)
     amount = fields.Float(string="Amount", required=True)
-    state = fields.Selection([('initiated', 'Initiated'), ('in_progress', 'In Progress'), ('issued', 'Issued')],
-                                     default="initiated", required=False, string="Request Status", tracking=True)
+    state = fields.Selection([('draft', 'Draft'), ('valid', 'Valid'), ('expired', 'Expired')],
+                             required=True, string="Status", tracking=True, default="draft")
     check_self_relation = fields.Boolean(compute="_compute_check_self_relation")
 
     # endregion [Fields]
@@ -218,19 +206,6 @@ class HREmployeeIqamaLine(models.Model):
         for rec in self:
             if rec.iqama_id:
                 rec.identification_id = rec.iqama_id.identification_id.id if rec.iqama_id.identification_id else False
-
-    @api.constrains("state")
-    def _check_state(self):
-        for line in self:
-            if line.state == "issued":
-                self_relation_id = self.env.ref("pr_hr.employee_dependent_relationship_self")
-                if line.relation_id.id == self_relation_id.id:
-                    line.iqama_id.sudo().write({
-                        "expiry_date": line.expiry_date,
-                        "expiry_date_hijri": line.expiry_date_hijri,
-                        "place_of_issue": line.place_of_issue if line.place_of_issue else False,
-                    })
-                line.iqama_id.state = "valid"
 
     def action_post(self):
         for rec in self:

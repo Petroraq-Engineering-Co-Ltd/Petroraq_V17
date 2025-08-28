@@ -14,15 +14,15 @@ class AccountCashPayment(models.Model):
 
     # region [Fields]
 
-    name = fields.Char(string="Number", required=False, tracking=True)
+    name = fields.Char(string="Cash Payment", required=False, tracking=True)
     company_id = fields.Many2one('res.company', string='Company', index=True, required=True,
                                  default=lambda self: self.env.company,
                                  tracking=True)
     currency_id = fields.Many2one('res.currency', string='Currency', related='company_id.currency_id', store=True,
                                   tracking=True)
-    account_id = fields.Many2one('account.account', string='Code', required=True,
+    account_id = fields.Many2one('account.account', string='Acc. Code', required=True,
                                  ondelete='restrict', tracking=True, index=True,)
-    account_name = fields.Char(string='Name', related="account_id.name", store=True,
+    account_name = fields.Char(string='Acc. Name', related="account_id.name", store=True,
                                      tracking=True)
     # === Analytic fields === #
     analytic_line_ids = fields.One2many(
@@ -44,14 +44,12 @@ class AccountCashPayment(models.Model):
     state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Submitted"),
-        ("finance_approve", "Accounts Approval"),
-        ("posted", "Finance Approval"),
+        ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], string="Status", tracking=True, default="draft")
     accounting_manager_state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Pending Approval"),
-        ("finance_approve", "Pending Approval"),
         ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], string="Acc Man Status", tracking=True, default="draft")
@@ -142,11 +140,6 @@ class AccountCashPayment(models.Model):
             rec.state = "submit"
             rec.accounting_manager_state = "submit"
 
-    def action_finance_approve(self):
-        for bank_payment in self:
-            bank_payment.state = "finance_approve"
-            bank_payment.accounting_manager_state = "finance_approve"
-
     def action_post(self):
         for cash_payment in self:
             if cash_payment.cash_payment_line_ids:
@@ -163,8 +156,8 @@ class AccountCashPayment(models.Model):
                     line_ids = [
                         move_line.create(cash_payment.prepare_credit_move_line_vals(move_id=journal_entry_id))
                     ]
-                    for line in cash_payment.cash_payment_line_ids.filtered(lambda l: l.state == "approve"):
-                    # for line in cash_payment.cash_payment_line_ids:
+                    # for line in cash_payment.cash_payment_line_ids.filtered(lambda l: l.state == "approve"):
+                    for line in cash_payment.cash_payment_line_ids:
                         line_ids.append(move_line.create(line.prepare_debit_move_line_vals(move_id=journal_entry_id)))
                         if line.tax_id:
                             line_ids.append(move_line.create(line.prepare_debit_tax_move_line_vals(move_id=journal_entry_id)))
@@ -198,8 +191,8 @@ class AccountCashPayment(models.Model):
                 "account_id": cash_payment.account_id.id,
                 "name": cash_payment.description if cash_payment.description else f"Credit For {cash_payment.name}",
                 "analytic_distribution": cash_payment.analytic_distribution if cash_payment.analytic_distribution else False,
-                # "credit": cash_payment.total_amount,
-                "credit": cash_payment.approved_amount,
+                "credit": cash_payment.total_amount,
+                # "credit": cash_payment.approved_amount,
                 "debit": 0.0,
             }
             if move_id:
@@ -318,9 +311,9 @@ class AccountCashPaymentLine(models.Model):
     cs_project_id = fields.Many2one("account.analytic.account", string="Project",
                                     domain="[('analytic_plan_type', '=', 'project')]", tracking=True)
     partner_id = fields.Many2one('res.partner', string='Project Manager', tracking=True)
-    account_id = fields.Many2one('account.account', string='Code', required=True,
+    account_id = fields.Many2one('account.account', string='Acc. Code', required=True,
                                  ondelete='restrict', tracking=True, index=True)
-    account_name = fields.Char(string='Name', related="account_id.name", store=True,
+    account_name = fields.Char(string='Acc. Name', related="account_id.name", store=True,
                                tracking=True)
     description = fields.Text(string="Description", required=False, tracking=True)
     reference_number = fields.Char(string="Reference Number", required=False)
@@ -350,8 +343,7 @@ class AccountCashPaymentLine(models.Model):
     parent_state = fields.Selection([
         ("draft", "Draft"),
         ("submit", "Submitted"),
-        ("finance_approve", "Accounts Approval"),
-        ("posted", "Finance Approval"),
+        ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], related="cash_payment_id.state", store=True, string="Parent Status")
     check_cost_centers_block = fields.Boolean(compute="_compute_check_cost_centers_block")

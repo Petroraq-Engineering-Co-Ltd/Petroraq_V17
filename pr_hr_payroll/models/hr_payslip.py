@@ -15,7 +15,6 @@ class HrPayslip(models.Model):
         for payslip in self:
             contract_id = payslip.employee_id.contract_id
             gosi_salary_rule = self.env.ref("pr_hr_payroll.hr_salary_rule_saudi_gosi")
-            gosi_allow_salary_rule = self.env.ref("pr_hr_payroll.hr_salary_rule_saudi_gosi_allow")
             if payslip.employee_id.country_id and payslip.employee_id.country_id.is_homeland and contract_id.is_automatic_gosi:
                 start_of_month = date_utils.start_of(payslip.date_to, 'month')
                 end_of_month = date_utils.end_of(payslip.date_to, 'month')
@@ -76,18 +75,17 @@ class HrPayslip(models.Model):
                         elif payslip.date_from >= contract_id.date_start:
                             total_amount += rule_total_amount
                 if gosi_salary_rule:
-                    gosi_line_amount = total_amount * 1 * .02
                     line_vals.append({
-                        'sequence': gosi_allow_salary_rule.sequence,
-                        'code': gosi_allow_salary_rule.code,
-                        'name': gosi_allow_salary_rule.name,
-                        'salary_rule_id': gosi_allow_salary_rule.id,
+                        'sequence': gosi_salary_rule.sequence,
+                        'code': gosi_salary_rule.code,
+                        'name': gosi_salary_rule.name,
+                        'salary_rule_id': gosi_salary_rule.id,
                         'contract_id': payslip.employee_id.contract_id.id,
                         'employee_id': payslip.employee_id.id,
-                        'amount': (gosi_line_amount if gosi_line_amount <= 900 else 900) or 0,
+                        'amount': (total_amount * 1 * .02) or 0,
                         'quantity': 1,
                         'rate': 100,
-                        'total': (gosi_line_amount if gosi_line_amount <= 900 else 900) or 0,
+                        'total': (total_amount * 1 * .02) or 0,
                         'slip_id': payslip.id,
                     })
 
@@ -98,10 +96,10 @@ class HrPayslip(models.Model):
                         'salary_rule_id': gosi_salary_rule.id,
                         'contract_id': payslip.employee_id.contract_id.id,
                         'employee_id': payslip.employee_id.id,
-                        'amount': (gosi_line_amount * -1 if gosi_line_amount <= 900 else -900) or 0,
+                        'amount': (total_amount * -1 * .02) or 0,
                         'quantity': 1,
                         'rate': 100,
-                        'total': (gosi_line_amount * -1 if gosi_line_amount <= 900 else -900) or 0,
+                        'total': (total_amount * -1 * .02) or 0,
                         'slip_id': payslip.id,
                     })
 
@@ -241,21 +239,13 @@ class HrPayslip(models.Model):
 
     def prepare_payslip_entry_line_vals(self, line):
         if (line.total != 0 or line.total > 0 or line.total < 0) and line.salary_rule_id.code not in ["GROSS", "NET"]:
-            analytic_distribution = {
-                str(self.employee_id.department_cost_center_id.id): 100,
-                str(self.employee_id.section_cost_center_id.id): 100,
-                str(self.employee_id.project_cost_center_id.id): 100,
-                str(self.employee_id.employee_cost_center_id.id): 100,
-                                     }
-            # if line.slip_id.employee_id.department_id and line.slip_id.employee_id.department_id.department_cost_center_id:
-            #     analytic_distribution.update({str(line.slip_id.employee_id.department_id.department_cost_center_id.id): 100})
+            analytic_distribution = {str(self.employee_id.employee_cost_center_id.id): 100}
+            if line.slip_id.employee_id.department_id and line.slip_id.employee_id.department_id.department_cost_center_id:
+                analytic_distribution.update({str(line.slip_id.employee_id.department_id.department_cost_center_id.id): 100})
             line_vals = {
                 "account_id": line.salary_rule_id.account_id.id,
                 "analytic_distribution": analytic_distribution,
             }
-            # Project Manager
-            if self.employee_id.project_cost_center_id and self.employee_id.project_cost_center_id.project_partner_id:
-                line_vals.update({"partner_id": self.employee_id.project_cost_center_id.project_partner_id.id})
             if line.salary_rule_id.code in ["LOAN", "ADVALL"]:
                 line_vals["account_id"] = line.slip_id.employee_id.employee_account_id.id
 

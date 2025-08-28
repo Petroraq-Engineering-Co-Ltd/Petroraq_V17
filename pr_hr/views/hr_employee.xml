@@ -7,9 +7,9 @@
             <field name="model">hr.employee</field>
             <field name="inherit_id" ref="hr.view_employee_form"/>
             <field name="arch" type="xml">
-<!--                <field name="tz" position="replace">-->
-<!--                    <field name="tz" readonly="state != 'new'"/>-->
-<!--                </field>-->
+                <field name="tz" position="replace">
+                    <field name="tz" readonly="state != 'new'"/>
+                </field>
                 <xpath expr="//header" position="inside">
                     <button name="set_in_service" string="SET IN SERVICE" type="object" groups="hr.group_hr_user"
                             invisible="state != 'new'" class="oe_highlight"/>
@@ -23,10 +23,6 @@
                     <button type="object" name="open_related_iqamas" class="oe_stat_button" icon="fa-address-card">
                         <field name="iqama_count" widget="statinfo" string="IQAMA"
                                help="Show IQAMAS linked to this Employee"/>
-                    </button>
-                    <button type="object" name="open_related_insurance" class="oe_stat_button" icon="fa-hospital-o">
-                        <field name="insurance_count" widget="statinfo" string="Medical Insurance"
-                               help="Show Medical Insurance linked to this Employee"/>
                     </button>
                 </div>
 
@@ -62,7 +58,7 @@
 
                 <h1 position="before">
                     <h1>
-                        <field name="code" style="color: green;" nolabel="1"
+                        <field name="code" readonly="state != 'new'" style="color: green;" nolabel="1"
                                placeholder="Employee's Code"
                                class="oe_inline"/>
                     </h1>
@@ -81,14 +77,14 @@
                     <attribute name="force_save">1</attribute>
                 </field>
                 <field name="department_id" position="before">
-                    <field name="job_id" options="{'no_create': True, 'no_edit': True}"
+                    <field name="job_id" readonly="state != 'new'" options="{'no_create': True, 'no_edit': True}"
                            placeholder="Job Position"/>
                 </field>
 
                 <field name="parent_id" position="after">
                     <field name="has_subrules" invisible="1"/>
                     <field name="subrule_department_domain" invisible="1"/>
-                    <field name="subrule_department_id"
+                    <field name="subrule_department_id" readonly="state != 'new'"
                            options="{'no_create': True, 'no_edit': True}"
                            domain="subrule_department_domain"
                            invisible="has_subrules == False"/>
@@ -107,26 +103,142 @@
 
                 <field name="category_ids" position="replace"/>
 
-<!--                <field name="mobile_phone" position="replace">-->
-<!--                    <field name="mobile_phone" widget="phone" readonly="state != 'new'"/>-->
-<!--                </field>-->
-
-<!--                <field name="work_phone" position="replace">-->
-<!--                    <field name="work_phone" widget="phone" readonly="state != 'new'"/>-->
-<!--                </field>-->
-
-                <field name="work_email" position="replace">
-                    <field name="work_email" widget="email" required="0"/>
+                <field name="mobile_phone" position="replace">
+                    <field name="mobile_phone" widget="phone" readonly="state != 'new'"/>
                 </field>
 
+                <field name="work_phone" position="replace">
+                    <field name="work_phone" widget="phone" readonly="state != 'new'"/>
+                </field>
 
+                <field name="work_email" position="replace">
+                    <field name="work_email" widget="email" required="0" readonly="state != 'new'"/>
+                </field>
+
+                <field name="coach_id" position="attributes">
+                    <attribute name="readonly">state != 'new'</attribute>
+                </field>
+
+                <field name="address_id" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="private_email" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="private_phone" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="bank_account_id" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="lang" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="km_home_work" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="marital" position="attributes">
+                    <field name="readonly">{state != 'new'</field>
+                </field>
+
+                <field name="spouse_complete_name" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="spouse_birthdate" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="children" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="emergency_contact" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="emergency_phone" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="certificate" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="study_field" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="study_school" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="visa_no" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="permit_no" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="visa_expire" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="work_permit_expiration_date" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="has_work_permit" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
 
                 <field name="country_id" position="attributes">
+                    <attribute name="readonly">state != 'new'</attribute>
                     <attribute name="required">0</attribute>
                 </field>
 
                 <field name="identification_id" position="attributes">
+                    <attribute name="readonly">state != 'new'</attribute>
                     <attribute name="required">0</attribute>
+                </field>
+
+                <field name="passport_id" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="gender" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="birthday" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="place_of_birth" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="country_of_birth" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="user_id" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="pin" position="attributes">
+                    <field name="readonly">state != 'new'</field>
+                </field>
+
+                <field name="barcode" position="attributes">
+                    <field name="readonly">state != 'new'</field>
                 </field>
 
                 <xpath expr="//page[@name='personal_information']/group/group[2]/field[@name='children']"

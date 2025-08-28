@@ -6,7 +6,7 @@
         <field name="model">pr.account.bank.payment</field>
         <field name="arch" type="xml">
             <search string="Bank Payments">
-                <field name="name" string="Number"/>
+                <field name="name" string="Bank Payment"/>
                 <field name="account_id" string="Account"/>
                 <field name="company_id" string="Company"/>
                 <separator/>
@@ -35,13 +35,14 @@
                 <field name="analytic_precision" invisible="1"/>
                 <field name="check_process_state" invisible="1"/>
                 <header>
-                    <button
-                            string="SUBMIT"
-                            name="action_submit"
-                            type="object"
-                            class="btn-teal-custom"
-                            invisible="state != 'draft'"
-                    />
+<!--                    <button-->
+<!--                            string="SUBMIT"-->
+<!--                            name="action_submit"-->
+<!--                            type="object"-->
+<!--                            class="btn-teal-custom"-->
+<!--                            invisible="state != 'draft'"-->
+<!--                            groups="account.group_account_manager"-->
+<!--                    />-->
 <!--                    <button-->
 <!--                            string="SET IN PROCESS"-->
 <!--                            name="action_approve_process"-->
@@ -51,27 +52,11 @@
 <!--                            groups="pr_account.custom_group_accounting_manager"-->
 <!--                    />-->
                     <button
-                            string="Approve"
-                            name="action_finance_approve"
-                            type="object"
-                            class="btn-teal-custom"
-                            invisible="state != 'submit' or check_process_state == False"
-                            groups="account.group_account_manager"
-                    />
-                    <button
-                            string="Final Approve"
+                            string="POST"
                             name="action_post"
                             type="object"
                             class="btn-teal-custom"
-                            invisible="state != 'finance_approve' or check_process_state == False"
-                            groups="pr_account.custom_group_accounting_manager"
-                    />
-                    <button
-                            string="REJECT"
-                            name="action_draft"
-                            type="object"
-                            class="btn-danger"
-                            invisible="state not in ['draft', 'finance_approve'] or check_process_state == False"
+                            invisible="state != 'draft'"
                             groups="pr_account.custom_group_accounting_manager,account.group_account_manager"
                     />
 <!--                    invisible="state != 'submit' or check_process_state == False"-->
@@ -83,21 +68,21 @@
                             invisible="state != 'posted'"
                             groups="account.group_account_manager"
                     />
-<!--                    <button-->
-<!--                            string="CANCEL"-->
-<!--                            name="action_cancel"-->
-<!--                            type="object"-->
-<!--                            class="btn-secondary"-->
-<!--                            invisible="state != 'draft'"-->
-<!--                            groups="account.group_account_manager"-->
-<!--                    />-->
-<!--                    <button-->
-<!--                            string="RESET ALL TO DRAFT"-->
-<!--                            name="make_all_draft"-->
-<!--                            type="object"-->
-<!--                            class="btn-danger"-->
-<!--                            groups="base.group_no_one"-->
-<!--                    />-->
+                    <button
+                            string="CANCEL"
+                            name="action_cancel"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'draft'"
+                            groups="account.group_account_manager"
+                    />
+                    <button
+                            string="RESET ALL TO DRAFT"
+                            name="make_all_draft"
+                            type="object"
+                            class="btn-danger"
+                            groups="base.group_no_one"
+                    />
                     <field name="state" widget="statusbar"/>
                     <field name="accounting_manager_state" invisible="1"/>
                 </header>
@@ -121,22 +106,22 @@
                     <widget name="web_ribbon" title="CANCELLED" bg_color="bg-danger"
                             invisible="state != 'cancel'"/>
                     <div class="oe_title">
-                        <label for="name" string="Number"/>
+                        <label for="name" string="Payment Number #"/>
                         <h1>
                             <field name="name" style="color: purple;" readonly="1"/>
                         </h1>
                     </div>
                     <group>
                         <group>
-                            <label for="account_id" string="Code"/>
+                            <label for="account_id" string="Acc. Code"/>
                             <div class="o_row">
                                 <field name="account_id" readonly="state != 'draft'" width="25%"
                                        class="oe_inline"
                                        options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
                                        style="font-size:16;font-weight:bold;color:green;" string="Code"/>
-                                <span><strong>Name</strong></span>
+                                <span><strong>Acc. Name</strong></span>
                                 <field name="account_name" width="40%"
-                                       class="oe_inline" string="Name" style="font-size:16;font-weight:bold;color:green;"/>
+                                       class="oe_inline" string="Acc. Name" style="font-size:16;font-weight:bold;color:green;"/>
                             </div>
                             <field name="analytic_line_ids" invisible="1"/>
                             <field name="analytic_distribution" widget="analytic_distribution" readonly="state != 'draft'"
@@ -160,12 +145,12 @@
                         <div style="display: inline-block !important; margin-right: 50px !important;" invisible="state != 'submit' or check_process_state == True" groups="pr_account.custom_group_accounting_manager">
                             <button name="action_approve_remaining_lines" string="APPROVE REMAINING LINES" type="object" class="btn-success"
                                 invisible="state != 'submit' or check_process_state == True"
-                                groups="account.group_account_manager,pr_account.custom_group_accounting_manager" style="display: inline-block !important; width: 400px !important; margin-right: 50px !important;"/>
+                                groups="pr_account.custom_group_accounting_manager" style="display: inline-block !important; width: 400px !important; margin-right: 50px !important;"/>
                         </div>
                         <div style="display: inline-block !important; width: 400px !important;" invisible="state != 'submit' or check_process_state == True" groups="pr_account.custom_group_accounting_manager">
                             <button name="action_reject_remaining_lines" string="REJECT REMAINING LINES" type="object" class="btn-danger"
                                 invisible="state != 'submit' or check_process_state == True"
-                                groups="account.group_account_manager,pr_account.custom_group_accounting_manager" style="display: inline-block !important; width: 400px !important;"/>
+                                groups="pr_account.custom_group_accounting_manager" style="display: inline-block !important; width: 400px !important;"/>
                         </div>
 
                     </div>
@@ -195,8 +180,8 @@
                                    decoration-success="state ==  'approve'"
                                    decoration-danger="state ==  'reject'"
                             />
-                            <button name="action_line_approve" string="APPROVE" type="object" class="btn-success" groups="account.group_account_manager,pr_account.custom_group_accounting_manager" invisible="state != 'submit'"/>
-                            <button name="action_line_reject" string="REJECT" type="object" class="btn-danger" groups="account.group_account_manager,pr_account.custom_group_accounting_manager" invisible="state != 'submit'"/>
+                            <button name="action_line_approve" string="APPROVE" type="object" class="btn-success" groups="pr_account.custom_group_accounting_manager" invisible="state != 'submit'"/>
+                            <button name="action_line_reject" string="REJECT" type="object" class="btn-danger" groups="pr_account.custom_group_accounting_manager" invisible="state != 'submit'"/>
                             <field name="parent_state" column_invisible="True"/>
                         </tree>
                     </field>
@@ -215,7 +200,7 @@
         <field name="model">pr.account.bank.payment</field>
         <field name="arch" type="xml">
             <tree string="Bank Payments">
-                <field name="name" decoration-warning="1" string="Number"/>
+                <field name="name" decoration-warning="1" string="Payment Number #"/>
                 <field name="account_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
                 <field name="account_name"/>
                 <field name="description"/>

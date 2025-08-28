@@ -195,7 +195,7 @@ class AccountLedger(models.TransientModel):
             if self.env.user.has_group('account.group_account_manager') or self.env.user.has_group('pr_account.custom_group_accounting_manager'):
                 rec.account_id_domain = "[]"
             else:
-                rec.account_id_domain = "[('id', 'not in', [748, 749, 1132])]"
+                rec.account_id_domain = "[('id', '!=', 749)]"
 
     @api.constrains("main_head", "assets_main_head", "liability_main_head", "current_assets_category",
                   "fixed_assets_category", "other_assets_category",
