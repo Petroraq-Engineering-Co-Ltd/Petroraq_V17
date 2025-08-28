@@ -10,22 +10,6 @@
                 <attribute name="groups">account.group_account_manager</attribute>
             </xpath>
 
-            <xpath expr="//header/button[@name='action_post'][2]" position="attributes">
-                <attribute name="groups">account.group_account_manager</attribute>
-            </xpath>
-
-            <xpath expr="//header/button[@name='action_post']" position="after">
-                <button name="button_cancel" type="object" string="REJECT"
-                        class="btn-danger"
-                        invisible="move_type != 'entry' or state != 'draft'"
-                        groups="account.group_account_manager"
-                />
-            </xpath>
-
-            <xpath expr="//header/button[@name='button_draft']" position="attributes">
-                <attribute name="groups">account.group_account_manager</attribute>
-            </xpath>
-
             <xpath expr="//header" position="inside">
                 <field name="journal_voucher_view" invisible="1"/>
             </xpath>

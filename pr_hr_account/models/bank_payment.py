@@ -1,24 +1,6 @@
 from odoo import api, fields, models, _
 
 
-class AccountBankPayment(models.Model):
-    # region [Initial]
-    _inherit = 'pr.account.bank.payment'
-    # endregion [Initial]
-
-    iqama_line_id = fields.Many2one("hr.employee.iqama.line", string="Iqama", tracking=True, readonly=True)
-    insurance_line_id = fields.Many2one("hr.employee.medical.insurance.line", string="Insurance", tracking=True, readonly=True)
-
-    def action_post(self):
-        res = super().action_post()
-        for rec in self:
-            if rec.iqama_line_id:
-                rec.iqama_line_id.sudo().state = "issued"
-            if rec.insurance_line_id:
-                rec.insurance_line_id.sudo().state = "issued"
-        return res
-
-
 class AccountBankPaymentLine(models.Model):
     # region [Initial]
     _inherit = 'pr.account.bank.payment.line'

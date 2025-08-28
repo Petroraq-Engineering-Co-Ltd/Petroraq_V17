@@ -6,7 +6,7 @@
         <field name="model">pr.account.cash.receipt</field>
         <field name="arch" type="xml">
             <search string="Cash Receipts">
-                <field name="name" string="Number"/>
+                <field name="name" string="Cash Receipt"/>
                 <field name="account_id" string="Account"/>
                 <field name="company_id" string="Company"/>
                 <separator/>
@@ -35,26 +35,11 @@
                 <field name="analytic_precision" invisible="1"/>
                 <header>
                     <button
-                            string="SUBMIT"
-                            name="action_submit"
-                            type="object"
-                            class="btn-teal-custom"
-                            invisible="state != 'draft'"
-                    />
-                    <button
-                            string="APPROVE"
+                            string="POST"
                             name="action_post"
                             type="object"
                             class="oe_highlight"
-                            invisible="state != 'submit'"
-                            groups="account.group_account_manager"
-                    />
-                    <button
-                            string="REJECT"
-                            name="action_draft"
-                            type="object"
-                            class="btn-danger"
-                            invisible="state != 'submit'"
+                            invisible="state != 'draft'"
                             groups="account.group_account_manager"
                     />
                     <button
@@ -65,21 +50,21 @@
                             invisible="state != 'posted'"
                             groups="account.group_account_manager"
                     />
-<!--                    <button-->
-<!--                            string="CANCEL"-->
-<!--                            name="action_cancel"-->
-<!--                            type="object"-->
-<!--                            class="btn-secondary"-->
-<!--                            invisible="state != 'draft'"-->
-<!--                            groups="account.group_account_manager"-->
-<!--                    />-->
-<!--                    <button-->
-<!--                            string="RESET ALL TO DRAFT"-->
-<!--                            name="make_all_draft"-->
-<!--                            type="object"-->
-<!--                            class="btn-danger"-->
-<!--                            groups="base.group_no_one"-->
-<!--                    />-->
+                    <button
+                            string="CANCEL"
+                            name="action_cancel"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'draft'"
+                            groups="account.group_account_manager"
+                    />
+                    <button
+                            string="RESET ALL TO DRAFT"
+                            name="make_all_draft"
+                            type="object"
+                            class="btn-danger"
+                            groups="base.group_no_one"
+                    />
                     <field name="state" widget="statusbar"/>
                 </header>
 
@@ -102,22 +87,22 @@
                     <widget name="web_ribbon" title="CANCELLED" bg_color="bg-danger"
                             invisible="state != 'cancel'"/>
                     <div class="oe_title">
-                        <label for="name" string="Number"/>
+                        <label for="name" string="Receipt Number #"/>
                         <h1>
                             <field name="name" style="color: purple;" readonly="1"/>
                         </h1>
                     </div>
                     <group>
                         <group>
-                            <label for="account_id" string="Code"/>
+                            <label for="account_id" string="Acc. Code"/>
                             <div class="o_row">
                                 <field name="account_id" readonly="state != 'draft'" width="25%"
                                        class="oe_inline"
                                        options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
                                        style="font-size:16;font-weight:bold;color:green;" string="Code"/>
-                                <span><strong>Name</strong></span>
+                                <span><strong>Acc. Name</strong></span>
                                 <field name="account_name" width="40%"
-                                       class="oe_inline" string="Name" style="font-size:16;font-weight:bold;color:green;"/>
+                                       class="oe_inline" string="Acc. Name" style="font-size:16;font-weight:bold;color:green;"/>
                             </div>
                             <field name="analytic_line_ids" invisible="1"/>
                             <field name="analytic_distribution" widget="analytic_distribution" readonly="state != 'draft'"
@@ -173,7 +158,7 @@
         <field name="model">pr.account.cash.receipt</field>
         <field name="arch" type="xml">
             <tree string="Cash Receipts">
-                <field name="name" decoration-warning="1" string="Number"/>
+                <field name="name" decoration-warning="1" string="Receipt Number #"/>
                 <field name="account_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
                 <field name="account_name"/>
                 <field name="description"/>
@@ -183,7 +168,6 @@
                 <field name="total_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'draft'"
-                       decoration-warning="state == 'submit'"
                        decoration-success="state == 'posted'"
                        decoration-danger="state == 'cancel'"/>
             </tree>

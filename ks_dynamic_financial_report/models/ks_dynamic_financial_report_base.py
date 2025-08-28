@@ -1975,13 +1975,6 @@ class ks_dynamic_financial_base(models.Model):
                                       'company_currency_id': ks_company_currency_id.id} for x in
                              ks_account_ids}  # base for accounts to display
 
-            # Add Restrict To Accountant (Our Custom)
-            if self.env.user.has_group('account.group_account_manager') or self.env.user.has_group(
-                    'pr_account.custom_group_accounting_manager'):
-                ks_account_ids = ks_account_ids
-            else:
-                ks_account_ids = ks_account_ids.filtered(lambda a: a.id not in [748, 749, 1132])
-
             ks_account_type_id = self.env['account.account'].search(
                 [('account_type', '=', 'equity_unaffected')], limit=1)
             ks_initial_account_code = []

@@ -8,10 +8,10 @@
             <sheet position="before">
                 <header>
                     <field name="locked" invisible="1"/>
-<!--                    <button name="set_locked" string="LOCK" type="object" class="oe_highlight"-->
-<!--                            invisible="locked == True"/>-->
-<!--                    <button name="set_unlocked" string="UNLOCK" type="object" class="btn-danger" style="color=red"-->
-<!--                            invisible="locked == False"/>-->
+                    <button name="set_locked" string="LOCK" type="object" class="oe_highlight"
+                            invisible="locked == True"/>
+                    <button name="set_unlocked" string="UNLOCK" type="object" class="btn-danger" style="color=red"
+                            invisible="locked == False"/>
                 </header>
             </sheet>
 
@@ -28,32 +28,32 @@
             </div>
 
             <div name="recruitment_target" position="after">
-                <field name="position_count"/>
-                <field name="nationality_ids" widget="many2many_tags"
+                <field name="position_count" readonly="locked == True"/>
+                <field name="nationality_ids" widget="many2many_tags" readonly="locked == True"
                        options="{'no_create':True, 'no_quick_create':True}"/>
             </div>
 
             <field name="department_id" position="attributes">
-<!--                <attribute name="readonly">locked == True</attribute>-->
+                <attribute name="readonly">locked == True</attribute>
                 <attribute name="options">{'no_create': True}</attribute>
             </field>
 
             <field name="contract_type_id" position="attributes">
-<!--                <attribute name="readonly">locked == True</attribute>-->
+                <attribute name="readonly">locked == True</attribute>
                 <attribute name="options">{'no_create': True}</attribute>
             </field>
 
-<!--            <xpath expr="//group[@name='recruitment']/field[@name='company_id']" position="attributes">-->
-<!--                <attribute name="readonly">locked == True</attribute>-->
-<!--            </xpath>-->
+            <xpath expr="//group[@name='recruitment']/field[@name='company_id']" position="attributes">
+                <attribute name="readonly">locked == True</attribute>
+            </xpath>
 
-<!--            <field name="no_of_recruitment" position="attributes">-->
-<!--                <attribute name="readonly">locked == True</attribute>-->
-<!--            </field>-->
+            <field name="no_of_recruitment" position="attributes">
+                <attribute name="readonly">locked == True</attribute>
+            </field>
 
-<!--            <field name="description" position="attributes">-->
-<!--                <attribute name="readonly">locked == True</attribute>-->
-<!--            </field>-->
+            <field name="description" position="attributes">
+                <attribute name="readonly">locked == True</attribute>
+            </field>
 
             <group name="recruitment2" position="attributes">
                 <attribute name="string">Job Type</attribute>
