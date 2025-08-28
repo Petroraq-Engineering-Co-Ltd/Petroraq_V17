@@ -166,35 +166,34 @@
             </xpath>
         </field>
     </record>
-    <!-- RFQ and PO KPI list view -->
-    <record id="purchase_order_inherit_tree_kpis" model="ir.ui.view">
-        <field name="name">purchase.order.inherit.purchase.order.tree.kpis</field>
+    <!-- RFQ and PO list view -->
+    <record id="purchase_order_inherit_tree" model="ir.ui.view">
+        <field name="name">purchase.order.inherit.purchase.order.tree</field>
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='amount_total' and @widget='monetary']" position="replace">
+            <xpath expr="//tree/field[@name='amount_total']" position="replace">
                 <field name="subtotal" string="Subtotal" widget="monetary"/>
             </xpath>
         </field>
     </record>
-    <!-- Main PO list view -->
-    <record id="purchase_order_inherit_tree_main" model="ir.ui.view">
-        <field name="name">purchase.order.inherit.purchase.order.tree.main</field>
+    <record id="purchase_order_inherit_tree_custom" model="ir.ui.view">
+        <field name="name">purchase.order.inherit.purchase.order.tree.custom</field>
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='amount_total' and @widget='monetary']" position="replace">
+            <xpath expr="//tree/field[@name='amount_total']" position="replace">
                 <field name="grand_total" string="Total" widget="monetary"/>
             </xpath>
         </field>
     </record>
     <record id="purchase_order_inherit_tree_activity" model="ir.ui.view">
-        <field name="name">purchase.order.inherit.tree.activity</field>
+        <field name="name">purchase.order.inherit.purchase.order.tree.activity</field>
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='amount_total' and @widget='monetary']" position="replace">
-                <field name="subtotal" string="Total" widget="monetary"/>
+            <xpath expr="//tree/field[@name='amount_total']" position="replace">
+                <field name="grand_total" string="Total" widget="monetary"/>
             </xpath>
         </field>
     </record>
