@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Report Action -->
+    <!-- <record id="action_report_petroraq_draft_invoice" model="ir.actions.report">
+        <field name="name">PetroRaq Draft Invoice</field>
+        <field name="model">purchase.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">custom_pr_system.report_petroraq_draft_invoice</field>
+        <field name="report_file">custom_pr_system.report_petroraq_draft_invoice</field>
+        <field name="print_report_name">'PetroRaq_Draft_Invoice_' + object.name</field>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_type">report</field>
+    </record>
+    <template id="report_petroraq_draft_invoice">
+                <t t-call="web.external_layout">
+            <main>
+                <div class="page" style="margin-top:0; padding-top:0;">
+                    <div style="text-align:right;">
+                        <p>requested by</p>
+                        <p>department</p>
+                        <p>testing</p>
+                    </div>
+                    <table style="width:100%; margin:20px 0;">
+                        <tr >
+                            <td style="text-align:left; width:33%;">
+                                <h5 style="margin:0;">Draft Invoice</h5>
+                            </td>
+                            <td style="text-align:center; width:34%; ">
+                                <h5 style="margin:0;">
+                                    <t t-esc="docs[0].name"/>
+                                </h5>
+                            </td>
+                            <td style="text-align:right; width:33%;">
+                                <h5 style="margin:0;">مسودة فاتورة</h5>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="table table-sm" style="width:100%; margin-bottom:20px;">
+                        <tbody>
+                            <tr>
+                                <td>Request Date:</td>
+                                <td>2025</td>
+                                <td>تاريخ الطلب :</td>
+                            </tr>
+                            <tr>
+                                <td>Required Date:</td>
+                                <td>required_date</td>
+                                <td>تاريخ المطلوب :</td>
+                            </tr>
+                            <tr>
+                                <td>Budget Type:</td>
+                                <td>budget_type</td>
+                                <td>نوع الميزانية :</td>
+                            </tr>
+                            <tr>
+                                <td>Cost Center:</td>
+                                <td>budget_details</td>
+                                <td>مركز التكلفة :</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-sm table-bordered" style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th>Description /
+                                    <span>الوصف</span>
+                                </th>
+                                <th>Quantity /
+                                    <span>الكمية</span>
+                                </th>
+                                <th>Taxes /
+                                    <span>اﻟﻀﺮاﺋﺐ</span>
+                                </th>
+                                <th>Unit Price /
+                                    <span>سعر الوحدة</span>
+                                </th>
+                                <th>Vat Amount /
+                                    <span>ﻗﻴﻤﺔ اﻟﻀﺮﻳﺒﺔ </span>
+                                </th>
+                                <th>Total /
+                                    <span>الإجمالي</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="docs[0].custom_line_ids" t-as="l">
+                                <tr>
+                                    <td>
+                                        <t t-esc="l.name"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="l.quantity"/>
+                                    </td>
+                                    <td>
+                                        <span>15%</span>
+                                    </td>
+                                    <td>
+                                        <t t-esc="l.price_unit"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="l.subtotal"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <table style="width:100%; margin-top:10px;">
+                        <tr>
+                            <td style="text-align:right;">Subtotal /
+                                <span>الاجمالي الفرعي</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <t t-esc="docs[0].subtotal"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:right;">VAT 15% /
+                                <span>الضريبة</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <t t-esc="docs[0].tax_15"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:right;">Total /
+                                <span>المجموع</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <t t-esc="docs[0].grand_total"/>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="margin-top:30px;">
+                        <p>
+                        Payment Reference:
+                            <t t-esc="docs[0].name"/>
+                            <span>: رقم إشارة الدفع</span>
+                        </p>
+                        <p>Payment terms: Immediate Payment</p>
+                    </div>
+                </div>
+            </main>
+        </t>
+    </template> -->
+</odoo>

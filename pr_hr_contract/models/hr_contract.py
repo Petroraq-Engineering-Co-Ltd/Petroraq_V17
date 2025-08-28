@@ -294,6 +294,10 @@ class HrContract(models.Model):
         for contract in self:
             contract.write({'state': 'open'})
 
+    def action_set_to_draft(self):
+        for contract in self:
+            contract.write({'state': 'draft'})
+
     def _action_send_mail(self, subject, body, user_id, author_id, activity_to_do=False):
         '''
         Method To Send Mail And Activity TO Do
