@@ -694,3 +694,13 @@ class PurchaseOrder(models.Model):
                 order.state = "purchase"
         return True
 
+    def create_grn_ses(self):
+        return {
+            'name': 'Add Remarks for GRN/SES',
+            'type': 'ir.actions.act_window',
+            'res_model': 'grn.ses.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'active_id': self.id},
+        }
+
