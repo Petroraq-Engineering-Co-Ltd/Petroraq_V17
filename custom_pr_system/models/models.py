@@ -170,6 +170,7 @@ class CustomPR(models.Model):
             }
         }
 
+
     @api.depends('budget_type', 'budget_details')
     def _compute_has_valid_project(self):
         for rec in self:

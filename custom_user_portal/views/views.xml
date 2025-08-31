@@ -26,22 +26,6 @@
                 <field name="show_od_approved" invisible="1"/>
                 <field name="show_md_approved" invisible="1"/>
                 <field name="can_confirm_order" invisible="1"/>
-                <!-- Project Engineer Approval -->
-                <field name="pe_approved"
-                groups="custom_user_portal.project_engineer"
-                invisible="not show_pe_approved"/>
-                <!-- Project Manager Approval -->
-                <field name="pm_approved"
-                groups="custom_user_portal.project_manager"
-                invisible="not show_pm_approved"/>
-                <!-- Operations Director Approval -->
-                <field name="od_approved"
-                groups="custom_user_portal.operations_director"
-                invisible="not show_od_approved"/>
-                <!-- Managing Director Approval -->
-                <field name="md_approved"
-                groups="custom_user_portal.managing_director"
-                invisible="not show_md_approved"/>
             </field>
         </field>
     </record>
@@ -57,10 +41,6 @@
                 <field name="can_confirm_order" invisible="1"/>
             </xpath>
             <!-- Hide Confirm button with id 'bid_confirm' -->
-            <!-- <xpath expr="//header/button[@id='bid_confirm']" position="attributes">
-                <attribute name="invisible">state != 'pending' or not can_confirm_order</attribute>
-                <attribute name="groups">custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director</attribute>
-            </xpath> -->
             <xpath expr="//header/button[@id='bid_confirm']" position="replace">
                 <!-- Confirm for Project Engineer (≤ 10k) -->
                 <button name="action_confirm" type="object" string="Confirm Order" class="btn btn-primary"
@@ -111,10 +91,6 @@
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
-            <!-- Insert inside the 'other_info' group -->
-            <!-- <xpath expr="//page[@name='purchase_delivery_invoice']/group/group[@name='other_info']" position="inside">
-                <field name="vendor_ids" widget="many2many_tags" options="{'no_create': True}"/>
-            </xpath> -->
             <!-- Hide the existing Products page -->
             <xpath expr="//page[@name='products']" position="attributes">
                 <attribute name="invisible">1</attribute>
@@ -194,6 +170,52 @@
         <field name="arch" type="xml">
             <xpath expr="//tree/field[@name='amount_total']" position="replace">
                 <field name="grand_total" string="Total" widget="monetary"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_purchase_order_form_inherit_grn_ses" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.grn.ses</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <button name="create_grn_ses"
+                        string="Create GRN/SES"
+                        type="object"
+                        invisible="state != 'purchase'"/>
+            </header>
+        </field>
+    </record>
+    <record id="purchase_order_form_inherit_approve_button" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.approve.button</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_approve"
+            type="object"
+            string="Approve"
+            class="btn btn-primary"
+            invisible="state != 'pending' or not show_pe_approved or can_confirm_order"
+            groups="custom_user_portal.project_engineer"/>
+                <button name="action_approve"
+            type="object"
+            string="Approve"
+            class="btn btn-primary"
+            invisible="state != 'pending' or not show_pm_approved or subtotal &lt;= 10000 or can_confirm_order"
+            groups="custom_user_portal.project_manager"/>
+                <button name="action_approve"
+            type="object"
+            string="Approve"
+            class="btn btn-primary"
+            invisible="state != 'pending' or not show_od_approved or subtotal &lt;= 100000 or can_confirm_order"
+            groups="custom_user_portal.operations_director"/>
+                <button name="action_approve"
+            type="object"
+            string="Approve"
+            class="btn btn-primary"
+            invisible="state != 'pending' or not show_md_approved or subtotal &lt;= 500000 or can_confirm_order"
+            groups="custom_user_portal.managing_director"/>
             </xpath>
         </field>
     </record>

@@ -5,7 +5,7 @@
     'summary': 'Module for PR and Quotation submission',
     'description': 'Allows end-users and vendors to submit purchase requests and quotations.',
     'author': 'Your Name',
-    'depends': ['base'],  # only base is fine
+    'depends': ['base', 'stock', 'purchase'],  # only base is fine
     'data': [
         'security/groups.xml',
         'security/record_rules.xml',
@@ -14,6 +14,8 @@
 
         # 'views/templates.xml',
         'views/views.xml',
+        'views/inventory.xml',
+        'views/remarks_popup.xml',
         # 'views/quotations.xml',
 
         'data/ir_sequence_data.xml'
