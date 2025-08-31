@@ -1,0 +1,104 @@
+<odoo>
+    <record id="sale_order_view_form_inherit" model="ir.ui.view">
+        <field name="name">sale.order.view.form.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_quotation_send'][1]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_confirm'][1]" position="attributes">
+                <attribute name="invisible">state not in ['sent', 'approved']</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="readonly">state in ['cancel', 'sale'] or locked == True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='validity_date']" position="attributes">
+                <attribute name="readonly">state in ['cancel', 'sale'] or locked == True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='date_order']" position="attributes">
+                <attribute name="readonly">state in ['cancel', 'sale'] or locked == True</attribute>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="reviewer_approval_quotation" string="Approve" class="btn-primary"
+                        type="object" groups="petroraq_customization.group_reviewer" invisible="state != 'to approve'"/>
+                <button name="approver_quotation" string="Approve" class="btn-primary"
+                        type="object" groups="petroraq_customization.group_approver"
+                        invisible="state != 'reviewer_approved'"/>
+                <button name="button_reject" string="Reject" class="btn-primary" type="object"
+                        groups="petroraq_customization.group_reviewer,petroraq_customization.group_approver"
+                        invisible="state not in ['to approve', 'reviewer_approved']"/>
+                <button name="create_workorder" string="Create Workorder" class="btn-primary" type="object"
+                        invisible="state != 'sale'"/>
+                <button name="operations_approval_quotation" string="Operations Approve" class="btn-primary"
+                        type="object" groups="petroraq_customization.group_operations"
+                        invisible="state != 'sale'"/>
+                <button name="accounts_approval_quotation" string="Accounts Approve" class="btn-primary"
+                        type="object" groups="petroraq_customization.group_accounts"
+                        invisible="state != 'operations_approval'"/>
+                <button name="ceo_approval_quotation" string="CEO Approve" class="btn-primary"
+                        type="object" groups="petroraq_customization.group_ceo"
+                        invisible="state != 'accounts_approval'"/>
+            </xpath>
+            <xpath expr="//group[@name='order_details']" position="inside">
+                <field name="partial_order_acceptable" widget="radio" options="{'horizontal': True}"
+                       readonly="locked == True"/>
+            </xpath>
+            <!--            <xpath expr="//tree//field[@name='product_template_id']" position="attributes">-->
+            <!--                <attribute name="string">Product Description</attribute>-->
+            <!--            </xpath>-->
+            <xpath expr="//tree//field[@name='tax_id']" position="replace"/>
+            <xpath expr="//tree//field[@name='price_subtotal']" position="attributes">
+                <attribute name="string">Amount</attribute>
+            </xpath>
+            <xpath expr="//group[hasclass('oe_subtotal_footer')]" position="replace"/>
+            <xpath expr="//group[@name='note_group']" position="before">
+                <group>
+                    <group>
+                        <field name="overheads" groups="account.group_account_manager" class="oe_inline"
+                               readonly="state not in ['draft', 'sent', 'sale'] or locked == True"/>
+                        <field name="risks" groups="account.group_account_manager" class="oe_inline"
+                               readonly="state not in ['draft', 'sent', 'sale'] or locked == True"/>
+                        <field name="profit" groups="account.group_account_manager" class="oe_inline"
+                               readonly="state not in ['draft', 'sent', 'sale'] or locked == True"/>
+                    </group>
+                    <group class="oe_subtotal_footer oe_right" colspan="2" name="sale_total">
+                        <field name="amount_untaxed" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        <field name="total_global_overheads" widget="monetary" groups="account.group_account_manager"
+                               options="{'currency_field': 'currency_id'}"/>
+                        <field name="total_global_risks" widget="monetary" groups="account.group_account_manager"
+                               options="{'currency_field': 'currency_id'}"/>
+                        <field name="total_global_profit" widget="monetary" groups="account.group_account_manager"
+                               options="{'currency_field': 'currency_id'}"/>
+                        <div class="oe_inline o_td_label">
+                            <label for="amount_total"/>
+                        </div>
+                        <field name="amount_total" nolabel="1" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_sale_order_cancel" model="ir.ui.view">
+        <field name="name">Reason for the rejection</field>
+        <field name="model">sale.rejection.reason</field>
+        <field name="arch" type="xml">
+            <form>
+                <br/>
+                <p>
+                    Choose the reason for the rejection of the
+                    sale order.
+                </p>
+                <group>
+                    <field name="cancel_reason"/>
+                </group>
+                <footer>
+                    <button name="button_reject" string="Reject" type="object" class="btn-primary"/>OR
+                    <button special="cancel" string="Discard" class="btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
