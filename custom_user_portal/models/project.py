@@ -23,43 +23,13 @@ class ProjectProject(models.Model):
 
     @api.depends(
         "budget_allowance",
-        "purchase_order_ids.amount_total",
-        "purchase_order_ids.pe_approved",
-        "purchase_order_ids.pm_approved",
-        "purchase_order_ids.od_approved",
-        "purchase_order_ids.md_approved",
+        "purchase_order_ids.grand_total",
         "purchase_order_ids.state",
     )
     def _compute_budget_left(self):
         for project in self:
             spent = 0
             for po in project.purchase_order_ids:
-                approvals_needed = 0
-                approvals_given = 0
-
-                # Determine how many approvals are needed based on amount
-                if po.amount_total < 10000:
-                    approvals_needed = 1
-                    approvals_given = 1 if po.pe_approved else 0
-                elif po.amount_total < 100000:
-                    approvals_needed = 2
-                    approvals_given = sum([po.pe_approved, po.pm_approved])
-                elif po.amount_total < 500000:
-                    approvals_needed = 3
-                    approvals_given = sum(
-                        [po.pe_approved, po.pm_approved, po.od_approved]
-                    )
-                else:
-                    approvals_needed = 4
-                    approvals_given = sum(
-                        [po.pe_approved, po.pm_approved, po.od_approved, po.md_approved]
-                    )
-
-                # Add to spent only if all required approvals are given
-                if approvals_given >= approvals_needed and po.state != "cancel":
-                    spent += po.amount_total
-
-                # If rejected (state = cancel), do NOT add — budget remains restored automatically
-
+                if po.state == "purchase":  # only deduct if confirmed as Purchase
+                    spent += po.grand_total
             project.budget_left = project.budget_allowance - spent
-
