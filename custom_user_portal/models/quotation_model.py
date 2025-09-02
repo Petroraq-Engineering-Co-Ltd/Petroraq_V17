@@ -140,15 +140,17 @@ class PurchaseQuotation(models.Model):
 
     @api.depends("status")
     def _compute_button_visibility(self):
-        """Button visible only if status is 'quote' 
-           AND no PO exists in pending/purchase state."""
+        """Button visible only if status is 'quote'
+        AND no PO exists in pending/purchase state."""
         for rec in self:
             show_button = False
             if rec.status == "quote":
-                po_exists = self.env["purchase.order"].search_count([
-                    ("origin", "=", rec.rfq_origin),
-                    ("state", "in", ["pending", "purchase"]),
-                ])
+                po_exists = self.env["purchase.order"].search_count(
+                    [
+                        ("origin", "=", rec.rfq_origin),
+                        ("state", "in", ["pending", "purchase"]),
+                    ]
+                )
                 show_button = po_exists == 0
             rec.show_create_po_button = show_button
 
@@ -280,11 +282,12 @@ class PurchaseQuotation(models.Model):
                     "mail.mail_activity_data_todo",
                     summary="New Purchase Quotation Created",
                     note=f"A new purchase quotation (ID: {record.id}) has been created "
-                        f"with a total amount of {record.total_incl_vat:.2f}.",
+                    f"with a total amount of {record.total_incl_vat:.2f}.",
                     user_id=user.id,
                 )
 
         return record
+
 
 class PurchaseQuotationLine(models.Model):
     _name = "purchase.quotation.line"
@@ -349,12 +352,23 @@ class PurchaseOrder(models.Model):
     grand_total = fields.Float(
         string="Grand Total", compute="_compute_amount_untaxed_custom", store=True
     )
-    vendor_ids = fields.Many2many(
-        "res.partner", string="All Vendors"
+    display_total = fields.Monetary(
+        string="Total",
+        currency_field="currency_id",
+        compute="_compute_display_total",
+        store=False,
     )
+    vendor_ids = fields.Many2many("res.partner", string="All Vendors")
     custom_line_ids = fields.One2many(
         "purchase.order.custom.line", "order_id", string="Custom Lines"
     )
+    date_request = fields.Date(
+        string="Date of Request", default=fields.Date.context_today
+    )
+    requested_by = fields.Char(string="Requested By")
+    department = fields.Char(string="Department")
+    supervisor = fields.Char(string="Supervisor")
+    supervisor_partner_id = fields.Char(string="supervisor_partner_id")
 
     @api.depends("custom_line_ids.subtotal")
     def _compute_amount_untaxed_custom(self):
@@ -374,7 +388,9 @@ class PurchaseOrder(models.Model):
         for order in self:
             # If the order is still using RFQ sequence, switch to PO sequence
             if order.name.startswith("RFQ"):
-                order.name = self.env["ir.sequence"].next_by_code("purchase.order") or "P0001"
+                order.name = (
+                    self.env["ir.sequence"].next_by_code("purchase.order") or "P0001"
+                )
 
             # Handle "pending" state → move to purchase
             if order.state == "pending":
@@ -394,7 +410,7 @@ class PurchaseOrder(models.Model):
                 user_id=user.id,
             )
 
-#main approval logic
+    # main approval logic
     def action_approve(self):
         self.ensure_one()
         amount = self.subtotal
@@ -469,7 +485,7 @@ class PurchaseOrder(models.Model):
                 self.write({"md_approved": True})
                 self.message_post(body="Approved by Managing Director.")
 
-#confirm order button visibility
+    # confirm order button visibility
     @api.depends(
         "state",
         "pe_approved",
@@ -658,7 +674,9 @@ class PurchaseOrder(models.Model):
     def unlink(self):
         # Before deleting, store PRs and Quotations linked to this PO
         prs_to_update = self.mapped("origin")  # origin = PR.name
-        quotations_to_update = self.mapped("origin")  # origin also used for RFQ/Quotation
+        quotations_to_update = self.mapped(
+            "origin"
+        )  # origin also used for RFQ/Quotation
 
         res = super(PurchaseOrder, self).unlink()  # Delete the PO
 
@@ -674,19 +692,25 @@ class PurchaseOrder(models.Model):
 
         # Update related Quotations
         for rfq_origin in quotations_to_update:
-            quotation = quotation_model.search([("rfq_origin", "=", rfq_origin)], limit=1)
+            quotation = quotation_model.search(
+                [("rfq_origin", "=", rfq_origin)], limit=1
+            )
             if quotation:
                 # Only set back if no active PO exists anymore
-                po_exists = self.env["purchase.order"].search_count([
-                    ("origin", "=", quotation.rfq_origin),
-                    ("state", "in", ["pending", "purchase"]),
-                ])
+                po_exists = self.env["purchase.order"].search_count(
+                    [
+                        ("origin", "=", quotation.rfq_origin),
+                        ("state", "in", ["pending", "purchase"]),
+                    ]
+                )
                 if po_exists == 0:
                     quotation.status = "quote"
-                    quotation.message_post(body=_("PO deleted, status reverted to Quote."))
+                    quotation.message_post(
+                        body=_("PO deleted, status reverted to Quote.")
+                    )
 
         return res
-    
+
     def action_confirm(self):
         """Custom confirm: set state from pending → purchase"""
         for order in self:
@@ -696,11 +720,18 @@ class PurchaseOrder(models.Model):
 
     def create_grn_ses(self):
         return {
-            'name': 'Add Remarks for GRN/SES',
-            'type': 'ir.actions.act_window',
-            'res_model': 'grn.ses.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {'active_id': self.id},
+            "name": "Add Remarks for GRN/SES",
+            "type": "ir.actions.act_window",
+            "res_model": "grn.ses.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"active_id": self.id},
         }
 
+    @api.depends("state", "subtotal", "grand_total")
+    def _compute_display_total(self):
+        for order in self:
+            if order.state == "purchase":
+                order.display_total = order.grand_total
+            else:
+                order.display_total = order.subtotal

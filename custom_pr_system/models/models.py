@@ -59,6 +59,17 @@ class CustomPR(models.Model):
     )
     pr_created = fields.Boolean(string="PR Created", default=False)
     line_ids = fields.One2many('custom.pr.line', 'pr_id', string="PR Lines")
+    state = fields.Selection(
+        [
+            ('draft', 'Draft'),
+            ('rfq_sent', 'RFQ Sent'),
+            ('pending', 'Pending'),
+            ('purchase', 'Purchase Order'),
+        ],
+        string="Status",
+        default='draft',
+        tracking=True,
+    )
 
     @api.depends('line_ids.total_price')
     def _compute_totals(self):
@@ -170,7 +181,6 @@ class CustomPR(models.Model):
             }
         }
 
-
     @api.depends('budget_type', 'budget_details')
     def _compute_has_valid_project(self):
         for rec in self:
@@ -219,3 +229,24 @@ class CustomPRLine(models.Model):
     def _compute_total(self):
         for line in self:
             line.total_price = line.quantity * line.unit_price
+
+# class PurchaseOrder(models.Model):
+#     _inherit = "purchase.order"
+
+#     def write(self, vals):
+#         res = super().write(vals)
+
+#         if 'state' in vals:
+#             for order in self:
+#                 if order.origin:  # origin = PR name
+#                     pr = self.env['custom.pr'].search([('name', '=', order.origin)], limit=1)
+#                     if pr:
+#                         if vals['state'] == 'draft':
+#                             pr.state = 'draft'
+#                         elif vals['state'] == 'sent':      # RFQ Sent
+#                             pr.state = 'rfq_sent'
+#                         elif vals['state'] == 'pending':   # Your custom state in PO
+#                             pr.state = 'pending'
+#                         elif vals['state'] == 'purchase':  # PO Confirmed
+#                             pr.state = 'purchase'
+#         return res

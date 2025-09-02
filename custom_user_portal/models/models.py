@@ -92,7 +92,9 @@ class PurchaseRequisition(models.Model):
         if record.name == "New":
             if record.pr_type == "cash":
                 record.name = (
-                    self.env["ir.sequence"].sudo().next_by_code("cash.purchase.requisition")
+                    self.env["ir.sequence"]
+                    .sudo()
+                    .next_by_code("cash.purchase.requisition")
                     or "CPR0001"
                 )
             else:
@@ -111,18 +113,26 @@ class PurchaseRequisition(models.Model):
         if approval_changed:
             for requisition in self:
                 new_approval = vals.get("approval", requisition.approval)
-                custom_pr = self.env["custom.pr"].sudo().search(
-                    [("name", "=", requisition.name)], limit=1
+                custom_pr = (
+                    self.env["custom.pr"]
+                    .sudo()
+                    .search([("name", "=", requisition.name)], limit=1)
                 )
 
                 if custom_pr:
                     # Sync approval → state
                     if new_approval == "approved" and custom_pr.approval != "approved":
-                        custom_pr.write({"approval": "approved", "approval": "approved"})
+                        custom_pr.write(
+                            {"approval": "approved", "approval": "approved"}
+                        )
                         self._notify_procurement_admins()
 
-                    elif new_approval == "rejected" and custom_pr.approval != "rejected":
-                        custom_pr.write({"approval": "rejected", "approval": "rejected"})
+                    elif (
+                        new_approval == "rejected" and custom_pr.approval != "rejected"
+                    ):
+                        custom_pr.write(
+                            {"approval": "rejected", "approval": "rejected"}
+                        )
 
                     elif new_approval == "pending" and custom_pr.approval != "pending":
                         custom_pr.write({"approval": "pending", "approval": "pending"})
@@ -142,11 +152,15 @@ class PurchaseRequisition(models.Model):
         """Compute button visibility based on PR type, approval, and status"""
         for rec in self:
             rec.show_create_rfq_button = (
-                rec.pr_type != "cash" and rec.approval == "approved" and rec.status == "pr"
+                rec.pr_type != "cash"
+                and rec.approval == "approved"
+                and rec.status == "pr"
             )
 
             rec.show_create_po_button = (
-                rec.pr_type == "cash" and rec.approval == "approved" and rec.status == "pr"
+                rec.pr_type == "cash"
+                and rec.approval == "approved"
+                and rec.status == "pr"
             )
 
     # sending activity to specific manager when PR is created
@@ -218,7 +232,7 @@ class PurchaseRequisition(models.Model):
                     str(e),
                 )
 
-    #create RFQ PR
+    # create RFQ PR
     def action_create_rfq(self):
         """Create RFQ (purchase.order) from this PR and populate Custom Lines tab."""
         PurchaseOrder = self.env["purchase.order"]
@@ -242,6 +256,11 @@ class PurchaseRequisition(models.Model):
                 "date_planned": pr.required_date,
                 "project_id": matched_project.id if matched_project else False,
                 "custom_line_ids": [],  # Populate custom tab instead
+                "date_request": pr.date_request,
+                "requested_by": pr.requested_by,
+                "department": pr.department,
+                "supervisor": pr.supervisor,
+                "supervisor_partner_id": pr.supervisor_partner_id,
             }
 
             # Fill custom_line_ids from PR lines
@@ -261,13 +280,15 @@ class PurchaseRequisition(models.Model):
             # Create RFQ
             rfq = PurchaseOrder.sudo().create(rfq_vals)
 
-            #sequence for Rfq
+            # sequence for Rfq
             if rfq.state == "draft":
-                rfq.name = self.env["ir.sequence"].next_by_code("purchase.order.rfq") or "RFQ0001"
+                rfq.name = (
+                    self.env["ir.sequence"].next_by_code("purchase.order.rfq")
+                    or "RFQ0001"
+                )
 
             # Update PR status
             pr.status = "rfq"
-            
 
             # Log in PR chatter
             pr.message_post(
@@ -311,6 +332,11 @@ class PurchaseRequisition(models.Model):
                 "date_planned": pr.required_date,
                 "project_id": matched_project.id if matched_project else False,
                 "custom_line_ids": [],
+                "date_request": pr.date_request,
+                "requested_by": pr.requested_by,
+                "department": pr.department,
+                "supervisor": pr.supervisor,
+                "supervisor_partner_id": pr.supervisor_partner_id,
             }
 
             # Fill custom_line_ids from PR lines
@@ -368,6 +394,7 @@ class PurchaseRequisition(models.Model):
             )
 
             rec.is_supervisor = supervisor_partner_id == current_partner_id
+
 
 class PurchaseRequisitionLine(models.Model):
     _name = "purchase.requisition.line"

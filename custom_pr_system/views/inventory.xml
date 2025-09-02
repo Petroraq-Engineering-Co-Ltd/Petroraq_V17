@@ -5,6 +5,7 @@
         <field name="res_model">purchase.order</field>
         <field name="view_mode">tree,form</field>
         <field name="view_id" ref="purchase.purchase_order_tree"/>
+        <field name="domain">[('state', '=', 'purchase')]</field>
     </record>
     <!-- Menu item under Inventory -->
     <menuitem id="menu_inventory_purchase_orders"

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
     <!-- Report Action -->
-    <!-- <record id="action_report_petroraq_draft_invoice" model="ir.actions.report">
+    <record id="action_report_petroraq_draft_invoice" model="ir.actions.report">
         <field name="name">PetroRaq Draft Invoice</field>
         <field name="model">purchase.order</field>
         <field name="report_type">qweb-pdf</field>
@@ -12,16 +12,17 @@
         <field name="binding_type">report</field>
     </record>
     <template id="report_petroraq_draft_invoice">
-                <t t-call="web.external_layout">
+        <t t-call="web.external_layout">
             <main>
                 <div class="page" style="margin-top:0; padding-top:0;">
                     <div style="text-align:right;">
-                        <p>requested by</p>
-                        <p>department</p>
-                        <p>testing</p>
+                        <t t-esc="docs[0].requested_by"/>
                     </div>
-                    <table style="width:100%; margin:20px 0;">
-                        <tr >
+                    <div style="text-align:right;">
+                        <t t-esc="docs[0].department"/>
+                    </div>
+                    <table class='table table-borderless' style="width:100%; margin:20px 0;">
+                        <tr>
                             <td style="text-align:left; width:33%;">
                                 <h5 style="margin:0;">Draft Invoice</h5>
                             </td>
@@ -35,29 +36,60 @@
                             </td>
                         </tr>
                     </table>
-                    <table class="table table-sm" style="width:100%; margin-bottom:20px;">
-                        <tbody>
-                            <tr>
-                                <td>Request Date:</td>
-                                <td>2025</td>
-                                <td>تاريخ الطلب :</td>
-                            </tr>
-                            <tr>
-                                <td>Required Date:</td>
-                                <td>required_date</td>
-                                <td>تاريخ المطلوب :</td>
-                            </tr>
-                            <tr>
-                                <td>Budget Type:</td>
-                                <td>budget_type</td>
-                                <td>نوع الميزانية :</td>
-                            </tr>
-                            <tr>
-                                <td>Cost Center:</td>
-                                <td>budget_details</td>
-                                <td>مركز التكلفة :</td>
-                            </tr>
-                        </tbody>
+
+                     <table class='table table-borderless' style="width:100%; margin:20px 0;">
+                        <tr>
+                            <td style="text-align:left; width:33%;">
+                                <h6 style="margin:0;">Invoice Date:</h6>
+                            </td>
+                            <td style="text-align:center; width:34%; ">
+                                <h6 style="margin:0;">
+                                    <t t-esc="docs[0].date_request or ''"/>
+                                </h6>
+                            </td>
+                            <td style="text-align:right; width:33%;">
+                                <h6>:تاريخ الفاتورة</h6>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left; width:33%;">
+                                <h6 style="margin:0;">Delivery Date:</h6>
+                            </td>
+                            <td style="text-align:center; width:34%; ">
+                                <h6 style="margin:0;">
+                                    <t t-esc="docs[0].date_planned or ''"/>
+                                </h6>
+                            </td>
+                            <td style="text-align:right; width:33%;">
+                                <h6>:تاريخ التوصيل</h6>
+                            </td>
+                        </tr>
+                         <tr>
+                            <td style="text-align:left; width:33%;">
+                                <h6 style="margin:0;">Source:</h6>
+                            </td>
+                            <td style="text-align:center; width:34%; ">
+                                <h6 style="margin:0;">
+                                     <t t-esc="docs[0].origin or ''"/>
+                                </h6>
+                            </td>
+                            <td style="text-align:right; width:33%;">
+                                <h6>:رقم الإشارة</h6>
+                            </td>
+                        </tr>
+                         <tr>
+                            <td style="text-align:left; width:33%;">
+                                <h6 style="margin:0;">Reference:</h6>
+                            </td>
+                            <td style="text-align:center; width:34%; ">
+                                <h6 style="margin:0;">
+                                    <t t-esc="docs[0].supervisor or ''"/>
+                                </h6>
+                            </td>
+                            <td style="text-align:right; width:33%;">
+                                <h6>:رقم الإشارة</h6>
+                            </td>
+                        </tr>
                     </table>
                     <table class="table table-sm table-bordered" style="width:100%; border-collapse:collapse;">
                         <thead>
@@ -73,12 +105,6 @@
                                 </th>
                                 <th>Unit Price /
                                     <span>سعر الوحدة</span>
-                                </th>
-                                <th>Vat Amount /
-                                    <span>ﻗﻴﻤﺔ اﻟﻀﺮﻳﺒﺔ </span>
-                                </th>
-                                <th>Total /
-                                    <span>الإجمالي</span>
                                 </th>
                             </tr>
                         </thead>
@@ -97,14 +123,12 @@
                                     <td>
                                         <t t-esc="l.price_unit"/>
                                     </td>
-                                    <td>
-                                        <t t-esc="l.subtotal"/>
-                                    </td>
                                 </tr>
                             </t>
                         </tbody>
                     </table>
                     <table style="width:100%; margin-top:10px;">
+                    <tbody>
                         <tr>
                             <td style="text-align:right;">Subtotal /
                                 <span>الاجمالي الفرعي</span>
@@ -129,17 +153,26 @@
                                 <t t-esc="docs[0].grand_total"/>
                             </td>
                         </tr>
+                    </tbody>
                     </table>
-                    <div style="margin-top:30px;">
-                        <p>
-                        Payment Reference:
-                            <t t-esc="docs[0].name"/>
-                            <span>: رقم إشارة الدفع</span>
-                        </p>
-                        <p>Payment terms: Immediate Payment</p>
-                    </div>
+                    <table class='table table-borderless' style="width:100%; margin:20px 0;">
+                        <tr>
+                            <td style="text-align:left; width:33%;">
+                                <h6 style="margin:0;">Payment Reference:</h6>
+                            </td>
+                            <td style="text-align:center; width:34%; ">
+                                <h6 style="margin:0;">via Bank</h6>
+                            </td>
+                            <td style="text-align:right; width:33%;">
+                                <h6>: رقم إشارة الدفع</h6>
+                            </td>
+                        </tr>
+                </table>
+                    
+                        <p style="text-align:end;">Payment terms: Immediate Payment</p>
                 </div>
+              
             </main>
         </t>
-    </template> -->
+    </template>
 </odoo>

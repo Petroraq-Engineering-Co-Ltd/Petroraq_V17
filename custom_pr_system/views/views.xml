@@ -66,6 +66,7 @@
             string="Create PR"
             class="btn btn-primary"
             invisible="approval == 'approved'"/>
+            <field name="state" widget="statusbar" statusbar_visible="draft,rfq_sent,pending,purchase"/>
           </header>
           <sheet>
             <group>
