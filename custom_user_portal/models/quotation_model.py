@@ -15,6 +15,7 @@ class PurchaseQuotation(models.Model):
     vendor_id = fields.Many2one("res.partner", string="Vendor")
     rfq_origin = fields.Char(string="RFQ Origin")
     vendor_ref = fields.Char(string="Vendor Reference")
+    pr_name = fields.Char(string="PR Name", readonly=True)
     notes = fields.Text(string="Notes")
     order_deadline = fields.Datetime(string="Deadline")
     expected_arrival = fields.Datetime(string="Quotation Date")
@@ -103,6 +104,11 @@ class PurchaseQuotation(models.Model):
     show_create_po_button = fields.Boolean(
         compute="_compute_button_visibility", store=False
     )
+    #PR Info
+    requested_by = fields.Char(string="Requested By")
+    department = fields.Char(string="Department")
+    supervisor = fields.Char(string="Supervisor")
+    supervisor_partner_id = fields.Char(string="supervisor_partner_id")
 
     # Lines
     line_ids = fields.One2many(
@@ -187,6 +193,12 @@ class PurchaseQuotation(models.Model):
                 "project_id": matched_project.id if matched_project else False,
                 "custom_line_ids": [],
                 "state": "pending",
+                "pr_name": self.pr_name,
+                "requested_by": quotation.requested_by,
+                "department": quotation.department,
+                "supervisor": quotation.supervisor,
+                "supervisor_partner_id": quotation.supervisor_partner_id,
+
             }
 
             # Fill lines from Quotation Lines

@@ -65,6 +65,7 @@ class CustomPR(models.Model):
             ('rfq_sent', 'RFQ Sent'),
             ('pending', 'Pending'),
             ('purchase', 'Purchase Order'),
+            ('cancel', 'Cancelled' ),
         ],
         string="Status",
         default='draft',
@@ -230,23 +231,43 @@ class CustomPRLine(models.Model):
         for line in self:
             line.total_price = line.quantity * line.unit_price
 
-# class PurchaseOrder(models.Model):
-#     _inherit = "purchase.order"
+class PurchaseOrder(models.Model):
+    _inherit = "purchase.order"
 
-#     def write(self, vals):
-#         res = super().write(vals)
+    pr_name = fields.Char(string="PR Name", readonly=True)
 
-#         if 'state' in vals:
-#             for order in self:
-#                 if order.origin:  # origin = PR name
-#                     pr = self.env['custom.pr'].search([('name', '=', order.origin)], limit=1)
-#                     if pr:
-#                         if vals['state'] == 'draft':
-#                             pr.state = 'draft'
-#                         elif vals['state'] == 'sent':      # RFQ Sent
-#                             pr.state = 'rfq_sent'
-#                         elif vals['state'] == 'pending':   # Your custom state in PO
-#                             pr.state = 'pending'
-#                         elif vals['state'] == 'purchase':  # PO Confirmed
-#                             pr.state = 'purchase'
-#         return res
+    def _update_pr_state(self):
+        """Helper to sync PR state with the highest PO state for the same pr_name"""
+        for order in self:
+            if order.pr_name:
+                pr = self.env['custom.pr'].sudo().search([('name', '=', order.pr_name)], limit=1)
+                if pr:
+                    all_pos = self.env['purchase.order'].sudo().search([('pr_name', '=', order.pr_name)])
+                    priority = {'draft': 1, 'sent': 2, 'pending': 3, 'purchase': 4, 'cancel': 5 }
+                    best_po = max(all_pos, key=lambda po: priority.get(po.state, 0))
+
+                    # Update PR state
+                    mapping = {
+                        'draft': 'draft',
+                        'sent': 'rfq_sent',
+                        'pending': 'pending',
+                        'purchase': 'purchase',
+                        'cancel': 'cancel', 
+                    }
+                    pr.state = mapping.get(best_po.state, pr.state)
+
+    @api.model
+    def create(self, vals):
+        order = super().create(vals)
+        # When PO is created, immediately set PR → pending
+        if order.pr_name:
+            pr = self.env['custom.pr'].sudo().search([('name', '=', order.pr_name)], limit=1)
+            if pr:
+                pr.state = 'pending'
+        return order
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'state' in vals:
+            self._update_pr_state()
+        return res

@@ -253,6 +253,7 @@ class PurchaseRequisition(models.Model):
             rfq_vals = {
                 "origin": pr.name,
                 "partner_id": pr.vendor_id.id if pr.vendor_id else False,
+                'pr_name': self.name,
                 "date_planned": pr.required_date,
                 "project_id": matched_project.id if matched_project else False,
                 "custom_line_ids": [],  # Populate custom tab instead

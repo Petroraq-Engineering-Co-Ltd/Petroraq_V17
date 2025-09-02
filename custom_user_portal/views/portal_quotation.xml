@@ -53,6 +53,13 @@
                     <!-- Vendor Reference -->
                     <div class="form-group mb-3">
                         <label>Vendor Reference</label>
+                        <input type="text" name="pr_name" class="form-control d-none" t-att-value="rfq.pr_name" readonly="readonly"/>
+                        <input type="text" name="requested_by" class="form-control d-none" t-att-value="rfq.requested_by" readonly="readonly"/>
+                        <input type="text" name="department" class="form-control d-none" t-att-value="rfq.department" readonly="readonly"/>
+                        <input type="text" name="supervisor" class="form-control d-none" t-att-value="rfq.supervisor" readonly="readonly"/>
+                        <input type="text" name="supervisor_partner_id" class="form-control d-none" t-att-value="rfq.supervisor_partner_id" readonly="readonly"/>
+
+                        
                         <input type="text" name="vendor_reference" class="form-control" t-att-value="rfq.partner_ref" readonly="readonly"/>
                     </div>
                     <!-- New Fields -->
