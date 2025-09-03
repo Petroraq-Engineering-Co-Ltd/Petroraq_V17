@@ -104,6 +104,7 @@ class PortalRFQ(http.Controller):
             .create(
                 {
                     "vendor_id": partner.id,
+                    "pr_name": rfq.pr_name,
                     "rfq_origin": rfq.name,
                     "vendor_ref": rfq.partner_ref,
                     "notes": post.get("description"),
@@ -161,6 +162,12 @@ class PortalRFQ(http.Controller):
                     "budget_type": rfq.budget_type,
                     "budget_code": rfq.budget_code,
                     "project_id": rfq.project_id.id,
+                    #PO Info
+                    "requested_by": rfq.requested_by,
+                    "department": rfq.department,
+                    "supervisor": rfq.supervisor,
+                    "supervisor_partner_id": rfq.supervisor_partner_id,
+
                 }
             )
         )
