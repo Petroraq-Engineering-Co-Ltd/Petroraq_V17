@@ -3,7 +3,7 @@
     <field name="name">grn.ses.wizard.form</field>
     <field name="model">grn.ses.wizard</field>
     <field name="arch" type="xml">
-        <form string="Create GRN/SES">
+        <form string="Add Remarks">
             <group>
                 <field name="remarks"/>
             </group>

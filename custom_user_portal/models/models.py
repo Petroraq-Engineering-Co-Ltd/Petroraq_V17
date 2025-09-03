@@ -272,6 +272,7 @@ class PurchaseRequisition(models.Model):
                     {
                         "name": line.description,
                         "quantity": line.quantity,
+                        "type": line.type,
                         "unit": line.unit,  # ✅ Added this
                         "price_unit": line.unit_price,
                     },
@@ -348,6 +349,7 @@ class PurchaseRequisition(models.Model):
                     {
                         "name": line.description,
                         "quantity": line.quantity,
+                        "type": line.type,
                         "unit": line.unit,
                         "price_unit": line.unit_price,
                     },
@@ -439,6 +441,15 @@ class PurchaseOrderCustomLine(models.Model):
     name = fields.Char(string="Description")
     quantity = fields.Float(string="Quantity")
     unit = fields.Char(string="Unit")
+    type = fields.Selection(
+        [
+            ('material', 'Material'),
+            ('service', 'Service')
+        ],
+        string="Type",
+        default='material',
+        required=True
+    )
     price_unit = fields.Float(string="Unit Price")
     subtotal = fields.Float(string="Subtotal", compute="_compute_subtotal", store=True)
 

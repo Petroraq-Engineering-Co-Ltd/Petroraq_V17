@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <record id="paperformat_petroraq_invoice_report_sheet" model="report.paperformat">
+    <record id="paperformat_petroraq_grn_ses_sheet" model="report.paperformat">
         <field name="name">Petroraq Purchase Order Report</field>
         <field name="default" eval="True"/>
         <field name="format">custom</field>
@@ -15,19 +14,20 @@
         <field name="header_spacing">55</field>
         <field name="dpi">100</field>
     </record>
-    <!-- Report Action -->
-    <record id="action_report_petroraq_draft_invoice" model="ir.actions.report">
-        <field name="name">PetroRaq Draft Invoice</field>
-        <field name="model">purchase.order</field>
+
+    <record id="action_report_grn_ses" model="ir.actions.report">
+        <field name="name">GRN/SES Report</field>
+        <field name="model">grn.ses</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">custom_pr_system.report_petroraq_draft_invoice</field>
-        <field name="report_file">custom_pr_system.report_petroraq_draft_invoice</field>
-        <field name="print_report_name">'PetroRaq_Draft_Invoice_' + object.name</field>
-        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="report_name">custom_pr_system.report_petroraq_grn_ses</field>
+        <field name="report_file">custom_pr_system.report_petroraq_grn_ses</field>
+        <field name="print_report_name">'GRN_SES_' + object.name</field>
+        <field name="binding_model_id" ref="model_grn_ses"/>
         <field name="binding_type">report</field>
-        <field name="paperformat_id" ref="custom_pr_system.paperformat_petroraq_invoice_report_sheet"/>
+        <field name="paperformat_id" ref="custom_pr_system.paperformat_petroraq_grn_ses_sheet"/>
     </record>
-    <template id="report_petroraq_draft_invoice">
+
+        <template id="report_petroraq_grn_ses">
         <t t-call="web.external_layout">
             <main>
                 <div class="page" style="margin-top:0; padding-top:0;">
@@ -49,6 +49,12 @@
                                 <td style="text-align:right; padding:4px;">Supervisor</td>
                                 <td style="text-align:right; padding:4px;">
                                     <t t-esc="docs[0].supervisor"/>
+                                </td>
+                            </tr>
+                             <tr>
+                                <td style="text-align:right; padding:4px;">Vendor Reference</td>
+                                <td style="text-align:right; padding:4px;">
+                                    <t t-esc="docs[0].partner_ref"/>
                                 </td>
                             </tr>
                         </tbody>
@@ -118,7 +124,7 @@
                                 </span>
                             </td>
                             <td style="text-align:right; width:33%;">
-                                <span>:رقم الإشارة</span>
+                                <span>:مُلاحَظة</span>
                             </td>
                         </tr>
                     </table>
@@ -137,10 +143,16 @@
                                 <th>Unit Price /
                                     <span>سعر الوحدة</span>
                                 </th>
+                                <th>Subtotal /
+                                    <span>سعر الوحدة</span>
+                                </th>
+                                <th>Remarks /
+                                    <span>مُلاحَظة</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <t t-foreach="docs[0].custom_line_ids" t-as="l">
+                            <t t-foreach="docs[0].line_ids" t-as="l">
                                 <tr>
                                     <td>
                                         <t t-esc="l.name"/>
@@ -153,6 +165,12 @@
                                     </td>
                                     <td>
                                         <t t-esc="l.price_unit"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="l.subtotal"/>
+                                    </td>
+                                    <td>
+                                        <t t-esc="l.remarks"/>
                                     </td>
                                 </tr>
                             </t>
@@ -203,82 +221,5 @@
                 </div>
             </main>
         </t>
-    </template>
-    <!-- Custom Header Template -->
-    <!--Template header-->
-    <template id="custom_header">
-        <div class="header">
-            <div class="text-center">
-                <img src='/custom_pr_system/static/src/img/white_header.jpg' style="width:100%;"/>
-            </div>
-        </div>
-    </template>
-    <!-- replace headers -->
-    <template id="external_layout_standard" inherit_id="web.external_layout_standard">
-        <xpath expr="//div[contains(@t-attf-class,'header')]" position="replace">
-            <t t-call="custom_pr_system.custom_header"/>
-        </xpath>
-    </template>
-    <template id="external_layout_boxed" inherit_id="web.external_layout_boxed">
-        <xpath expr="//div[contains(@t-attf-class,'header')]" position="replace">
-            <t t-call="custom_pr_system.custom_header"/>
-        </xpath>
-    </template>
-    <template id="external_layout_bold" inherit_id="web.external_layout_bold">
-        <xpath expr="//div[contains(@t-attf-class,'header')]" position="replace">
-            <t t-call="custom_pr_system.custom_header"/>
-        </xpath>
-    </template>
-    <template id="xternal_layout_striped" inherit_id="web.external_layout_striped">
-        <xpath expr="//div[contains(@t-attf-class,'header')]" position="replace">
-            <t t-call="custom_pr_system.custom_header"/>
-        </xpath>
-    </template>
-    <!-- Custom Footer Template -->
-    <!--Template footer-->
-    <template id="custom_footer">
-        <div class="footer">
-            <div style="border-bottom:1px solid #305081 !important;">
-                <table class="table table-borderless" style="line-height:0.5;font-family: 'DroidArabicNaskh';">
-                    <tr>
-                        <td width="50%" style="text-align:left;font-size: 18px !important;">
-                            <p>This is computer generated document, no signature and stamp required</p>
-                        </td>
-                        <td width="50%" style="text-align:right;font-size: 18px !important;">
-                            <p>هذه وثيقة تم إنشاؤها بواسطة الكمبيوتر، ولا تتطلب توقيعًا أو ختمًا</p>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-            <div style="border-top:1px solid #305081 !important;">
-                <img src='/custom_pr_system/static/src/img/blue_footer.jpeg' style="width:100%;display:inline-block;"/>
-                <div name="pager" class="list-inline no-margin text-center" style="color:rgba(18,49,96,0.91);">
-                    Page:
-                    <span class="page"/> /
-                    <span class="topage"/>
-                </div>
-            </div>
-        </div>
-    </template>
-    <!-- Footer replacements for all external layouts -->
-    <template id="external_layout_standard_footer" inherit_id="web.external_layout_standard">
-        <xpath expr="//div[contains(@t-attf-class,'footer')]" position="replace">
-            <t t-call="custom_pr_system.custom_footer"/>
-        </xpath>
-    </template>
-    <template id="external_layout_boxed_footer" inherit_id="web.external_layout_boxed">
-        <xpath expr="//div[contains(@t-attf-class,'footer')]" position="replace">
-            <t t-call="custom_pr_system.custom_footer"/>
-        </xpath>
-    </template>
-    <template id="external_layout_bold_footer" inherit_id="web.external_layout_bold">
-        <xpath expr="//div[contains(@t-attf-class,'footer')]" position="replace">
-            <t t-call="custom_pr_system.custom_footer"/>
-        </xpath>
-    </template>
-    <template id="external_layout_striped_footer" inherit_id="web.external_layout_striped">
-        <xpath expr="//div[contains(@t-attf-class,'footer')]" position="replace">
-            <t t-call="custom_pr_system.custom_footer"/>
-        </xpath>
     </template>
 </odoo>

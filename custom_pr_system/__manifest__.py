@@ -16,6 +16,7 @@
         'views/views.xml',
         'views/inventory.xml',
         'views/remarks_popup.xml',
+        'views/grn_report.xml',
         # 'views/quotations.xml',
 
         'data/ir_sequence_data.xml'
