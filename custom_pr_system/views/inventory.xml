@@ -24,6 +24,7 @@
                 <field name="partner_ref"/>
                 <field name="date_order"/>
                 <field name="date_planned"/>
+                <field name="stage"/>
             </tree>
         </field>
     </record>
