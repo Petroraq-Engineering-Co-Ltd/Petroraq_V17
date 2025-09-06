@@ -58,8 +58,6 @@
                         <input type="text" name="department" class="form-control d-none" t-att-value="rfq.department" readonly="readonly"/>
                         <input type="text" name="supervisor" class="form-control d-none" t-att-value="rfq.supervisor" readonly="readonly"/>
                         <input type="text" name="supervisor_partner_id" class="form-control d-none" t-att-value="rfq.supervisor_partner_id" readonly="readonly"/>
-
-                        
                         <input type="text" name="vendor_reference" class="form-control" t-att-value="rfq.partner_ref" readonly="readonly"/>
                     </div>
                     <!-- New Fields -->
@@ -118,6 +116,7 @@
                                 <th>Sr. No.</th>
                                 <th>Item Description</th>
                                 <th>Quantity</th>
+                                <th>Type</th>
                                 <th>Unit</th>
                                 <th>Unit Price</th>
                                 <th>Total Price</th>
@@ -141,6 +140,11 @@
                        t-att-value="line.quantity" step="0.01" readonly="1"/>
                                     </td>
                                     <td>
+                                        <input type="text" t-att-name="'product_type_%s' % idx"
+                       class="form-control border-0 text-center type-input"
+                       t-att-value="line.type" step="0.01" readonly="1"/>
+                                    </td>
+                                    <td>
                                         <input type="text" t-att-name="'product_unit_%s' % idx"
                        t-att-value="line.unit"
                        readonly="1" class="form-control border-0 text-center"/>
@@ -162,19 +166,19 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="5" class="text-end fw-bold">Total Amount</td>
+                                <td colspan="6" class="text-end fw-bold">Total Amount</td>
                                 <td>
                                     <input type="number" name="total_excl_vat" id="total_excl_vat" class="form-control border-0" readonly='1'/>
                                 </td>
                             </tr>
                             <tr class="d-none">
-                                <td colspan="5" class="text-start fw-bold">VAT Amount @ 15%</td>
+                                <td colspan="6" class="text-start fw-bold">VAT Amount @ 15%</td>
                                 <td>
                                     <input type="number" name="vat_amount" id="vat_amount" class="form-control border-0" readonly='1'/>
                                 </td>
                             </tr>
                             <tr class="d-none">
-                                <td colspan="5" class="text-start fw-bold">Total Amount Including VAT</td>
+                                <td colspan="6" class="text-start fw-bold">Total Amount Including VAT</td>
                                 <td>
                                     <input type="number" name="total_incl_vat" id="total_incl_vat" class="form-control border-0" readonly='1'/>
                                 </td>
@@ -305,6 +309,9 @@
                         </td>
                         <td>
                             <input type="number" name="product_quantity_${quotationRowIndex}" class="form-control border-0 text-center qty-input" step="0.01" />
+                        </td>
+                        <td>
+                            <input type="number" name="product_type_${quotationRowIndex}" class="form-control border-0 text-center type-input" />
                         </td>
                         <td>
                             <input type="hidden" name="product_id_${quotationRowIndex}" value="0"/>

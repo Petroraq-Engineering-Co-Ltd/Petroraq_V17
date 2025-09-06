@@ -33,9 +33,27 @@
         <field name="model">grn.ses</field>
         <field name="arch" type="xml">
             <form string="GRN/SES">
+                <header>
+                    <!-- Review button (only show if not reviewed yet) -->
+                    <button name="action_review"
+            string="Review"
+            type="object"
+            class="btn-primary"
+            groups="custom_pr_system.inventory_qc"
+            invisible="is_reviewed"/>
+                    <!-- Approve button (only visible after review, and if not approved yet) -->
+                    <button name="action_approve"
+            string="Approve"
+            type="object"
+            class="btn-primary"
+            groups="custom_user_portal.inventory_admin"
+            invisible="not is_reviewed or is_approved"/>
+                </header>
                 <sheet>
                     <group>
                         <group>
+                            <field name="is_reviewed" invisible="1"/>
+                            <field name="is_approved" invisible="1"/>
                             <field name="name" readonly="1"/>
                             <field name="partner_ref" readonly="1"/>
                             <field name="project" readonly="1"/>
@@ -47,13 +65,13 @@
                     </group>
                     <notebook>
                         <page string="GRN/SES">
-                            <field name="line_ids">
+                            <field name="line_ids" readonly='1'>
                                 <tree editable="bottom">
                                     <field name="name" readonly="1"/>
+                                    <field name="type" readonly="1"/>
                                     <field name="unit" readonly="1"/>
                                     <field name="quantity" readonly="1"/>
                                     <field name="remarks"/>
-                                    <!-- <field name="subtotal" readonly="1"/> -->
                                 </tree>
                             </field>
                         </page>

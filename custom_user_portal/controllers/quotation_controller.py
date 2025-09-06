@@ -185,6 +185,7 @@ class PortalRFQ(http.Controller):
             quantity = float(post.get(f"product_quantity_{i}", 0))
             unit = post.get(f"product_unit_{i}", "").strip()
             price_unit = float(post.get(f"product_price_{i}", 0))
+            product_type = post.get(f"product_type_{i}", "").strip()
 
             if not description:
                 continue
@@ -194,6 +195,7 @@ class PortalRFQ(http.Controller):
                     "quotation_id": quotation.id,
                     "name": description,
                     "quantity": quantity,
+                    "type": product_type,
                     "unit": unit,
                     "price_unit": price_unit,
                 }

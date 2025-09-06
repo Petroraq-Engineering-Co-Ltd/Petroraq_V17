@@ -200,7 +200,7 @@ class CustomPRLine(models.Model):
     _description = 'Custom PR Line'
 
     pr_id = fields.Many2one('custom.pr', string="Purchase Requisition", ondelete="cascade")
-    description = fields.Char(string="Item Description")
+    description = fields.Char(string="Item Description", required=True)
     type = fields.Selection(
         [
             ('material', 'Material'),

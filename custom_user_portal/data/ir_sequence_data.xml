@@ -4,7 +4,7 @@
     <record id="seq_purchase_requisition" model="ir.sequence">
       <field name="name">Purchase Requisition</field>
       <field name="code">purchase.requisition</field>
-      <field name="prefix">PR</field>
+      <field name="prefix">NPR</field>
       <field name="padding">4</field>
       <field name="implementation">no_gap</field>
     </record>
@@ -12,7 +12,7 @@
     <record id="seq_cash_purchase_requisition" model="ir.sequence">
       <field name="name">Cash Purchase Requisition</field>
       <field name="code">cash.purchase.requisition</field>
-      <field name="prefix">CPR</field>
+      <field name="prefix">NCPR</field>
       <field name="padding">4</field>
       <field name="implementation">no_gap</field>
     </record>

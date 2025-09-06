@@ -5,6 +5,14 @@
             <field name="name">End Users</field>
             <field name="category_id" ref="base.module_category_hidden"/> 
         </record>
+        <record id="inventory_data_entry" model="res.groups">
+            <field name="name">Inventory Data Entry</field>
+            <field name="category_id" ref="base.module_category_hidden"/> 
+        </record>
+        <record id="inventory_qc" model="res.groups">
+            <field name="name">Inventory QC</field>
+            <field name="category_id" ref="base.module_category_hidden"/> 
+        </record>
 
     </data>
 </odoo>

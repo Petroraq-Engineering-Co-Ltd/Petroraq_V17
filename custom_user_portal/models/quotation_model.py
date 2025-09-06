@@ -209,6 +209,7 @@ class PurchaseQuotation(models.Model):
                     {
                         "name": line.description or line.name,
                         "quantity": line.quantity,
+                        "type": line.type,
                         "unit": line.unit,
                         "price_unit": line.price_unit,
                     },
@@ -311,6 +312,15 @@ class PurchaseQuotationLine(models.Model):
     name = fields.Char(string="Description")
     quantity = fields.Float(string="Quantity")
     unit = fields.Char(string="Unit")
+    type = fields.Selection(
+        [
+            ('material', 'Material'),
+            ('service', 'Service')
+        ],
+        string="Type",
+        default='material',
+        required=True
+    )
     price_unit = fields.Float(string="Unit Price")
     subtotal = fields.Float(string="Subtotal", compute="_compute_subtotal", store=True)
     tax_15 = fields.Float(string="15% Tax", compute="_compute_subtotal", store=True)
@@ -381,7 +391,17 @@ class PurchaseOrder(models.Model):
     department = fields.Char(string="Department")
     supervisor = fields.Char(string="Supervisor")
     supervisor_partner_id = fields.Char(string="supervisor_partner_id")
-
+    grn_ses_button_type = fields.Selection(
+        [
+            ("grn", "GRN"),
+            ("ses", "SES"),
+            ("both", "GRN/SES"),
+        ],
+        string="GRN/SES Button Type",
+        compute="_compute_grn_ses_button_type",
+        store=False,
+    )
+    
     @api.depends("custom_line_ids.subtotal")
     def _compute_amount_untaxed_custom(self):
         for order in self:
@@ -728,6 +748,16 @@ class PurchaseOrder(models.Model):
         for order in self:
             if order.state == "pending":
                 order.state = "purchase"
+            # Find the group
+            group = self.env.ref("custom_pr_system.inventory_data_entry", raise_if_not_found=False)
+            if group and group.users:
+                for user in group.users:
+                    order.activity_schedule(
+                        'mail.mail_activity_data_todo',  # Default TODO activity
+                        user_id=user.id,
+                        summary="Purchase Order Approved",
+                        note=f"Purchase Order {order.name} has been approved."
+                    )
         return True
 
     def create_grn_ses(self):
@@ -747,3 +777,16 @@ class PurchaseOrder(models.Model):
                 order.display_total = order.grand_total
             else:
                 order.display_total = order.subtotal
+
+    @api.depends("custom_line_ids.type")
+    def _compute_grn_ses_button_type(self):
+        for order in self:
+            line_types = set(order.custom_line_ids.mapped("type"))
+            if not line_types:
+                order.grn_ses_button_type = False
+            elif line_types == {"material"}:
+                order.grn_ses_button_type = "grn"
+            elif line_types == {"service"}:
+                order.grn_ses_button_type = "ses"
+            else:
+                order.grn_ses_button_type = "both"
