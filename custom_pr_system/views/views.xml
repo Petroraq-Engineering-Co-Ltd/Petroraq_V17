@@ -93,7 +93,8 @@
                   <tree editable="bottom">
                     <field name="description"/>
                     <field name="type"/>
-                    <field name="unit"/>
+                    <!-- <field name="unit"/> -->
+                    <field name="unit" options="{'no_open': False, 'no_create': False, 'no_quick_create': False}"/>
                     <field name="quantity"/>
                     <field name="unit_price"/>
                     <field name="total_price" readonly="1"/>

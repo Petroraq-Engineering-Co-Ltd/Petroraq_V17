@@ -1,9 +1,10 @@
-from odoo import models, fields, api
-from odoo.exceptions import ValidationError
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 class GrnSes(models.Model):
     _name = "grn.ses"
     _description = "GRN / SES"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
 
     name = fields.Char(string="Reference", required=True)
     partner_ref = fields.Char(string="Vendor Reference")
@@ -21,7 +22,18 @@ class GrnSes(models.Model):
     is_reviewed = fields.Boolean("Reviewed", default=False)
     is_approved = fields.Boolean("Approved", default=False)
     line_ids = fields.One2many("grn.ses.line", "order_id", string="GRN/SES Lines")
-
+    stage = fields.Selection(
+        [
+            ("pending", "Pending"),
+            ("reviewed", "Reviewed"),
+            ("approved", "Approved"),
+        ],
+        string="Stage",
+        default="pending",
+        tracking=True,
+    )
+    
+    
     @api.depends("line_ids.subtotal")
     def _compute_totals(self):
         for rec in self:
@@ -32,6 +44,7 @@ class GrnSes(models.Model):
         """Mark record as reviewed"""
         for rec in self:
             rec.is_reviewed = True
+            rec.stage = "reviewed" 
         group = self.env.ref("custom_user_portal.inventory_admin", raise_if_not_found=False)
         if group and group.users:
             for user in group.users:
@@ -47,6 +60,32 @@ class GrnSes(models.Model):
         """Mark record as approved"""
         for rec in self:
             rec.is_approved = True
+            rec.stage = "approved"
+            # Notify approvers group
+            group = self.env.ref("custom_pr_system.inventory_approver", raise_if_not_found=False)
+            if group and group.users:
+                for user in group.users:
+                    rec.activity_schedule(
+                        'mail.mail_activity_data_todo',
+                        user_id=user.id,
+                        summary="Record Approved",
+                        note=f"Record {rec.display_name} has been approved."
+                    )
+
+    def _get_report_base_filename(self):
+        """Hide GRN/SES report until approved"""
+        self.ensure_one()
+        if not self.is_approved:
+            return False  # prevents showing in Print dropdown
+        return f"{self.name}_Report"
+    
+    def print_grn_ses_report(self):
+        for rec in self:
+            if rec.state != "approved":   # change to your real approval field
+                raise UserError(_("Reports cannot be downloaded until GRN/SES is approved"))
+        return self.env.ref("custom_pr_system.action_report_grn_ses").report_action(self)
+
+
 
 class GrnSesLine(models.Model):
     _name = "grn.ses.line"
@@ -176,3 +215,23 @@ class GrnSesWizard(models.TransientModel):
                     )
 
         return {"type": "ir.actions.act_window_close"}
+
+
+class GrnSesReport(models.AbstractModel):
+    _name = 'report.custom_pr_system.report_petroraq_grn_ses'
+    _description = 'GRN/SES QWeb Report'
+
+    @api.model
+    def _get_report_values(self, docids, data=None):
+        docs = self.env['grn.ses'].browse(docids)
+        for rec in docs:
+            if not rec.is_approved:  # ✅ check approval before printing
+                raise UserError("You can only print the GRN/SES Report after it is approved.")
+        return {
+            'doc_ids': docids,
+            'doc_model': 'grn.ses',
+            'docs': docs,
+        }
+        
+        
+        
