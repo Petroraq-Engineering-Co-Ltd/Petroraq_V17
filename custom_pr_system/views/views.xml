@@ -21,14 +21,18 @@
       <field name="domain">[('pr_type','=','cash')]</field>
       <field name="context">{'default_pr_type':'cash'}</field>
     </record>
-    <!-- Menus -->
-    <menuitem id="menu_custom_purchase_root"
+     <!-- Menus -->
+    <!-- <menuitem id="menu_custom_purchase_root"
               name="Custom Purchase"
               sequence="10"/>
     <menuitem id="menu_purchase_requisition"
               name="Purchase Requisition"
               parent="menu_custom_purchase_root"
-              sequence="10"/>
+              sequence="10"/> -->
+    <menuitem id="menu_purchase_requisition"
+          name="Purchase Requisition"
+          parent="purchase.menu_purchase_root"
+          sequence="30"/>
     <menuitem id="menu_pr"
               name="PR"
               parent="menu_purchase_requisition"
