@@ -743,9 +743,27 @@ class PurchaseOrder(models.Model):
 
         return res
 
+    # def action_confirm(self):
+    #     """Custom confirm: set state from pending → purchase"""
+    #     for order in self:
+    #         if order.state == "pending":
+    #             order.state = "purchase"
+    #         # Find the group
+    #         group = self.env.ref("custom_pr_system.inventory_data_entry", raise_if_not_found=False)
+    #         if group and group.users:
+    #             for user in group.users:
+    #                 order.activity_schedule(
+    #                     'mail.mail_activity_data_todo',  # Default TODO activity
+    #                     user_id=user.id,
+    #                     summary="Purchase Order Approved",
+    #                     note=f"Purchase Order {order.name} has been approved."
+    #                 )
+    #     return True
+    
     def action_confirm(self):
-        """Custom confirm: set state from pending → purchase"""
+        """Custom confirm: set state from pending → purchase + create/update product & update stock (Odoo 17)."""
         for order in self:
+            # --- existing logic: move to purchase & schedule activities ---
             if order.state == "pending":
                 order.state = "purchase"
             # Find the group
@@ -758,6 +776,118 @@ class PurchaseOrder(models.Model):
                         summary="Purchase Order Approved",
                         note=f"Purchase Order {order.name} has been approved."
                     )
+
+            # --- gather lines to process ---
+            if hasattr(order, "custom_line_ids") and order.custom_line_ids:
+                lines = order.custom_line_ids
+            else:
+                lines = order.order_line
+
+            aggregated = {}  # { product_name: { 'qty': total_qty, 'unit': custom_unit_record, 'sample_line': line } }
+            for line in lines:
+                # find a product name
+                product_name = False
+                for attr in ("name", "description", "product_name", "default_code"):
+                    if getattr(line, attr, False):
+                        product_name = getattr(line, attr)
+                        break
+                if not product_name and getattr(line, "product_id", False):
+                    product_name = getattr(line.product_id, "name", False)
+
+                # quantity
+                qty = 0.0
+                for qattr in ("quantity", "product_qty", "product_uom_qty", "qty"):
+                    val = getattr(line, qattr, False)
+                    if val:
+                        try:
+                            qty = float(val)
+                            break
+                        except Exception:
+                            qty = 0.0
+
+                custom_unit = getattr(line, "unit", False)
+
+                if not product_name or qty <= 0:
+                    continue
+
+                key = str(product_name).strip()
+                if key not in aggregated:
+                    aggregated[key] = {"qty": qty, "unit": custom_unit, "sample_line": line}
+                else:
+                    aggregated[key]["qty"] += qty
+
+            if not aggregated:
+                continue
+
+            env = self.env
+
+            def _get_or_create_uom_from_custom_unit(cu):
+                """Find or create a uom.uom matching custom.unit"""
+                try:
+                    if not cu:
+                        return env.ref("uom.product_uom_unit")
+                    name = cu.name if hasattr(cu, "name") else str(cu)
+                    uom = env["uom.uom"].sudo().search([("name", "=", name)], limit=1)
+                    if uom:
+                        return uom
+                    default_uom = env.ref("uom.product_uom_unit")
+                    uom_vals = {
+                        "name": name,
+                        "category_id": default_uom.category_id.id,
+                    }
+                    return env["uom.uom"].sudo().create(uom_vals)
+                except Exception:
+                    return env.ref("uom.product_uom_unit")
+
+            # decide stock location
+            stock_location = env.ref("stock.stock_location_stock", raise_if_not_found=False)
+            if not stock_location:
+                stock_location = env["stock.location"].sudo().search([("usage", "=", "internal")], limit=1)
+            if not stock_location:
+                continue  # no internal stock location, skip
+
+            # --- process each aggregated product ---
+            for prod_name, info in aggregated.items():
+                qty = info["qty"]
+                custom_unit = info["unit"]
+
+                # find or create product.template
+                product_tmpl = env["product.template"].sudo().search([("name", "=", prod_name)], limit=1)
+                if not product_tmpl:
+                    uom = _get_or_create_uom_from_custom_unit(custom_unit)
+                    try:
+                        categ = env.ref("product.product_category_all")
+                    except Exception:
+                        categ = env["product.category"].sudo().search([], limit=1)
+
+                    tmpl_vals = {
+                        "name": prod_name,
+                        "type": "product",  # storable product
+                        "uom_id": uom.id if uom else env.ref("uom.product_uom_unit").id,
+                        "uom_po_id": uom.id if uom else env.ref("uom.product_uom_unit").id,
+                        "categ_id": categ.id if categ else False,
+                        "list_price": info["sample_line"].price_unit or 0.0,   
+                        "standard_price": info["sample_line"].price_unit or 0.0,  
+                    }
+                    product_tmpl = env["product.template"].sudo().create(tmpl_vals)
+
+                product = product_tmpl.product_variant_id
+
+                # update/create stock.quant
+                quant = env["stock.quant"].sudo().search([
+                    ("product_id", "=", product.id),
+                    ("location_id", "=", stock_location.id),
+                ], limit=1)
+
+                if quant:
+                    quant.quantity += qty
+                else:
+                    env["stock.quant"].sudo().create({
+                        "product_id": product.id,
+                        "location_id": stock_location.id,
+                        "quantity": qty,
+                    })
+
         return True
 
     def create_grn_ses(self):

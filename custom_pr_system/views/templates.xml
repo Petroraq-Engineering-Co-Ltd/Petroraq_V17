@@ -126,7 +126,7 @@
                         <thead>
                             <tr>
                                 <th>Description /
-                                    <span>الوصف</span>
+                                    <span class="ms-3">الوصف</span>
                                 </th>
                                 <th>Quantity /
                                     <span>الكمية</span>
