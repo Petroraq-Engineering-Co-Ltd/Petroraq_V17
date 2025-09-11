@@ -24,6 +24,7 @@ class PurchaseOrder(models.Model):
 
     date_order_custom = fields.Char(string="Custom Date Order", compute="_compute_date_order_custom")
 
+
     @api.depends("date_order")
     def _compute_date_order_custom(self):
         for order in self:
