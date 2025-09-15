@@ -223,6 +223,7 @@ class CustomPRLine(models.Model):
     #     string="Unit",
     #     required=True,
     # )
+    # unit_comments
     unit = fields.Many2one(
     'custom.unit',
     string="Unit",
