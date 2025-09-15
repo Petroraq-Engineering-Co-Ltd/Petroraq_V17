@@ -27,3 +27,7 @@ def migrate(cr, version):
             WHERE model = 'custom.pr.line' AND name = 'unit'
         );
     """)
+    cr.execute("""
+        DELETE FROM ir_model_fields
+        WHERE model = 'custom.pr.line' AND name = 'unit';
+    """)
