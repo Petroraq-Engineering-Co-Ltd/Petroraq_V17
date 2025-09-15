@@ -223,7 +223,7 @@ class CustomPRLine(models.Model):
     #     string="Unit",
     #     required=True,
     # )
-    # unit_comments
+    # unit_comments_for_testing
     unit = fields.Many2one(
     'custom.unit',
     string="Unit",
