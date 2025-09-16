@@ -1,7 +1,7 @@
 {
     'name': 'Custom PR System',
-    'version': '17.0.1.0.0',   # match migrations folder
-    # 'version': '1.0',
+    # 'version': '17.0.1.0.0',   
+    'version': '1.0',
     'category': 'Operations',
     'summary': 'Module for PR and Quotation submission',
     'description': 'Allows end-users and vendors to submit purchase requests and quotations.',
