@@ -53,7 +53,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <table class='table table-borderless' style="width:100%; margin:20px 0;">
+                    <table class='table table-borderless' style="width:100%; margin:20px 0; ">
                         <tr>
                             <td style="text-align:left; width:33%;">
                                 <h5 style="margin:0;">Draft Invoice</h5>
@@ -68,7 +68,7 @@
                             </td>
                         </tr>
                     </table>
-                    <table class='table table-borderless' style="width:45%; margin:20px 0; float:right;">
+                    <table class='table table-borderless' style="width:100%; margin:20px 0;">
                         <tr>
                             <td style="text-align:left; width:33%;">
                                 <span style="margin:0;">Invoice Date:</span>
@@ -168,7 +168,7 @@
                                     <t t-esc="docs[0].subtotal"/>
                                 </td>
                             </tr>
-                            <tr>
+                            <tr t-if="docs[0].state == 'purchase'">
                                 <td style="text-align:right;">VAT 15% /
                                     <span>الضريبة</span>
                                 </td>
@@ -176,6 +176,15 @@
                                     <t t-esc="docs[0].tax_15"/>
                                 </td>
                             </tr>
+                            <!-- <tr>
+                                <td style="text-align:right;">Total /
+                                    <span>المجموع</span>
+                                </td>
+                                <td style="text-align:right;">
+                                    <t t-esc="docs[0].grand_total"/>
+                                </td>
+                            </tr> -->
+                            <t t-if="docs[0].state in ['purchase','done']">
                             <tr>
                                 <td style="text-align:right;">Total /
                                     <span>المجموع</span>
@@ -184,6 +193,17 @@
                                     <t t-esc="docs[0].grand_total"/>
                                 </td>
                             </tr>
+                        </t>
+                        <t t-else="">
+                            <tr>
+                                <td style="text-align:right;">Total /
+                                    <span>المجموع</span>
+                                </td>
+                                <td style="text-align:right;">
+                                    <t t-esc="docs[0].subtotal"/>
+                                </td>
+                            </tr>
+                        </t>
                         </tbody>
                     </table>
                     <table class='table table-borderless' style="width:100%; margin:20px 0;">
