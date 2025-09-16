@@ -166,7 +166,7 @@ class CustomPR(models.Model):
                 'description': line.description,
                 'type': line.type,
                 'quantity': line.quantity,
-                'unit': line.unit.name,
+                'unit': line.unit,
                 'unit_price': line.unit_price,
             })
 
@@ -211,25 +211,25 @@ class CustomPRLine(models.Model):
         required=True
     )
     quantity = fields.Float(string="Quantity", default=1.0)
-    # unit = fields.Selection(
-    #     [
-    #         ('Kilogram', 'Kilogram'),
-    #         ('Gram', 'Gram'),
-    #         ('Litre', 'Litre'),
-    #         ('Millilitre', 'Millilitre'),
-    #         ('Meter', 'Metre'),
-    #         ('Each', 'Each'),
-    #     ],
-    #     string="Unit",
-    #     required=True,
-    # )
-    # unit_comments
-    unit = fields.Many2one(
-    'custom.unit',
-    string="Unit",
-    required=True,
-    ondelete="restrict",
+    unit = fields.Selection(
+        [
+            ('Kilogram', 'Kilogram'),
+            ('Gram', 'Gram'),
+            ('Litre', 'Litre'),
+            ('Millilitre', 'Millilitre'),
+            ('Meter', 'Metre'),
+            ('Each', 'Each'),
+        ],
+        string="Unit",
+        required=True,
     )
+
+    # unit = fields.Many2one(
+    # 'custom.unit',
+    # string="Unit",
+    # required=True,
+    # ondelete="restrict",
+    # )
     
     unit_price = fields.Float(string="Unit Price")
     total_price = fields.Float(string="Total", compute="_compute_total", store=True)
