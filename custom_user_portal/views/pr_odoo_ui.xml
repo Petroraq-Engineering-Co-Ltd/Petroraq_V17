@@ -116,4 +116,17 @@
               parent="purchase.menu_purchase_root"
               action="action_purchase_requisition_list"
               sequence="130"/>
+     <!-- Re-parent PR menu -->
+    <menuitem id="custom_pr_system.menu_pr"
+            name="PR"
+            parent="custom_user_portal.menu_purchase_requisition_main"
+            action="custom_pr_system.action_custom_pr_standard"
+            sequence="10"/>
+
+    <!-- Re-parent Cash PR menu -->
+    <menuitem id="custom_pr_system.menu_cash_pr"
+            name="Cash PR"
+            parent="custom_user_portal.menu_purchase_requisition_main"
+            action="custom_pr_system.action_custom_pr_cash"
+            sequence="20"/>
 </odoo>
