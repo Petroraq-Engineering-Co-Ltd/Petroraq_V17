@@ -1,0 +1,15 @@
+
+.btn-teal-custom {
+
+  color: #fff !important;
+  background-color: #008080 !important;
+  border-color: #008080 !important;
+
+}
+
+
+.btn-teal-custom:hover {
+  color: #fff;
+  background-color: #0ea9a9;
+  border-color: #0ea9a9;
+}
