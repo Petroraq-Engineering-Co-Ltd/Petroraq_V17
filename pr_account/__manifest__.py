@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Petroraq Account",
+    'name': "Petroraq Pr_Account",
     'summary': """
         This Module is created to manage Accounting""",
 
