@@ -21,7 +21,7 @@
       <field name="domain">[('pr_type','=','cash')]</field>
       <field name="context">{'default_pr_type':'cash'}</field>
     </record>
-     <!-- Menus -->
+    <!-- Menus -->
     <!-- <menuitem id="menu_custom_purchase_root"
               name="Custom Purchase"
               sequence="10"/>
@@ -34,7 +34,7 @@
           parent="purchase.menu_purchase_root"
           sequence="30"/>
     <menuitem id="menu_pr"
-              name="PR"
+              name="Regular PR"
               parent="menu_purchase_requisition"
               action="action_custom_pr_standard"
               sequence="10"/>
@@ -92,6 +92,12 @@
               </group>
             </group>
             <notebook>
+               <page string="Budget Information">
+                <group>
+                  <field name="budget_type"/>
+                  <field name="budget_details"/>
+                </group>
+              </page>
               <page string="Products">
                 <field name="line_ids" invisible="not has_valid_project">
                   <tree editable="bottom">
@@ -104,12 +110,6 @@
                     <field name="total_price" readonly="1"/>
                   </tree>
                 </field>
-              </page>
-              <page string="Budget Information">
-                <group>
-                  <field name="budget_type"/>
-                  <field name="budget_details"/>
-                </group>
               </page>
               <page string="Notes">
                 <group>

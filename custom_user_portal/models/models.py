@@ -345,7 +345,7 @@ class PurchaseRequisition(models.Model):
                     0,
                     0,
                     {
-                        "name": line.description,
+                        "name": line.description.display_name,
                         "quantity": line.quantity,
                         "type": line.type,
                         "unit": line.unit,
@@ -448,7 +448,7 @@ class PurchaseRequisition(models.Model):
                     0,
                     0,
                     {
-                        "name": line.description,
+                        "name": line.description.display_name,
                         "quantity": line.quantity,
                         "type": line.type,
                         "unit": line.unit,
@@ -507,7 +507,13 @@ class PurchaseRequisitionLine(models.Model):
     requisition_id = fields.Many2one(
         "purchase.requisition", string="Requisition", ondelete="cascade"
     )
-    description = fields.Char(string="Item Description")
+    description = fields.Many2one(
+        'product.product',
+        string="Product",
+        required=True,
+        ondelete="restrict"
+    )
+
     type = fields.Char(string="Type")
     quantity = fields.Float(string="Quantity")
     unit = fields.Char(string="Unit")

@@ -27,12 +27,14 @@
         'views/templates.xml',
         'views/portal_pr_form_template.xml',
         'views/quotation.xml',
+        # 'views/quotation_form_template.xml',
         'views/pr_odoo_ui.xml',
         'views/portal_quotation.xml',
         'views/project_view.xml',
         'views/pr_portal_view.xml',
         'views/cash_odoo_ui.xml',
         'views/rfq_vendor.xml',
+        'views/purchase_order_inherit.xml',
 
         'data/ir_sequence_data.xml',
     ],
@@ -41,8 +43,10 @@
     ],
     'assets': {
     'web.assets_backend': [
-            'custom_user_portal/static/src/css/style.scss'
-        ]
+            'custom_user_portal/static/src/css/style.scss',
+            'custom_user_portal/static/src/js/script.js',
+            'custom_user_portal/static/src/xml/form.xml',
+        ],
     },
     'auto_install': False,
     'application': True,
