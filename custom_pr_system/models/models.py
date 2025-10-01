@@ -163,7 +163,7 @@ class CustomPR(models.Model):
         for line in rec.line_ids:
             self.env['purchase.requisition.line'].sudo().create({
                 'requisition_id': requisition.id,
-                'description': line.description,
+                'description': line.description.id,
                 'type': line.type,
                 'quantity': line.quantity,
                 'unit': line.unit,
@@ -200,7 +200,13 @@ class CustomPRLine(models.Model):
     _description = 'Custom PR Line'
 
     pr_id = fields.Many2one('custom.pr', string="Purchase Requisition", ondelete="cascade")
-    description = fields.Char(string="Item Description", required=True)
+    description = fields.Many2one(
+        'product.product',
+        string="Product",
+        required=True,
+        ondelete="restrict"
+    )
+
     type = fields.Selection(
         [
             ('material', 'Material'),
@@ -223,7 +229,6 @@ class CustomPRLine(models.Model):
         string="Unit",
         required=True,
     )
-
     # unit = fields.Many2one(
     # 'custom.unit',
     # string="Unit",
@@ -279,3 +284,7 @@ class PurchaseOrder(models.Model):
         if 'state' in vals:
             self._update_pr_state()
         return res
+    
+    def print_quotation(self):
+        """Override Print RFQ to use custom PetroRaq Draft Invoice report"""
+        return self.env.ref('custom_pr_system.action_report_petroraq_draft_invoice').report_action(self)

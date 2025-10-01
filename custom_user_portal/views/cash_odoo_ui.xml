@@ -9,9 +9,9 @@
     </record>
 
     <!-- Menu item under Purchase -->
-    <menuitem id="menu_purchase_requisition_cash"
+    <!-- <menuitem id="menu_purchase_requisition_cash"
               name="Cash PRs"
               parent="purchase.menu_purchase_root"
               action="action_purchase_requisition_cash"
-              sequence="135"/>
+              sequence="135"/> -->
 </odoo>
