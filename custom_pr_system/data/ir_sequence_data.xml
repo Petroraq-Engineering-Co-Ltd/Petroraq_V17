@@ -3,7 +3,8 @@
     <record id="seq_custom_pr" model="ir.sequence">
         <field name="name">Custom Purchase Requisition</field>
         <field name="code">custom.pr</field>
-        <field name="prefix">PR</field>
+        <!-- <field name="prefix">PR</field> -->
+        <field name="prefix">PEC-PR-%(year)s-</field>
         <field name="padding">4</field>
         <field name="implementation">no_gap</field>
     </record>
@@ -12,7 +13,8 @@
     <record id="seq_custom_cash_pr" model="ir.sequence">
         <field name="name">Custom Cash Purchase Requisition</field>
         <field name="code">custom.cash.pr</field>
-        <field name="prefix">CPR</field>
+        <!-- <field name="prefix">CPR</field> -->
+        <field name="prefix">PEC-CPR-%(year)s-</field>
         <field name="padding">4</field>
         <field name="implementation">no_gap</field>
     </record>
