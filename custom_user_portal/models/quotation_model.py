@@ -880,7 +880,8 @@ class PurchaseOrder(models.Model):
                 ], limit=1)
 
                 if quant:
-                    quant.quantity += qty
+                    # quant.quantity += qty
+                    quant.sudo().write({"quantity": quant.quantity + qty})
                 else:
                     env["stock.quant"].sudo().create({
                         "product_id": product.id,
