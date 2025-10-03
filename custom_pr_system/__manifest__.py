@@ -6,7 +6,7 @@
     'summary': 'Module for PR and Quotation submission',
     'description': 'Allows end-users and vendors to submit purchase requests and quotations.',
     'author': 'Your Name',
-    'depends': ['base', 'stock', 'purchase'],  # only base is fine
+    'depends': ['base', 'stock', 'purchase', 'purchase_stock'],  # ensure purchase↔stock linkage
     'data': [
         'security/groups.xml',
         'security/record_rules.xml',
