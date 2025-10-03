@@ -101,7 +101,8 @@
               <page string="Products">
                 <field name="line_ids" invisible="not has_valid_project">
                   <tree editable="bottom">
-                    <field name="description"/>
+                    <!-- <field name="description"/> -->
+                    <field name="description" context="{'display_default_code': False}"/> 
                     <field name="type"/>
                     <!-- <field name="unit"/> -->
                     <field name="unit" options="{'no_open': False, 'no_create': False, 'no_quick_create': False}"/>
