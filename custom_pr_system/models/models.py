@@ -204,7 +204,8 @@ class CustomPRLine(models.Model):
         'product.product',
         string="Product",
         required=True,
-        ondelete="restrict"
+        ondelete="restrict",
+        context={'display_default_code': False},
     )
 
     type = fields.Selection(

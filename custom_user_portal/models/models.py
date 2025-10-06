@@ -345,7 +345,8 @@ class PurchaseRequisition(models.Model):
                     0,
                     0,
                     {
-                        "name": line.description.display_name,
+                        # "name": line.description.display_name,
+                        "name": line.description.name,
                         "quantity": line.quantity,
                         "type": line.type,
                         "unit": line.unit,
@@ -448,7 +449,8 @@ class PurchaseRequisition(models.Model):
                     0,
                     0,
                     {
-                        "name": line.description.display_name,
+                        # "name": line.description.display_name,
+                        "name": line.description.name,
                         "quantity": line.quantity,
                         "type": line.type,
                         "unit": line.unit,
@@ -511,7 +513,8 @@ class PurchaseRequisitionLine(models.Model):
         'product.product',
         string="Product",
         required=True,
-        ondelete="restrict"
+        ondelete="restrict",
+        context={'display_default_code': False},
     )
 
     type = fields.Char(string="Type")
