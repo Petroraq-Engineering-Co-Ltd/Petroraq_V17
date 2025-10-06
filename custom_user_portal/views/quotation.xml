@@ -125,6 +125,16 @@
                                     <field name="notes" readonly="1"/>
                                 </group>
                             </page>
+                            <!-- <page string="Reason">
+                                <group>
+                                    <field name="rejection_reason"
+                                           placeholder="Enter Reason for Rejection"
+                                           groups="custom_user_portal.procurement_admin" readonly="1"/>
+                                    <field name="rejection_reason"
+                                           placeholder="Enter Reason for Rejection"
+                                           groups="custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director"/>
+                                </group>
+                            </page> -->
                         </notebook>
                         <div class="total_amount_main">
                             <div class="total_amount_quotation">
