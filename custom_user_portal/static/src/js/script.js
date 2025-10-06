@@ -210,6 +210,9 @@ class QuotationFormPage extends Component {
         if (po.partner_id && po.partner_id[1]) setIfExists('supplier_name', po.partner_id[1]);
         if (po.partner_id && po.partner_id[1]) await this.populateFromVendorName(po.partner_id[1]);
 
+        // Expected Arrival: patch from RFQ/PO date_planned in YYYY-MM-DD (with +5h adjustment)
+        setIfExists('expected_arrival', toDateInput(po.date_planned || headerDatePlanned));
+
         // Fetch lines: prefer custom_line_ids
         const lines = [];
         let headerDatePlanned = po.date_planned || null;

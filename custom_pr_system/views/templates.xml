@@ -22,7 +22,7 @@
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">custom_pr_system.report_petroraq_draft_invoice</field>
         <field name="report_file">custom_pr_system.report_petroraq_draft_invoice</field>
-        <field name="print_report_name">'PetroRaq_Draft_Invoice_' + object.name</field>
+        <field name="print_report_name">'PetroRaq_Invoice_' + object.name</field>
         <field name="binding_model_id" ref="purchase.model_purchase_order"/>
         <field name="binding_type">report</field>
         <field name="paperformat_id" ref="custom_pr_system.paperformat_petroraq_invoice_report_sheet"/>

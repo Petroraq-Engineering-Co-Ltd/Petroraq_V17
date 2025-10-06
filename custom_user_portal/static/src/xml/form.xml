@@ -55,7 +55,7 @@
                                 <label>Supplier VAT ID:</label>
                                 <input type="text" name="supplier_id" class="form-control"/><br/>
 
-                                <label>Expected Arrival:</label>
+                                <label>Quotation Date:</label>
                                 <input type="date" name="expected_arrival" class="form-control" required="required"/>
                             </div>
                         </div>
