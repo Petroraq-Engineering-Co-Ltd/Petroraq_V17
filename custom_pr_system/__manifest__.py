@@ -22,7 +22,6 @@
         # 'views/quotations.xml',
 
         'data/ir_sequence_data.xml',
-        'data/custom_unit_data.xml',
 
     ],
     'installable': True,

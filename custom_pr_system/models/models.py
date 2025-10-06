@@ -30,6 +30,7 @@ class CustomPR(models.Model):
     budget_details = fields.Char(string="Cost Center Code", required=True)
     comments = fields.Text(string="Comments")
     notes = fields.Text(string="Notes")
+    rejection_reason = fields.Text(string="Reason for Rejection")
     approval = fields.Selection(
         [("pending", "Pending"), ("rejected", "Rejected"), ("approved", "Approved")],
         default="pending",
@@ -166,7 +167,7 @@ class CustomPR(models.Model):
                 'description': line.description.id,
                 'type': line.type,
                 'quantity': line.quantity,
-                'unit': line.unit,
+                'unit': line.unit.name,
                 'unit_price': line.unit_price,
             })
 
@@ -218,24 +219,22 @@ class CustomPRLine(models.Model):
         required=True
     )
     quantity = fields.Float(string="Quantity", default=1.0)
-    unit = fields.Selection(
-        [
-            ('Kilogram', 'Kilogram'),
-            ('Gram', 'Gram'),
-            ('Litre', 'Litre'),
-            ('Millilitre', 'Millilitre'),
-            ('Meter', 'Metre'),
-            ('Each', 'Each'),
-        ],
-        string="Unit",
-        required=True,
-    )
-    # unit = fields.Many2one(
-    # 'custom.unit',
-    # string="Unit",
-    # required=True,
-    # ondelete="restrict",
+    # unit = fields.Selection(
+    #     [
+    #         ('Kilogram', 'Kilogram'),
+    #         ('Gram', 'Gram'),
+    #         ('Litre', 'Litre'),
+    #         ('Millilitre', 'Millilitre'),
+    #         ('Meter', 'Metre'),
+    #         ('Each', 'Each'),
+    #     ],
+    #     string="Unit",
+    #     required=True,
     # )
+    unit = fields.Many2one(
+    'uom.uom',
+    string="Unit of Measure"
+    )
     
     unit_price = fields.Float(string="Unit Price")
     total_price = fields.Float(string="Total", compute="_compute_total", store=True)
@@ -244,7 +243,12 @@ class CustomPRLine(models.Model):
     def _compute_total(self):
         for line in self:
             line.total_price = line.quantity * line.unit_price
-
+    
+    @api.onchange('description')
+    def _onchange_description(self):
+        for rec in self:
+            if rec.description:
+                rec.unit = rec.description.uom_id
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
@@ -289,3 +293,4 @@ class PurchaseOrder(models.Model):
     def print_quotation(self):
         """Override Print RFQ to use custom PetroRaq Draft Invoice report"""
         return self.env.ref('custom_pr_system.action_report_petroraq_draft_invoice').report_action(self)
+

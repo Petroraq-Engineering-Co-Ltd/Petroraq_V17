@@ -28,6 +28,8 @@ class PurchaseQuotation(models.Model):
     email_address = fields.Char(string="Email Address")
     supplier_id = fields.Char(string="Supplier ID")
     quotation_ref = fields.Char(string="Quotation Reference")
+    # Reason tab field for end user/supervisor workflow
+    rejection_reason = fields.Text(string="Reason for Rejection")
 
     # Payment Terms
     terms_net = fields.Boolean("Net")
@@ -125,19 +127,37 @@ class PurchaseQuotation(models.Model):
             record.vat_amount = total_excl * 0.15
             record.total_incl_vat = total_excl + record.vat_amount
 
-    @api.depends("rfq_origin", "total_incl_vat")
+    @api.depends("rfq_origin", "total_excl_vat")
     def _compute_is_best(self):
-        # Group records by rfq_origin
-        grouped = {}
-        for rec in self:
-            if rec.rfq_origin and rec.total_incl_vat:
-                grouped.setdefault(rec.rfq_origin, []).append(rec)
+        """Ensure only the quotation with the lowest total_excl_vat per RFQ is marked as best."""
+        # Fetch all relevant rfq_origin values in current batch
+        rfq_origins = self.mapped("rfq_origin")
+        if not rfq_origins:
+            return
 
-        for group in grouped.values():
-            # Get minimum total_incl_vat in group
-            min_amount = min(rec.total_incl_vat for rec in group)
-            for rec in group:
-                rec.is_best = rec.total_incl_vat == min_amount
+        # Fetch all quotations sharing those RFQs (even outside current batch)
+        all_quotations = self.env["purchase.quotation"].search([("rfq_origin", "in", rfq_origins)])
+
+        # Group them by rfq_origin
+        rfq_groups = {}
+        for rec in all_quotations:
+            rfq_groups.setdefault(rec.rfq_origin, []).append(rec)
+
+        # Determine the best for each group
+        for group in rfq_groups.values():
+            valid_records = [r for r in group if r.total_excl_vat > 0]
+            if not valid_records:
+                continue
+
+            # Find the one with minimum total_excl_vat
+            min_rec = min(valid_records, key=lambda r: r.total_excl_vat)
+
+            # Reset all to False first
+            for r in group:
+                r.is_best = False
+
+            # Then mark only the minimum one as True
+            min_rec.is_best = True
 
     @api.depends("is_best")
     def _compute_is_best_badge(self):
@@ -401,6 +421,8 @@ class PurchaseOrder(models.Model):
         compute="_compute_grn_ses_button_type",
         store=False,
     )
+    # Reason tab field (editable by specific groups via view)
+    rejection_reason = fields.Text(string="Reason for Rejection")
     
     @api.depends("custom_line_ids.subtotal")
     def _compute_amount_untaxed_custom(self):

@@ -80,6 +80,12 @@
                                 <field name="comments"/>
                             </group>
                         </page>
+                        <page string="Reason">
+                            <group>
+                                <field name="rejection_reason"
+                                       invisible="not is_supervisor"/>
+                            </group>
+                        </page>
                     </notebook>
                     <div class="total_amount_main">
                         <div class="total_amount_quotation">

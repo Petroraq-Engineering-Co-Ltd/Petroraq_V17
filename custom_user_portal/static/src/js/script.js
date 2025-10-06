@@ -84,6 +84,24 @@ class QuotationFormPage extends Component {
             updateTotalAmount();
             this.loadRfqs();
             this.loadVendors();
+            // Enforce exclusive selections and conditional enables
+            this._initTermsUiLogic();
+            // Wire RFQ Origin change → auto populate header + lines
+            const rfqInput = document.querySelector('input[name="rfq_origin"], select[name="rfq_origin"]');
+            if (rfqInput) {
+                rfqInput.addEventListener('change', async (e) => {
+                    const rfqName = e.target && e.target.value;
+                    await this.populateFromRfqName(rfqName);
+                });
+            }
+            // Wire Vendor change → populate vendor-based fields
+            const vendorInput = document.querySelector('input[name="supplier_name"]');
+            if (vendorInput) {
+                vendorInput.addEventListener('change', async (e) => {
+                    const vendorName = (e.target && e.target.value) || '';
+                    await this.populateFromVendorName(vendorName);
+                });
+            }
         });
     }
 
@@ -139,6 +157,184 @@ class QuotationFormPage extends Component {
         }
     }
 
+    async populateFromRfqName(rfqName) {
+        if (!rfqName) return;
+        // Fetch the RFQ/PO record first
+        let po;
+        try {
+            const recs = await this.rpc('/web/dataset/call_kw', {
+                model: 'purchase.order',
+                method: 'search_read',
+                args: [[['name', '=', rfqName]]],
+                kwargs: { fields: ['id','name','partner_id','partner_ref','date_planned','date_order','custom_line_ids','order_line'], limit: 1 },
+            });
+            po = (recs && recs[0]) || null;
+        } catch (e) {
+            console.error('Failed to load RFQ by name', rfqName, e);
+            po = null;
+        }
+        if (!po) return;
+
+        // Populate some header inputs if present
+        const setIfExists = (name, val) => {
+            const el = document.querySelector(`[name="${name}"]`);
+            if (el) el.value = val || '';
+        };
+        const toDateInput = (v) => {
+            if (!v) return '';
+            const s = (v || '').toString();
+            const pad2 = (n) => (n < 10 ? '0' + n : '' + n);
+            // helper: add 5 hours then format local date parts
+            const fmtPlus5h = (dateObj) => {
+                const d2 = new Date(dateObj.getTime() + 5 * 60 * 60 * 1000);
+                return `${d2.getFullYear()}-${pad2(d2.getMonth() + 1)}-${pad2(d2.getDate())}`;
+            };
+
+            // If 'YYYY-MM-DD' or starts with that, add +5h from midnight local
+            const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+            if (m) {
+                const d0 = new Date(m[1] + 'T00:00:00');
+                if (!isNaN(d0)) return fmtPlus5h(d0);
+                return m[1];
+            }
+            // Otherwise parse and format in LOCAL time then add +5h
+            try {
+                const d = new Date(s.replace(' ', 'T'));
+                if (!isNaN(d)) return fmtPlus5h(d);
+            } catch (e) {}
+            return '';
+        };
+
+        setIfExists('vendor_ref', po.partner_ref || '');
+        setIfExists('quotation_ref', po.name || rfqName || '');
+        if (po.partner_id && po.partner_id[1]) setIfExists('supplier_name', po.partner_id[1]);
+        if (po.partner_id && po.partner_id[1]) await this.populateFromVendorName(po.partner_id[1]);
+
+        // Fetch lines: prefer custom_line_ids
+        const lines = [];
+        let headerDatePlanned = po.date_planned || null;
+        let minLineDatePlanned = null;
+        try {
+            if (po.custom_line_ids && po.custom_line_ids.length) {
+                const clines = await this.rpc('/web/dataset/call_kw', {
+                    model: 'purchase.order.custom.line',
+                    method: 'read',
+                    args: [po.custom_line_ids, ['name','quantity','unit','type','price_unit']],
+                    kwargs: {},
+                });
+                for (const ln of (clines || [])) {
+                    lines.push({
+                        description: ln.name || '',
+                        quantity: ln.quantity || 0,
+                        type: ln.type || '',
+                        unit: ln.unit || '',
+                        price: ln.price_unit || 0,
+                    });
+                }
+            } else if (po.order_line && po.order_line.length) {
+                const olines = await this.rpc('/web/dataset/call_kw', {
+                    model: 'purchase.order.line',
+                    method: 'read',
+                    args: [po.order_line, ['name','product_id','product_qty','product_uom','price_unit','date_planned']],
+                    kwargs: {},
+                });
+                for (const ln of (olines || [])) {
+                    if (ln.date_planned) {
+                        const d = new Date(ln.date_planned);
+                        if (!isNaN(d)) {
+                            const iso = d.toISOString();
+                            if (!minLineDatePlanned || new Date(minLineDatePlanned) > d) {
+                                minLineDatePlanned = iso;
+                            }
+                        } else if (!minLineDatePlanned) {
+                            minLineDatePlanned = ln.date_planned;
+                        }
+                    }
+                    lines.push({
+                        description: ln.name || (ln.product_id && ln.product_id[1]) || '',
+                        quantity: ln.product_qty || 0,
+                        type: normalizeType((ln.product_id && ln.product_id[1]) || 'material'),
+                        unit: (ln.product_uom && ln.product_uom[1]) || '',
+                        price: ln.price_unit || 0,
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load RFQ lines', e);
+        }
+
+        // Populate table rows
+        try {
+            const tbody = document.getElementById('quotation_lines_body');
+            if (!tbody) return;
+            // reset
+            tbody.innerHTML = '';
+            lineIndex = 0;
+            const makeRow = (ln) => {
+                lineIndex++;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" name="product_description_${lineIndex}" class="form-control"/></td>
+                    <td><input type="number" step="0.01" name="product_quantity_${lineIndex}" class="form-control"/></td>
+                    <td><input type="text" name="product_type_${lineIndex}" class="form-control"/></td>
+                    <td><input type="text" name="product_unit_${lineIndex}" class="form-control"/></td>
+                    <td><input type="number" step="0.01" name="product_price_${lineIndex}" class="form-control"/></td>
+                    <td><input type="number" step="0.01" name="product_total_${lineIndex}" class="form-control" readonly="readonly"/></td>
+                    <td><button type="button" class="btn btn-danger btn-sm p-1" title="Remove" aria-label="Remove">&times;</button></td>
+                `;
+                tbody.appendChild(tr);
+                // set values
+                tr.querySelector(`input[name="product_description_${lineIndex}"]`).value = ln.description || '';
+                tr.querySelector(`input[name="product_quantity_${lineIndex}"]`).value = (ln.quantity || 0);
+                tr.querySelector(`input[name="product_type_${lineIndex}"]`).value = ln.type || '';
+                tr.querySelector(`input[name="product_unit_${lineIndex}"]`).value = ln.unit || '';
+                tr.querySelector(`input[name="product_price_${lineIndex}"]`).value = (ln.price || 0);
+                wireRowEvents(tr);
+            };
+            if (lines.length) {
+                for (const ln of lines) makeRow(ln);
+            } else {
+                // Create a single empty row if no lines found
+                makeRow({});
+            }
+            updateTotalAmount();
+        } catch (e) {
+            console.error('Failed to populate lines table', e);
+        }
+    }
+
+    async populateFromVendorName(vendorName) {
+        if (!vendorName) return;
+        let partner = null;
+        try {
+            const partners = await this.rpc('/web/dataset/call_kw', {
+                model: 'res.partner',
+                method: 'search_read',
+                args: [[['name', '=', vendorName]]],
+                kwargs: { fields: ['id','name','email','phone','vat','contact_address','street','street2','city','zip','state_id','country_id'], limit: 1 },
+            });
+            partner = (partners && partners[0]) || null;
+        } catch (e) {
+            console.error('Failed to resolve vendor by name', vendorName, e);
+            partner = null;
+        }
+        if (!partner) return;
+
+        const setIfExists = (name, val) => {
+            const el = document.querySelector(`[name="${name}"]`);
+            if (el) el.value = val || '';
+        };
+
+        // Compose address if contact_address not available
+        const addr = partner.contact_address || [partner.street, partner.street2, partner.city, partner.zip, (partner.state_id && partner.state_id[1]) || '', (partner.country_id && partner.country_id[1]) || ''].filter(Boolean).join(', ');
+
+        setIfExists('company_address', addr);
+        setIfExists('email_address', partner.email || '');
+        setIfExists('phone_number', partner.phone || '');
+        setIfExists('supplier_id', partner.vat || '');
+        setIfExists('contact_person', partner.name || '');
+    }
+
     async save(ev) {
         if (ev && ev.preventDefault) ev.preventDefault();
         const btn = ev && ev.currentTarget ? ev.currentTarget : null;
@@ -176,27 +372,27 @@ class QuotationFormPage extends Component {
         addCheck((fd.get('expected_arrival') || '').toString().trim().length > 0, 'Quotation Date (Expected Arrival) is required');
         addCheck((fd.get('quotation_valid_till') || '').toString().trim().length > 0, 'Quotation Valid Till is required');
 
-        // Terms: Payment Terms (at least one), Delivery Method (at least one), Production/Material Availability (at least one), Delivery Terms (at least one), Partial Order Acceptable (Yes/No)
-        const anyPayment = fd.has('terms_net') || fd.has('terms_30days') || fd.has('terms_advance') || fd.has('terms_delivery') || fd.has('terms_other');
-        addCheck(anyPayment, 'At least one Payment Term must be selected');
+        // Terms: now exactly one selection per group
+        const paymentCount = ['terms_net','terms_30days','terms_advance','terms_delivery','terms_other'].reduce((n, k) => n + (fd.has(k) ? 1 : 0), 0);
+        addCheck(paymentCount === 1, 'Select exactly one Payment Term');
 
-        const anyProduction = fd.has('ex_stock') || fd.has('required_days');
-        addCheck(anyProduction, 'Select Production/Material Availability');
+        const prodCount = ['ex_stock','required_days'].reduce((n, k) => n + (fd.has(k) ? 1 : 0), 0);
+        addCheck(prodCount === 1, 'Select exactly one Production/Material Availability option');
 
-        const anyDeliveryTerms = fd.has('ex_work') || fd.has('delivery_site');
-        addCheck(anyDeliveryTerms, 'Select Delivery Terms');
+        const delivTermsCount = ['ex_work','delivery_site'].reduce((n, k) => n + (fd.has(k) ? 1 : 0), 0);
+        addCheck(delivTermsCount === 1, 'Select exactly one Delivery Term');
 
         // Delivery Date Expected
         addCheck((fd.get('delivery_date') || '').toString().trim().length > 0, 'Delivery Date Expected is required');
 
-        // Delivery Method
-        const anyDeliveryMethod = fd.has('courier') || fd.has('pickup') || fd.has('freight') || fd.has('delivery_others');
-        addCheck(anyDeliveryMethod, 'Select at least one Delivery Method');
+        // Delivery Method (exactly one)
+        const delivMethodCount = ['courier','pickup','freight','delivery_others'].reduce((n, k) => n + (fd.has(k) ? 1 : 0), 0);
+        addCheck(delivMethodCount === 1, 'Select exactly one Delivery Method');
 
         // Partial Order Acceptable (exactly one of yes/no)
         const partialYes = fd.has('partial_yes');
         const partialNo = fd.has('partial_no');
-        addCheck(partialYes || partialNo, 'Select if Partial Order is acceptable (Yes/No)');
+        addCheck((partialYes ? 1 : 0) + (partialNo ? 1 : 0) === 1, 'Select exactly one: Partial Order acceptable Yes/No');
 
         // Conditional specifies
         if (fd.has('terms_advance')) {
@@ -365,6 +561,56 @@ class QuotationFormPage extends Component {
             // Fallback: navigate to Purchase app
             window.location.href = '/web#cids=1&menu_id=115&action=purchase.purchase_rfq';
         }
+    }
+
+    _initTermsUiLogic() {
+        // Generic exclusive group binder
+        const bindExclusive = (names, onToggle = null) => {
+            const inputs = names.map((n) => document.querySelector(`input[name="${n}"]`)).filter(Boolean);
+            const uncheckOthers = (current) => {
+                inputs.forEach((inp) => { if (inp !== current) inp.checked = false; });
+                if (typeof onToggle === 'function') onToggle();
+            };
+            inputs.forEach((inp) => {
+                inp.addEventListener('change', () => { if (inp.checked) uncheckOthers(inp); else { if (typeof onToggle === 'function') onToggle(); } });
+            });
+            // Initial
+            if (typeof onToggle === 'function') onToggle();
+        };
+
+        // Enable/disable helper
+        const toggleEnable = (selector, enabled) => {
+            const el = document.querySelector(selector);
+            if (!el) return;
+            el.disabled = !enabled;
+            if (!enabled) el.value = '';
+        };
+
+        // Payment Terms exclusive group
+        bindExclusive(['terms_net','terms_30days','terms_advance','terms_delivery','terms_other'], () => {
+            const adv = document.querySelector('input[name="terms_advance"]').checked;
+            const oth = document.querySelector('input[name="terms_other"]').checked;
+            toggleEnable('input[name="terms_advance_specify"]', adv);
+            toggleEnable('input[name="terms_others_specify"]', oth);
+        });
+
+        // Production / Availability exclusive
+        bindExclusive(['ex_stock','required_days'], () => {
+            const req = document.querySelector('input[name="required_days"]').checked;
+            toggleEnable('input[name="production_days"]', req);
+        });
+
+        // Delivery Terms exclusive
+        bindExclusive(['ex_work','delivery_site']);
+
+        // Delivery Method exclusive
+        bindExclusive(['courier','pickup','freight','delivery_others'], () => {
+            const other = document.querySelector('input[name="delivery_others"]').checked;
+            toggleEnable('input[name="delivery_others_specify"]', other);
+        });
+
+        // Partial Order Acceptable exclusive
+        bindExclusive(['partial_yes','partial_no']);
     }
 }
 
