@@ -27,7 +27,7 @@
         'views/portal_pr_form_template.xml',
         'views/quotation.xml',
         # 'views/quotation_form_template.xml',
-        'views/pr_odoo_ui.xml',
+        # 'views/pr_odoo_ui.xml',
         'views/portal_quotation.xml',
         'views/project_view.xml',
         'views/pr_portal_view.xml',
