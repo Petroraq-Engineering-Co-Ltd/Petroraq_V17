@@ -36,9 +36,11 @@
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
             <!-- Add the can_confirm_order field so it can be used in button visibility -->
-            <xpath expr="//field[@name='partner_ref']" position="after">
+            <!-- <xpath expr="//field[@name='partner_ref']" position="after"> -->
+            <xpath expr="//header" position="before">
                 <field name='subtotal' invisible='1'/>
                 <field name="can_confirm_order" invisible="1"/>
+                <field name="current_user_has_acted" invisible="1"/>
             </xpath>
             <!-- Hide Confirm button with id 'bid_confirm' -->
             <xpath expr="//header/button[@id='bid_confirm']" position="replace">
@@ -68,7 +70,7 @@
             type="object"
             string="Reject"
             class="btn btn-danger"
-            invisible="state != 'pending'"
+            invisible="state != 'pending' or current_user_has_acted"
             groups="custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director"/>
             </xpath>
         </field>
@@ -215,25 +217,25 @@
             type="object"
             string="Approve"
             class="btn btn-primary"
-            invisible="state != 'pending' or not show_pe_approved or can_confirm_order"
+            invisible="state != 'pending' or not show_pe_approved or can_confirm_order or current_user_has_acted"
             groups="custom_user_portal.project_engineer"/>
                 <button name="action_approve"
             type="object"
             string="Approve"
             class="btn btn-primary"
-            invisible="state != 'pending' or not show_pm_approved or subtotal &lt;= 10000 or can_confirm_order"
+            invisible="state != 'pending' or not show_pm_approved or subtotal &lt;= 10000 or can_confirm_order or current_user_has_acted"
             groups="custom_user_portal.project_manager"/>
                 <button name="action_approve"
             type="object"
             string="Approve"
             class="btn btn-primary"
-            invisible="state != 'pending' or not show_od_approved or subtotal &lt;= 100000 or can_confirm_order"
+            invisible="state != 'pending' or not show_od_approved or subtotal &lt;= 100000 or can_confirm_order or current_user_has_acted"
             groups="custom_user_portal.operations_director"/>
                 <button name="action_approve"
             type="object"
             string="Approve"
             class="btn btn-primary"
-            invisible="state != 'pending' or not show_md_approved or subtotal &lt;= 500000 or can_confirm_order"
+            invisible="state != 'pending' or not show_md_approved or subtotal &lt;= 500000 or can_confirm_order or current_user_has_acted"
             groups="custom_user_portal.managing_director"/>
             </xpath>
         </field>
