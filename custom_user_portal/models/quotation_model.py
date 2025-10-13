@@ -385,6 +385,18 @@ class PurchaseOrder(models.Model):
     show_pm_approved = fields.Boolean(compute="_compute_show_approvals", store=False)
     show_od_approved = fields.Boolean(compute="_compute_show_approvals", store=False)
     show_md_approved = fields.Boolean(compute="_compute_show_approvals", store=False)
+    # Track which users already acted (approved/rejected) so we can hide buttons for them only
+    approval_action_user_ids = fields.Many2many(
+        "res.users",
+        "purchase_order_approval_action_user_rel",
+        "order_id",
+        "user_id",
+        string="Users Who Acted",
+        copy=False,
+    )
+    current_user_has_acted = fields.Boolean(
+        compute="_compute_current_user_has_acted", store=False
+    )
     subtotal = fields.Float(
         string="Subtotal", compute="_compute_amount_untaxed_custom", store=True
     )
@@ -423,6 +435,16 @@ class PurchaseOrder(models.Model):
     )
     # Reason tab field (editable by specific groups via view)
     rejection_reason = fields.Text(string="Reason for Rejection")
+    
+    def _reload_action(self):
+        """Return an action that reloads the current form to refresh button visibility."""
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "purchase.order",
+            "view_mode": "form",
+            "res_id": self.id,
+            "target": "current",
+        }
     
     @api.depends("custom_line_ids.subtotal")
     def _compute_amount_untaxed_custom(self):
@@ -469,17 +491,21 @@ class PurchaseOrder(models.Model):
                 user_id=user.id,
             )
 
+    def _compute_current_user_has_acted(self):
+        uid = self.env.user.id
+        for order in self:
+            order.current_user_has_acted = bool(order.approval_action_user_ids.filtered(lambda u: u.id == uid))
+
     # main approval logic
     def action_approve(self):
         self.ensure_one()
         amount = self.subtotal
+        acting_user_id = self.env.user.id
 
         if amount <= 10000:
             if not self.pe_approved:
                 self.write({"pe_approved": True})
-
                 self.message_post(body="Approved by Project Engineer.")
-                return
 
         elif amount <= 100000:
             if not self.pe_approved:
@@ -544,6 +570,10 @@ class PurchaseOrder(models.Model):
                 self.write({"md_approved": True})
                 self.message_post(body="Approved by Managing Director.")
 
+        # Mark current user as having acted so their buttons hide
+        self.sudo().write({"approval_action_user_ids": [(4, acting_user_id)]})
+        return self._reload_action()
+
     # confirm order button visibility
     @api.depends(
         "state",
@@ -606,6 +636,9 @@ class PurchaseOrder(models.Model):
                 order.origin,
                 rejecting_user.name,
             )
+
+            # Record action for current user to hide buttons for them only
+            order.sudo().write({"approval_action_user_ids": [(4, self.env.user.id)]})
 
             # Step 1: Find the PO with this origin
             parent_po = self.env["purchase.order"].search(
