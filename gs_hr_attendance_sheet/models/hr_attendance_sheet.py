@@ -17,6 +17,7 @@ from dateutil.relativedelta import relativedelta
 from odoo import models, fields, tools, api, exceptions, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.misc import format_date
+
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 TIME_FORMAT = "%H:%M:%S"
 from odoo.tools import date_utils
@@ -31,24 +32,26 @@ class HrAttendance(models.Model):
             if rec.employee_id and rec.check_in:
                 leave_ids = self.env['hr.leave'].search([('employee_id', '=', rec.employee_id.id)])
                 for leave_id in leave_ids:
-                    if leave_id.holiday_status_id.work_entry_type_id.id == self.env.ref('hr_work_entry_contract.work_entry_type_unpaid_leave').id:
+                    if leave_id.holiday_status_id.work_entry_type_id.id == self.env.ref(
+                            'hr_work_entry_contract.work_entry_type_unpaid_leave').id:
                         if leave_id.request_date_from <= rec.check_in.date() <= leave_id.request_date_to:
                             raise ValidationError(_('There Is No Attendance For Employee %s' % rec.employee_id.name))
 
-                    if leave_id.holiday_status_id.work_entry_type_id.id == self.env.ref('hr_work_entry_contract.work_entry_type_legal_leave').id:
+                    if leave_id.holiday_status_id.work_entry_type_id.id == self.env.ref(
+                            'hr_work_entry_contract.work_entry_type_legal_leave').id:
                         if leave_id.request_date_from <= rec.check_in.date() <= leave_id.request_date_to:
                             raise ValidationError(_('There Is No Attendance For Employee %s' % rec.employee_id.name))
 
     day_name = fields.Selection(string='Day',
-        selection=[
-                    ('Saturday', 'Saturday'),
-                    ('Sunday', 'Sunday'),
-                    ('Monday', 'Monday'),
-                    ('Tuesday', 'Tuesday'),
-                    ('Wednesday', 'Wednesday'),
-                    ('Thursday', 'Thursday'),
-                    ('Friday', 'Friday'),
-        ])
+                                selection=[
+                                    ('Saturday', 'Saturday'),
+                                    ('Sunday', 'Sunday'),
+                                    ('Monday', 'Monday'),
+                                    ('Tuesday', 'Tuesday'),
+                                    ('Wednesday', 'Wednesday'),
+                                    ('Thursday', 'Thursday'),
+                                    ('Friday', 'Friday'),
+                                ])
 
     run_compute = fields.Boolean(compute='_compute_day_name')
 
@@ -63,13 +66,13 @@ class HrAttendance(models.Model):
 class hrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
-    attendance_sheet_id = fields.Many2one('attendance.sheet', string='Attendance Sheet',)
+    attendance_sheet_id = fields.Many2one('attendance.sheet', string='Attendance Sheet', )
     is_bool = fields.Boolean()
     absence_num = fields.Integer()
     total_absence = fields.Float()
 
     def compute_sheet(self):
-        res = super(hrPayslip,self).compute_sheet()
+        res = super(hrPayslip, self).compute_sheet()
         for rec in self:
             rec._get_workday_lines()
             # rec._get_total_absence()
@@ -82,7 +85,8 @@ class hrPayslip(models.Model):
             for line in rec.line_ids:
                 if line.code == 'NET':
                     if line.total < 0:
-                        raise ValidationError(_('Total Salary Less Than Zero For Employee :  %s' % rec.employee_id.name))
+                        raise ValidationError(
+                            _('Total Salary Less Than Zero For Employee :  %s' % rec.employee_id.name))
 
     # def _get_total_absence(self):
     #     for rec in self:
@@ -106,12 +110,17 @@ class hrPayslip(models.Model):
                 absence_work_entry = work_entry_obj.search([('code', '=', 'ATTSHAB')])
                 difftime_work_entry = work_entry_obj.search([('code', '=', 'ATTSHDT')])
                 # total_unpaid_leave_hours = rec.attendance_sheet_id.unpaid_leave * rec.contract_id.resource_calendar_id.hours_per_day
-                total_unpaid_leave_hours = rec.attendance_sheet_id.unpaid_leave * (rec.contract_id.resource_calendar_id.hours_per_day + 1)
+                total_unpaid_leave_hours = rec.attendance_sheet_id.unpaid_leave * (
+                            rec.contract_id.resource_calendar_id.hours_per_day + 1)
                 # total_paid_leave_hours = rec.attendance_sheet_id.paid_leave * rec.contract_id.resource_calendar_id.hours_per_day
-                total_paid_leave_hours = rec.attendance_sheet_id.paid_leave * (rec.contract_id.resource_calendar_id.hours_per_day + 1)
+                total_paid_leave_hours = rec.attendance_sheet_id.paid_leave * (
+                            rec.contract_id.resource_calendar_id.hours_per_day + 1)
                 # total_num_att_hours = rec.attendance_sheet_id.num_att * rec.contract_id.resource_calendar_id.hours_per_day
-                total_num_att_hours = rec.attendance_sheet_id.num_att * (rec.contract_id.resource_calendar_id.hours_per_day + 1)
-                attendances = self.env['hr.attendance'].search([('employee_id', '=', rec.employee_id.id), ('check_in', '>=', rec.date_from), ('check_out', '<=', rec.date_to)])
+                total_num_att_hours = rec.attendance_sheet_id.num_att * (
+                            rec.contract_id.resource_calendar_id.hours_per_day + 1)
+                attendances = self.env['hr.attendance'].search(
+                    [('employee_id', '=', rec.employee_id.id), ('check_in', '>=', rec.date_from),
+                     ('check_out', '<=', rec.date_to)])
                 leave_ids = self.env['hr.leave'].search(
                     [('employee_id', '=', rec.employee_id.id), ('request_date_from', '>=', rec.date_from),
                      ('request_date_to', '<=', rec.date_to)])
@@ -199,7 +208,7 @@ class hrPayslip(models.Model):
                 # worked_days_lines = att + paid + unpaid + overtime + late + absence + difftime
                 worked_days_lines = att + paid + unpaid + overtime + late + absence
                 rec.worked_days_line_ids = [(0, 0, x) for x in
-                                                   worked_days_lines]
+                                            worked_days_lines]
                 rec.is_bool = True
                 rec.compute_sheet()
 
@@ -246,7 +255,7 @@ class AttendanceSheet(models.Model):
                                 string="Total Over Time", readonly=True,
                                 store=True)
     tot_overtime_amount = fields.Float(compute="_compute_sheet_total",
-                                      string="Total Overtime Amount", readonly=True, store=True)
+                                       string="Total Overtime Amount", readonly=True, store=True)
     tot_difftime = fields.Float(compute="_compute_sheet_total",
                                 string="Total Diff time Hours", readonly=True,
                                 store=True)
@@ -254,11 +263,11 @@ class AttendanceSheet(models.Model):
                                  string="No of Diff Times", readonly=True,
                                  store=True)
     tot_difftime_amount = fields.Float(compute="_compute_sheet_total",
-                                      string="Total Diff Amount", readonly=True, store=True)
+                                       string="Total Diff Amount", readonly=True, store=True)
     tot_late = fields.Float(compute="_compute_sheet_total",
                             string="Total Late In", readonly=True, store=True)
     tot_late_amount = fields.Float(compute="_compute_sheet_total",
-                            string="Total Late In Amount", readonly=True, store=True)
+                                   string="Total Late In Amount", readonly=True, store=True)
     no_late = fields.Integer(compute="_compute_sheet_total",
                              string="No of Lates",
                              readonly=True, store=True)
@@ -269,7 +278,7 @@ class AttendanceSheet(models.Model):
                                string="Total absence Hours", readonly=True,
                                store=True)
     tot_absence_amount = fields.Float(compute="_compute_sheet_total",
-                                   string="Total Absence Amount", readonly=True, store=True)
+                                      string="Total Absence Amount", readonly=True, store=True)
     tot_worked_hour = fields.Float(compute="_compute_sheet_total",
                                    string="Total Late In", readonly=True,
                                    store=True)
@@ -286,14 +295,15 @@ class AttendanceSheet(models.Model):
     business_trip_leave = fields.Integer()
     num_att = fields.Integer()
     attendance_amount = fields.Float(compute="_compute_sheet_total",
-                                   string="Total Attendance Amount", readonly=True, store=True)
+                                     string="Total Attendance Amount", readonly=True, store=True)
 
     total_unpaid_leave = fields.Float(compute='_compute_total_unpaid_leave')
     total_paid_leave = fields.Float(compute='_compute_total_unpaid_leave')
     total_sick_leave = fields.Float(compute='_compute_total_unpaid_leave')
     total_business_trip_leave = fields.Float(compute='_compute_total_unpaid_leave')
 
-    @api.depends("line_ids.status", "line_ids.date", "employee_id", "paid_leave", "unpaid_leave", "sick_leave", "business_trip_leave")
+    @api.depends("line_ids.status", "line_ids.date", "employee_id", "paid_leave", "unpaid_leave", "sick_leave",
+                 "business_trip_leave")
     def _compute_total_unpaid_leave(self):
         for rec in self:
             # Compute Paid Leave
@@ -305,10 +315,10 @@ class AttendanceSheet(models.Model):
                 for line in rec.line_ids:
                     if line.status == "leave":
                         leave_id = self.env['hr.leave'].search([('employee_id', '=', rec.employee_id.id),
-                                                         ('request_date_from', '<=', line.date),
-                                                         ('request_date_to', '>=', line.date),
-                                                         ('state', '=', "validate"),
-                                                         ])
+                                                                ('request_date_from', '<=', line.date),
+                                                                ('request_date_to', '>=', line.date),
+                                                                ('state', '=', "validate"),
+                                                                ])
                         if leave_id and leave_id.holiday_status_id:
                             if leave_id.holiday_status_id.is_paid:
                                 if leave_id.holiday_status_id.leave_type == "sick_leave":
@@ -323,7 +333,6 @@ class AttendanceSheet(models.Model):
             rec.total_paid_leave = paid_amount
             rec.total_sick_leave = sick_amount
             rec.total_business_trip_leave = business_trip_amount
-
 
     # def _compute_total_unpaid_leave(self):
     #     for rec in self:
@@ -341,7 +350,6 @@ class AttendanceSheet(models.Model):
     #             # amount_day = rec.contract_id.total_package_val / days
     #             amount_day = rec.contract_id.gross_amount / days
     #             rec.total_paid_leave = rec.paid_leave * amount_day
-
 
     def unlink(self):
         if any(self.filtered(
@@ -429,23 +437,35 @@ class AttendanceSheet(models.Model):
             if sheet.employee_id.resource_calendar_id.id == 6:
                 tot_overtime_hours_from_calc_def = 0
                 # sheet.tot_overtime = sum([l.overtime for l in overtime_lines]) if sheet.employee_id.add_overtime else 0
-                overtime_lines = sheet.line_ids.filtered(lambda l: l.worked_hours > 11 or (l.pl_sign_in == 0 and l.ac_sign_in > 0))
+                overtime_lines = sheet.line_ids.filtered(
+                    lambda l: l.worked_hours > 11 or (l.pl_sign_in == 0 and l.ac_sign_in > 0)
+                )
                 # sheet.tot_overtime = sum([(l.worked_hours -1) - sheet.employee_id.resource_calendar_id.hours_per_day for l in overtime_lines]) if sheet.employee_id.add_overtime else 0
                 for overtime_line in overtime_lines:
-                    tot_overtime_hours_from_calc_def += self.calculate_overtime_from_method(overtime_line, sheet.employee_id.resource_calendar_id.hours_per_day, sheet.employee_id.add_overtime)
+                    tot_overtime_hours_from_calc_def += self.calculate_overtime_from_method(
+                        overtime_line,
+                        sheet.employee_id.resource_calendar_id.hours_per_day,
+                        sheet.employee_id.add_overtime
+                    )
                 sheet.tot_overtime = tot_overtime_hours_from_calc_def
-                # sheet.tot_overtime_amount = sum([l.overtime_amount for l in overtime_lines])
-                sheet.tot_overtime_amount = sum([l.overtime_amount for l in overtime_lines])
+                if sheet.employee_id.add_overtime:
+                    basic_salary = sheet.employee_id.contract_id.wage or 0
+                    hourly_rate = (basic_salary / 26 / 8) * 1.5  # requested formula
+                    sheet.tot_overtime_amount = sheet.tot_overtime * hourly_rate
+                else:
+                    sheet.tot_overtime_amount = 0
             else:
                 worked_hours = sum(sheet.line_ids.filtered(lambda l: l.worked_hours > 0).mapped("worked_hours"))
-                overtime_lines = sheet.line_ids.filtered(lambda l: l.worked_hours > 9 or (l.pl_sign_in == 0 and l.ac_sign_in > 0))
+                overtime_lines = sheet.line_ids.filtered(
+                    lambda l: l.worked_hours > 9 or (l.pl_sign_in == 0 and l.ac_sign_in > 0))
                 monthly_working_hours = 260 if sheet.employee_id.resource_calendar_id.id == 6 else 208
                 if worked_hours >= monthly_working_hours:
                     tot_overtime_custom = worked_hours - monthly_working_hours
                 else:
                     tot_overtime_custom = 0
                 sheet.tot_overtime = tot_overtime_custom if sheet.employee_id.add_overtime else 0
-                sheet.tot_overtime_amount = (((tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.gross_amount) / monthly_working_hours) if sheet.employee_id.add_overtime else 0
+                sheet.tot_overtime_amount = (((
+                                                          tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.gross_amount) / monthly_working_hours) if sheet.employee_id.add_overtime else 0
             # sheet.tot_overtime_amount = (((tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.wage) / 208) if sheet.employee_id.add_overtime else 0
             sheet.no_overtime = len(overtime_lines)
             # Compute Total Late In
@@ -456,7 +476,7 @@ class AttendanceSheet(models.Model):
             # Compute Absence
             absence_lines = sheet.line_ids.filtered(
                 lambda l: l.status == "ab")
-                # lambda l: l.diff_time > 0 and l.status == "ab")
+            # lambda l: l.diff_time > 0 and l.status == "ab")
             sheet.tot_absence = sum([l.diff_time for l in absence_lines])
             sheet.tot_absence_amount = sum([l.absence_amount for l in absence_lines])
             sheet.no_absence = len(absence_lines)
@@ -590,7 +610,7 @@ class AttendanceSheet(models.Model):
                 day_str = str(day.weekday())
                 date = day.strftime('%Y-%m-%d')
                 work_intervals = calendar_id.att_get_work_intervals_new(day_start,
-                                                                    day_end, tz)
+                                                                        day_end, tz)
                 attendance_intervals = self.get_attendance_intervals(emp,
                                                                      day_start,
                                                                      day_end,
@@ -980,7 +1000,8 @@ class AttendanceSheet(models.Model):
 
             for leave in leave_ids:
                 # if leave.holiday_status_id.work_entry_type_id.id == self.env.ref('hr_work_entry_contract.work_entry_type_unpaid_leave').id:
-                if leave.holiday_status_id.work_entry_type_id.id == self.env.ref('hr_work_entry_contract.work_entry_type_unpaid_leave').id or not leave.holiday_status_id.is_paid:
+                if leave.holiday_status_id.work_entry_type_id.id == self.env.ref(
+                        'hr_work_entry_contract.work_entry_type_unpaid_leave').id or not leave.holiday_status_id.is_paid:
                     unpaid_leave += leave.number_of_days_display
                 # if leave.holiday_status_id.work_entry_type_id.id == self.env.ref('hr_work_entry_contract.work_entry_type_legal_leave').id:
                 if leave.holiday_status_id.is_paid:
@@ -1061,7 +1082,7 @@ class AttendanceSheet(models.Model):
             # payslip_id.gs_onchange_employee()
             # payslip_id.onchange_employee_ref()
             sheet.payslip_id = payslip_id
-            payslips+=payslip_id
+            payslips += payslip_id
         return payslips
 
     def _get_workday_lines(self):
@@ -1348,7 +1369,8 @@ class AttendanceSheetLine(models.Model):
                 hours_per_day = line.employee_id.contract_id.resource_calendar_id.hours_per_day
 
                 if line.pl_sign_in > 0 and line.ac_sign_in > 0:
-                    line.overtime_amount = (((line.worked_hours - 1) - line.employee_id.resource_calendar_id.hours_per_day) * 1.5 * day_amount )/ hours_per_day
+                    line.overtime_amount = (((
+                                                         line.worked_hours - 1) - line.employee_id.resource_calendar_id.hours_per_day) * 1.5 * day_amount) / hours_per_day
                 elif line.pl_sign_in == 0 and line.ac_sign_in > 0:
                     line.overtime_amount = ((line.worked_hours - 1) * 1.5 * day_amount) / hours_per_day
 
@@ -1373,12 +1395,3 @@ class AttendanceSheetLine(models.Model):
                 line.diff_amount = (line.act_diff_time * day_amount) / hours_per_day
             else:
                 line.diff_amount = 0
-
-
-
-
-
-
-
-
-        
