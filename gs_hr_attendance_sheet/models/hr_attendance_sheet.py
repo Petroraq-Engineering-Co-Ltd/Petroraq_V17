@@ -111,13 +111,13 @@ class hrPayslip(models.Model):
                 difftime_work_entry = work_entry_obj.search([('code', '=', 'ATTSHDT')])
                 # total_unpaid_leave_hours = rec.attendance_sheet_id.unpaid_leave * rec.contract_id.resource_calendar_id.hours_per_day
                 total_unpaid_leave_hours = rec.attendance_sheet_id.unpaid_leave * (
-                            rec.contract_id.resource_calendar_id.hours_per_day + 1)
+                        rec.contract_id.resource_calendar_id.hours_per_day + 1)
                 # total_paid_leave_hours = rec.attendance_sheet_id.paid_leave * rec.contract_id.resource_calendar_id.hours_per_day
                 total_paid_leave_hours = rec.attendance_sheet_id.paid_leave * (
-                            rec.contract_id.resource_calendar_id.hours_per_day + 1)
+                        rec.contract_id.resource_calendar_id.hours_per_day + 1)
                 # total_num_att_hours = rec.attendance_sheet_id.num_att * rec.contract_id.resource_calendar_id.hours_per_day
                 total_num_att_hours = rec.attendance_sheet_id.num_att * (
-                            rec.contract_id.resource_calendar_id.hours_per_day + 1)
+                        rec.contract_id.resource_calendar_id.hours_per_day + 1)
                 attendances = self.env['hr.attendance'].search(
                     [('employee_id', '=', rec.employee_id.id), ('check_in', '>=', rec.date_from),
                      ('check_out', '<=', rec.date_to)])
@@ -454,6 +454,7 @@ class AttendanceSheet(models.Model):
                     sheet.tot_overtime_amount = sheet.tot_overtime * hourly_rate
                 else:
                     sheet.tot_overtime_amount = 0
+
             else:
                 worked_hours = sum(sheet.line_ids.filtered(lambda l: l.worked_hours > 0).mapped("worked_hours"))
                 overtime_lines = sheet.line_ids.filtered(
@@ -465,7 +466,7 @@ class AttendanceSheet(models.Model):
                     tot_overtime_custom = 0
                 sheet.tot_overtime = tot_overtime_custom if sheet.employee_id.add_overtime else 0
                 sheet.tot_overtime_amount = (((
-                                                          tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.gross_amount) / monthly_working_hours) if sheet.employee_id.add_overtime else 0
+                                                      tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.gross_amount) / monthly_working_hours) if sheet.employee_id.add_overtime else 0
             # sheet.tot_overtime_amount = (((tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.wage) / 208) if sheet.employee_id.add_overtime else 0
             sheet.no_overtime = len(overtime_lines)
             # Compute Total Late In
@@ -1370,7 +1371,7 @@ class AttendanceSheetLine(models.Model):
 
                 if line.pl_sign_in > 0 and line.ac_sign_in > 0:
                     line.overtime_amount = (((
-                                                         line.worked_hours - 1) - line.employee_id.resource_calendar_id.hours_per_day) * 1.5 * day_amount) / hours_per_day
+                                                     line.worked_hours - 1) - line.employee_id.resource_calendar_id.hours_per_day) * 1.5 * day_amount) / hours_per_day
                 elif line.pl_sign_in == 0 and line.ac_sign_in > 0:
                     line.overtime_amount = ((line.worked_hours - 1) * 1.5 * day_amount) / hours_per_day
 
