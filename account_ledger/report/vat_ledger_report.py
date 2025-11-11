@@ -8,7 +8,7 @@ import logging
 _logger = logging.getLogger(__name__)
 
 class AccountLedgerReport(models.AbstractModel):
-    
+
     _name = 'report.account_ledger.vat_ledger_rep'
 
     def _get_valuation_dates(self, start_date, end_date):
@@ -214,11 +214,13 @@ class AccountLedgerReport(models.AbstractModel):
                     'tot_tax_amount': '{:,.2f}'.format(tot_tax_amount),
                     'tot_total_amount': '{:,.2f}'.format(tot_total_amount)
                     })
+        account_names = ", ".join(self.env['account.account'].browse(account).mapped('name'))
+
         return {
             'doc_ids': data['ids'],
             'doc_model': data['model'],
             'valuation_date':self._get_valuation_dates(data['form']['date_start'], data['form']['date_end']),
-            'account': " ",
+            'account': account_names or "All",
             'report_date': report_date,
             'docs': docs
         }
