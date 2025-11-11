@@ -5,10 +5,11 @@ from datetime import datetime
 from odoo import api, models
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
 import logging
+
 _logger = logging.getLogger(__name__)
 
+
 class AccountLedgerReport(models.AbstractModel):
-    
     _name = 'report.account_ledger.account_ledger_rep'
 
     def _get_valuation_dates(self, start_date, end_date):
@@ -32,7 +33,6 @@ class AccountLedgerReport(models.AbstractModel):
         project = False
         employee = False
         asset = False
-
 
         if data['form'].get("department"):
             department = data['form']['department']
@@ -69,25 +69,26 @@ class AccountLedgerReport(models.AbstractModel):
             analytic_ids.append(int(asset))
             str_analytic_ids.append(str(asset))
 
-
         today = datetime.today()
         report_date = today.strftime("%b-%d-%Y")
         # user_type_receivable_id = self.env['ir.model.data'].xmlid_to_res_id('account.data_account_type_receivable')
         ji_domain = [
-            # ('account_id','=', account),
-            ('company_id','=', company),
-            ('date','>=',datetime.strptime(date_start, DATE_FORMAT).date()),
-            ('date','<=',datetime.strptime(date_end, DATE_FORMAT).date()),
-        ]
-        opening_balance_domain = [
-            # ('account_id','=', account),
             ('company_id', '=', company),
             ('date', '>=', datetime.strptime(date_start, DATE_FORMAT).date()),
             ('date', '<=', datetime.strptime(date_end, DATE_FORMAT).date()),
+            ('move_id.state', '=', 'posted'),
         ]
+
+        opening_balance_domain = [
+            ('company_id', '=', company),
+            ('date', '>=', datetime.strptime(date_start, DATE_FORMAT).date()),
+            ('date', '<=', datetime.strptime(date_end, DATE_FORMAT).date()),
+            ('move_id.state', '=', 'posted'),
+        ]
+
         if account:
-            ji_domain.append(('account_id','in', account))
-            opening_balance_domain.append(('account_id','in', account))
+            ji_domain.append(('account_id', 'in', account))
+            opening_balance_domain.append(('account_id', 'in', account))
         else:
             return {
                 'doc_ids': data['ids'],
@@ -106,7 +107,6 @@ class AccountLedgerReport(models.AbstractModel):
         if department:
             ji_domain.append(('analytic_distribution', 'in', [int(department)]))
 
-
         opening_balance_ids = self.env['account.move.line'].search(opening_balance_domain, order="date asc")
         JournalItems = self.env['account.move.line'].search(ji_domain, order="date asc")
         # JournalAccounts = JournalItems.mapped("account_id.id")
@@ -114,28 +114,35 @@ class AccountLedgerReport(models.AbstractModel):
         TupleJournalAccounts = tuple(JournalAccounts)
 
         if JournalItems and section:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(section)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(section)])], order="date asc")
         if JournalItems and project:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(project)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(project)])], order="date asc")
         if JournalItems and employee:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(employee)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(employee)])], order="date asc")
         if JournalItems and asset:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(asset)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(asset)])], order="date asc")
 
         # account_move_line.account_id = {account}
         tuple_account = tuple(account)
         if len(JournalAccounts) == 1:
             where_statement = f"""
-                WHERE account_move_line.account_id = {JournalAccounts[0]} 
+                WHERE aml.account_id = {JournalAccounts[0]} 
                 AND 
-                account_move_line.date < '{date_start}'"""
+                aml.date < '{date_start}'
+                AND am.state = 'posted'"""
         elif len(JournalAccounts) > 1:
             where_statement = f"""
-                WHERE account_move_line.account_id in {TupleJournalAccounts} 
+                WHERE aml.account_id in {TupleJournalAccounts} 
                 AND 
-                account_move_line.date < '{date_start}'"""
+                aml.date < '{date_start}'
+                AND am.state = 'posted'"""
         else:
-            where_statement = f""""""
+            where_statement = ""
+
         # where_statement = f"""
         # account_move_line.account_id in {TupleJournalAccounts}
         # AND
@@ -172,13 +179,15 @@ class AccountLedgerReport(models.AbstractModel):
                 'docs': []
             }
         sql = f"""
-                    SELECT 
-                        SUM(balance)
-                    FROM
-                        account_move_line
-                    {where_statement}    
-                    GROUP By account_move_line.account_id
-                """
+            SELECT 
+                SUM(aml.balance)
+            FROM
+                account_move_line aml
+            JOIN
+                account_move am ON aml.move_id = am.id
+            {where_statement}
+            GROUP BY aml.account_id
+        """
         # raise ValueError(sql)
         self.env.cr.execute(sql)
         result = self.env.cr.fetchone()
@@ -194,34 +203,38 @@ class AccountLedgerReport(models.AbstractModel):
             t_debit += item.debit
             t_credit += item.credit
             docs.append({
-                    'transaction_ref': item.move_id.name,
-                    'date': item.date,
-                    'description':  item.name,
-                    'reference': item.ref,
-                    'journal': item.journal_id.name,
-                    'initial_balance': '{:,.2f}'.format(initial_balance),
-                    'debit': '{:,.2f}'.format(item.debit),
-                    'credit': '{:,.2f}'.format(item.credit),
-                    'balance': '{:,.2f}'.format(balance)
-                    })
+                'transaction_ref': item.move_id.name,
+                'date': item.date,
+                'description': item.name,
+                'reference': item.ref,
+                'journal': item.journal_id.name,
+                'initial_balance': '{:,.2f}'.format(initial_balance),
+                'debit': '{:,.2f}'.format(item.debit),
+                'credit': '{:,.2f}'.format(item.credit),
+                'balance': '{:,.2f}'.format(balance)
+            })
             initial_balance = balance
         docs.append({
-                    'transaction_ref': False,
-                    'date': ' ',
-                    'description': ' ',
-                    'reference': ' ',
-                    'journal': ' ',
-                    'initial_balance': '{:,.2f}'.format(init_balance),
-                    'debit': '{:,.2f}'.format(t_debit),
-                    'credit': '{:,.2f}'.format(t_credit),
-                    'balance': '{:,.2f}'.format(init_balance+t_debit-t_credit)
-                    })
+            'transaction_ref': False,
+            'date': ' ',
+            'description': ' ',
+            'reference': ' ',
+            'journal': ' ',
+            'initial_balance': '{:,.2f}'.format(init_balance),
+            'debit': '{:,.2f}'.format(t_debit),
+            'credit': '{:,.2f}'.format(t_credit),
+            'balance': '{:,.2f}'.format(init_balance + t_debit - t_credit)
+        })
+        account_ids = data['form']['account']
+        account_names = ", ".join(self.env['account.account'].browse(account_ids).mapped('name'))
+        company_name = self.env['res.company'].browse(company).name
+
         return {
             'doc_ids': data['ids'],
             'doc_model': data['model'],
-            'valuation_date':self._get_valuation_dates(data['form']['date_start'], data['form']['date_end']),
+            'valuation_date': self._get_valuation_dates(data['form']['date_start'], data['form']['date_end']),
             # 'account':self.env['account.account'].search([('id', '=', account)]).name,
-            'account': " ",
+            'account': f"{company_name} - {account_names}" if account_names else company_name,
             'report_date': report_date,
             'docs': docs
-        } 
+        }

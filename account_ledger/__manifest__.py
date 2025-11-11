@@ -30,6 +30,8 @@
         'views/bank_receipt.xml',
         'views/cash_payment.xml',
         'views/cash_receipt.xml',
+
+
     ],
     # 'assets': {
     #         'web.assets_backend': [
