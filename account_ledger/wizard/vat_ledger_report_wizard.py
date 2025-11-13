@@ -3,32 +3,38 @@
 from odoo import api, models, fields
 from datetime import datetime, date
 import json
+from odoo.exceptions import UserError
 
 MAIN_HEAD = ["main_head"]
 MAIN_HEAD_FIELDS = ["assets_main_head", "liability_main_head"]
-CATEGORY_FIELDS = ["current_assets_category", "fixed_assets_category", "other_assets_category", "current_liability_category", "liability_non_current_category", "equity_category", "revenue_category", "expense_category"]
-CURRENT_ASSET_FIELDS = ["cash_equivalents_subcategory", "banks_subcategory", "accounts_receivable_subcategory", "inventory_subcategory", "prepaid_expenses_subcategory"]
-FIXED_ASSET_FIELDS = ["vehicles_subcategory", "furniture_fixture_subcategory", "computer_printers_subcategory", "machinery_equipment_subcategory", "land_buildings_subcategory"]
+CATEGORY_FIELDS = ["current_assets_category", "fixed_assets_category", "other_assets_category",
+                   "current_liability_category", "liability_non_current_category", "equity_category",
+                   "revenue_category", "expense_category"]
+CURRENT_ASSET_FIELDS = ["cash_equivalents_subcategory", "banks_subcategory", "accounts_receivable_subcategory",
+                        "inventory_subcategory", "prepaid_expenses_subcategory"]
+FIXED_ASSET_FIELDS = ["vehicles_subcategory", "furniture_fixture_subcategory", "computer_printers_subcategory",
+                      "machinery_equipment_subcategory", "land_buildings_subcategory"]
 OTHER_ASSET_FIELDS = ["investment_subcategory", "vat_receivable_subcategory", "suspense_account_subcategory"]
 
-CURRENT_LIABILITY_FIELDS = ["accounts_payable_subcategory", "short_term_loans_subcategory", "other_liabilities_subcategory"]
+CURRENT_LIABILITY_FIELDS = ["accounts_payable_subcategory", "short_term_loans_subcategory",
+                            "other_liabilities_subcategory"]
 NON_CURRENT_LIABILITY_FIELDS = ["long_term_loans_subcategory", "lease_obligations_subcategory"]
 
 EQUITY_FIELDS = ["capital_subcategory"]
 
 REVENUE_FIELDS = ["operating_revenue_subcategory"]
 
-EXPENSE_FIELDS = ["cogs_subcategory", "operating_expenses_subcategory", "financial_expenses_subcategory", "other_expenses_subcategory"]
+EXPENSE_FIELDS = ["cogs_subcategory", "operating_expenses_subcategory", "financial_expenses_subcategory",
+                  "other_expenses_subcategory"]
 
 
 class VatLedgerReport(models.TransientModel):
-    
     _name = 'vat.ledger.report.wizard'
 
     # region [Default Methods]
 
     # endregion [Default Methods]
-    
+
     date_start = fields.Date(string="Start Date", required=True, default=date(2025, 1, 1))
     date_end = fields.Date(string="End Date", required=True, default=fields.Date.today)
     account_id = fields.Many2one('account.account', required=False, string="Account")
@@ -36,13 +42,21 @@ class VatLedgerReport(models.TransientModel):
     account_ids = fields.Many2many('account.account', required=True, string="Accounts")
     account_name = fields.Char(string='Account Name', related="account_id.name")
     company_id = fields.Many2one('res.company', required=True, string="Company", default=lambda self: self.env.company)
-    department_id = fields.Many2one('account.analytic.account', string="Department", domain="[('analytic_plan_type', '=', 'department')]")
-    section_id = fields.Many2one('account.analytic.account', string="Section", domain="[('analytic_plan_type', '=', 'section')]")
-    project_id = fields.Many2one('account.analytic.account', string="Project", domain="[('analytic_plan_type', '=', 'project')]")
-    employee_id = fields.Many2one('account.analytic.account', string="Employee", domain="[('analytic_plan_type', '=', 'employee')]")
-    asset_id = fields.Many2one('account.analytic.account', string="Asset", domain="[('analytic_plan_type', '=', 'asset')]")
-    vat_option = fields.Selection([("including_vat", "Including VAT"), ("excluding_vat", "Excluding VAT"), ("all", "All")], string="VAT Options", default="including_vat", required=True)
+    department_id = fields.Many2one('account.analytic.account', string="Department",
+                                    domain="[('analytic_plan_type', '=', 'department')]")
+    section_id = fields.Many2one('account.analytic.account', string="Section",
+                                 domain="[('analytic_plan_type', '=', 'section')]")
+    project_id = fields.Many2one('account.analytic.account', string="Project",
+                                 domain="[('analytic_plan_type', '=', 'project')]")
+    employee_id = fields.Many2one('account.analytic.account', string="Employee",
+                                  domain="[('analytic_plan_type', '=', 'employee')]")
+    asset_id = fields.Many2one('account.analytic.account', string="Asset",
+                               domain="[('analytic_plan_type', '=', 'asset')]")
+    vat_option = fields.Selection(
+        [("including_vat", "Including VAT"), ("excluding_vat", "Excluding VAT"), ("all", "All")], string="VAT Options",
+        default="including_vat", required=True)
     # region [Account Filter Fields]
+
 
     main_head = fields.Selection([
         ("assets", "Assets"),
@@ -188,32 +202,41 @@ class VatLedgerReport(models.TransientModel):
         ("general_administrative_expenses", "General Administrative Expenses"),
     ], string="Other Expenses Sub-Category", tracking=True)
 
+    # Inline summary fields
+    total_debit = fields.Float("Total Debit", readonly=True)
+    total_credit = fields.Float("Total Credit", readonly=True)
+    vat_total = fields.Float("Total VAT", readonly=True)
+    transaction_count = fields.Integer("Transaction Count", readonly=True)
+
+    summary_html = fields.Html("Account Balances Summary", readonly=True)
+
     # endregion [Account Filter Fields]
 
     @api.depends("date_start", "date_end")
     def _compute_account_id_domain(self):
         for rec in self:
-            if self.env.user.has_group('account.group_account_manager') or self.env.user.has_group('pr_account.custom_group_accounting_manager'):
+            if self.env.user.has_group('account.group_account_manager') or self.env.user.has_group(
+                    'pr_account.custom_group_accounting_manager'):
                 rec.account_id_domain = "[]"
             else:
                 rec.account_id_domain = "[('id', '!=', 749)]"
 
     @api.constrains("main_head", "assets_main_head", "liability_main_head", "current_assets_category",
-                  "fixed_assets_category", "other_assets_category",
-                  "current_liability_category", "liability_non_current_category", "equity_category",
-                  "revenue_category", "expense_category", "cash_equivalents_subcategory",
-                  "banks_subcategory", "accounts_receivable_subcategory", "inventory_subcategory",
-                  "prepaid_expenses_subcategory",
-                  "vehicles_subcategory", "furniture_fixture_subcategory", "computer_printers_subcategory",
-                  "machinery_equipment_subcategory",
-                  "land_buildings_subcategory", "investment_subcategory", "vat_receivable_subcategory",
-                  "suspense_account_subcategory", "accounts_payable_subcategory",
-                  "short_term_loans_subcategory", "other_liabilities_subcategory", "long_term_loans_subcategory",
-                  "lease_obligations_subcategory",
-                  "capital_subcategory", "operating_revenue_subcategory", "cogs_subcategory",
-                  "operating_expenses_subcategory",
-                  "financial_expenses_subcategory", "other_expenses_subcategory",
-                  "account_id")
+                    "fixed_assets_category", "other_assets_category",
+                    "current_liability_category", "liability_non_current_category", "equity_category",
+                    "revenue_category", "expense_category", "cash_equivalents_subcategory",
+                    "banks_subcategory", "accounts_receivable_subcategory", "inventory_subcategory",
+                    "prepaid_expenses_subcategory",
+                    "vehicles_subcategory", "furniture_fixture_subcategory", "computer_printers_subcategory",
+                    "machinery_equipment_subcategory",
+                    "land_buildings_subcategory", "investment_subcategory", "vat_receivable_subcategory",
+                    "suspense_account_subcategory", "accounts_payable_subcategory",
+                    "short_term_loans_subcategory", "other_liabilities_subcategory", "long_term_loans_subcategory",
+                    "lease_obligations_subcategory",
+                    "capital_subcategory", "operating_revenue_subcategory", "cogs_subcategory",
+                    "operating_expenses_subcategory",
+                    "financial_expenses_subcategory", "other_expenses_subcategory",
+                    "account_id")
     def prepare_account_ids_domain(self):
         self.ensure_one()
         account_ids_domain = []
@@ -288,3 +311,131 @@ class VatLedgerReport(models.TransientModel):
 
     def print_xlsx_report(self):
         return self.env.ref('account_ledger.vat_ledger_xlsx_report_view_xlsx').report_action(self, data=None)
+
+    def action_view_vat_ledger_report(self):
+        """Open VAT Ledger PDF inline (in browser)."""
+        self.ensure_one()
+        data = {
+            'ids': self.ids,
+            'model': self._name,
+            'form': {
+                'date_start': self.date_start.strftime('%Y-%m-%d'),
+                'date_end': self.date_end.strftime('%Y-%m-%d'),
+                'account': self.account_ids.ids,
+                'company': self.company_id.id,
+                'department': self.department_id.id if self.department_id else False,
+                'section': self.section_id.id if self.section_id else False,
+                'project': self.project_id.id if self.project_id else False,
+                'employee': self.employee_id.id if self.employee_id else False,
+                'asset': self.asset_id.id if self.asset_id else False,
+                'vat_option': self.vat_option or '',
+            },
+        }
+        url = f"/vat_ledger/report/preview/{self.id}"
+        return {
+            'type': 'ir.actions.act_url',
+            'target': 'new',
+            'url': url,
+        }
+
+    def action_view_vat_summary(self):
+        """Compute and show summary inside this wizard (inline, no popup)."""
+        self.ensure_one()
+
+        if not self.account_ids:
+            raise UserError("Please select at least one account to view the VAT summary.")
+
+        analytic_ids = [
+            aid for aid in [
+                self.department_id.id if self.department_id else None,
+                self.section_id.id if self.section_id else None,
+                self.project_id.id if self.project_id else None,
+                self.employee_id.id if self.employee_id else None,
+                self.asset_id.id if self.asset_id else None,
+            ] if aid
+        ]
+
+        ji_domain = [
+            ('company_id', '=', self.company_id.id),
+            ('date', '>=', self.date_start),
+            ('date', '<=', self.date_end),
+            ('account_id', 'in', self.account_ids.ids),
+        ]
+        if analytic_ids:
+            ji_domain.append(('analytic_distribution', 'in', analytic_ids))
+
+        JournalItems = self.env['account.move.line'].search(ji_domain, order="date asc")
+
+        # Apply VAT option
+        if self.vat_option == "including_vat":
+            filtered_items = JournalItems.filtered(lambda l: l.tax_ids)
+        elif self.vat_option == "excluding_vat":
+            filtered_items = JournalItems.filtered(lambda l: not l.tax_ids)
+        else:
+            filtered_items = JournalItems
+
+        report_model = self.env['report.account_ledger.vat_ledger_rep']
+
+        total_debit = sum(filtered_items.mapped('debit'))
+        total_credit = sum(filtered_items.mapped('credit'))
+        total_vat = 0.0
+        balances_by_account = {}
+
+        for line in filtered_items:
+            if line.tax_ids:
+                tax_amount_dict = report_model._get_tax_amount(line)
+                total_vat += round(tax_amount_dict.get("amount_tax", 0.0), 2)
+            acc = line.account_id
+            balances_by_account[acc.code + " - " + acc.name] = balances_by_account.get(acc.code + " - " + acc.name,
+                                                                                       0.0) + (line.debit - line.credit)
+
+        # === Generate HTML Table ===
+        html_content = """
+        <table class="table table-sm table-hover o_report_table"
+               style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid #ccc; font-size:14px;">
+            <thead style="background-color:#173b76; color:white;">
+                <tr>
+                    <th style="text-align:left; padding:10px 12px;">Account</th>
+                    <th style="text-align:right; padding:10px 12px;">Total Debit</th>
+                    <th style="text-align:right; padding:10px 12px;">Total Credit</th>
+                    <th style="text-align:right; padding:10px 12px;">Total VAT</th>
+                    <th style="text-align:right; padding:10px 12px;">Balance</th>
+                    <th style="text-align:right; padding:10px 12px;">Transactions</th>
+                </tr>
+            </thead>
+            <tbody>
+        """
+        for acc_name, balance in balances_by_account.items():
+            color = "#008000" if balance >= 0 else "#d00000"
+            html_content += f"""
+                <tr style="border-bottom:1px solid #e0e0e0;">
+                    <td style="padding:8px 12px; font-weight:500;">{acc_name}</td>
+                    <td style="text-align:right; padding:8px 12px;">{total_debit:,.2f}</td>
+                    <td style="text-align:right; padding:8px 12px;">{total_credit:,.2f}</td>
+                    <td style="text-align:right; padding:8px 12px;">{total_vat:,.2f}</td>
+                    <td style="text-align:right; color:{color}; padding:8px 12px; font-weight:600;">{balance:,.2f}</td>
+                    <td style="text-align:right; padding:8px 12px;">{len(filtered_items)}</td>
+                </tr>
+            """
+
+        html_content += """
+            </tbody>
+        </table>
+        """
+
+        # Save results in wizard
+        self.write({
+            'total_debit': total_debit,
+            'total_credit': total_credit,
+            'vat_total': total_vat,
+            'transaction_count': len(filtered_items),
+            'summary_html': html_content,
+        })
+
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': self._name,
+            'view_mode': 'form',
+            'res_id': self.id,
+            'target': 'new',
+        }

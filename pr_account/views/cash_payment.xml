@@ -17,7 +17,8 @@
                 <group expand="0" string="Group By...">
                     <filter name="account_id" string="Account" domain="[]" context="{'group_by':'account_id'}"/>
                     <filter name="company_id" string="Company" domain="[]" context="{'group_by':'company_id'}"/>
-                    <filter string="Accounting Date" name="accounting_date" domain="[]" context="{'group_by':'accounting_date'}"/>
+                    <filter string="Accounting Date" name="accounting_date" domain="[]"
+                            context="{'group_by':'accounting_date'}"/>
                     <filter name="state" string="Status" domain="[]" context="{'group_by':'state'}"/>
 
                 </group>
@@ -74,21 +75,21 @@
                             invisible="state != 'posted'"
                             groups="account.group_account_manager"
                     />
-<!--                    <button-->
-<!--                            string="CANCEL"-->
-<!--                            name="action_cancel"-->
-<!--                            type="object"-->
-<!--                            class="btn-secondary"-->
-<!--                            invisible="state != 'draft'"-->
-<!--                            groups="account.group_account_manager"-->
-<!--                    />-->
-<!--                    <button-->
-<!--                            string="RESET ALL TO DRAFT"-->
-<!--                            name="make_all_draft"-->
-<!--                            type="object"-->
-<!--                            class="btn-danger"-->
-<!--                            groups="base.group_no_one"-->
-<!--                    />-->
+                    <!--                    <button-->
+                    <!--                            string="CANCEL"-->
+                    <!--                            name="action_cancel"-->
+                    <!--                            type="object"-->
+                    <!--                            class="btn-secondary"-->
+                    <!--                            invisible="state != 'draft'"-->
+                    <!--                            groups="account.group_account_manager"-->
+                    <!--                    />-->
+                    <!--                    <button-->
+                    <!--                            string="RESET ALL TO DRAFT"-->
+                    <!--                            name="make_all_draft"-->
+                    <!--                            type="object"-->
+                    <!--                            class="btn-danger"-->
+                    <!--                            groups="base.group_no_one"-->
+                    <!--                    />-->
                     <field name="state" widget="statusbar"/>
                     <field name="accounting_manager_state" invisible="1"/>
                 </header>
@@ -125,13 +126,17 @@
                                        class="oe_inline"
                                        options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
                                        style="font-size:16;font-weight:bold;color:green;" string="Code"/>
-                                <span><strong>Name</strong></span>
+                                <span>
+                                    <strong>Name</strong>
+                                </span>
                                 <field name="account_name" width="40%"
-                                       class="oe_inline" string="Name" style="font-size:16;font-weight:bold;color:green;"/>
+                                       class="oe_inline" string="Name"
+                                       style="font-size:16;font-weight:bold;color:green;"/>
                             </div>
                             <field name="analytic_line_ids" invisible="1"/>
-                            <field name="analytic_distribution" widget="analytic_distribution" readonly="state != 'draft'"
-                                   string="Cost Centers" invisible="1" />
+                            <field name="analytic_distribution" widget="analytic_distribution"
+                                   readonly="state != 'draft'"
+                                   string="Cost Centers" invisible="1"/>
                             <field name="description" readonly="state != 'draft'"/>
                         </group>
                         <group>
@@ -141,56 +146,85 @@
                             <field name="currency_id"
                                    options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
                                    readonly="state != 'draft'" invisible="1"/>
-                            <field name="accounting_date" readonly="state != 'draft'" />
-                            <field name="total_amount" style="color: blue;" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                            <field name="approved_amount" style="color: green;" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                            <field name="rejected_amount" style="color: red;" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="accounting_date" readonly="state != 'draft'"/>
+                            <field name="total_amount" style="color: blue;" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="approved_amount" style="color: green;" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="rejected_amount" style="color: red;" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
                         </group>
                     </group>
                     <div>
-                        <div style="display: inline-block !important; margin-right: 50px !important;" invisible="state != 'submit' or check_process_state == True" groups="pr_account.custom_group_accounting_manager">
-                            <button name="action_approve_remaining_lines" string="APPROVE REMAINING LINES" type="object" class="btn-success"
-                                invisible="state != 'submit' or check_process_state == True"
-                                groups="account.group_account_manager,pr_account.custom_group_accounting_manager" style="display: inline-block !important; width: 400px !important; margin-right: 50px !important;"/>
+                        <div style="display: inline-block !important; margin-right: 50px !important;"
+                             invisible="state != 'submit' or check_process_state == True"
+                             groups="pr_account.custom_group_accounting_manager">
+                            <button name="action_approve_remaining_lines" string="APPROVE REMAINING LINES" type="object"
+                                    class="btn-success"
+                                    invisible="state != 'submit' or check_process_state == True"
+                                    groups="account.group_account_manager,pr_account.custom_group_accounting_manager"
+                                    style="display: inline-block !important; width: 400px !important; margin-right: 50px !important;"/>
                         </div>
-                        <div style="display: inline-block !important; width: 400px !important;" invisible="state != 'submit' or check_process_state == True" groups="pr_account.custom_group_accounting_manager">
-                            <button name="action_reject_remaining_lines" string="REJECT REMAINING LINES" type="object" class="btn-danger"
-                                invisible="state != 'submit' or check_process_state == True"
-                                groups="account.group_account_manager,pr_account.custom_group_accounting_manager" style="display: inline-block !important; width: 400px !important;"/>
+                        <div style="display: inline-block !important; width: 400px !important;"
+                             invisible="state != 'submit' or check_process_state == True"
+                             groups="pr_account.custom_group_accounting_manager">
+                            <button name="action_reject_remaining_lines" string="REJECT REMAINING LINES" type="object"
+                                    class="btn-danger"
+                                    invisible="state != 'submit' or check_process_state == True"
+                                    groups="account.group_account_manager,pr_account.custom_group_accounting_manager"
+                                    style="display: inline-block !important; width: 400px !important;"/>
                         </div>
 
                     </div>
-                    <field name="cash_payment_line_ids" widget="section_and_note_one2many" nolabel="1" readonly="state != 'draft'">
-                        <tree editable="bottom">
+                    <field name="cash_payment_line_ids" class="cash_line_with_bottom_pager"
+                           widget="section_and_note_one2many" nolabel="1" readonly="state != 'draft'">
+                        <tree editable="bottom" limit="100">
                             <field name="cash_payment_id" column_invisible="True"/>
                             <field name="company_id" column_invisible="True"/>
                             <field name="currency_id" column_invisible="True"/>
                             <field name="check_cost_centers_block" column_invisible="True"/>
-                            <field name="account_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
+                            <field name="account_id"
+                                   options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
                             <field name="account_name"/>
                             <field name="analytic_line_ids" column_invisible="True"/>
                             <field name="analytic_precision" column_invisible="True"/>
-                            <field name="cs_project_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}" force_save="1" readonly="check_cost_centers_block == False"/>
-                            <field name="analytic_distribution" widget="analytic_distribution" optional="show" readonly="check_cost_centers_block == False" force_save="1"/>
-                            <field name="partner_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
-                                   string="Project Manager" force_save="1" readonly="check_cost_centers_block == False"/>
+                            <field name="cs_project_id"
+                                   options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
+                                   force_save="1" readonly="check_cost_centers_block == False"/>
+                            <field name="analytic_distribution" widget="analytic_distribution" optional="show"
+                                   readonly="check_cost_centers_block == False" force_save="1"/>
+                            <field name="partner_id"
+                                   options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
+                                   string="Project Manager" force_save="1"
+                                   readonly="check_cost_centers_block == False"/>
                             <field name="description"/>
                             <field name="reference_number"/>
-                            <field name="amount" decoration-warning="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                            <field name="tax_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
-                            <field name="amount_tax" widget="monetary" options="{'currency_field': 'currency_id'}" column_invisible="True"/>
-                            <field name="total_amount" decoration-success="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="amount" decoration-warning="1" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
+                            <field name="tax_id"
+                                   options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
+                            <field name="amount_tax" widget="monetary" options="{'currency_field': 'currency_id'}"
+                                   column_invisible="True"/>
+                            <field name="total_amount" decoration-success="1" widget="monetary"
+                                   options="{'currency_field': 'currency_id'}"/>
                             <field name="state"
                                    decoration-info="state == 'draft'"
                                    decoration-warning="state ==  'submit'"
                                    decoration-success="state ==  'approve'"
                                    decoration-danger="state ==  'reject'"
                             />
-                            <button name="action_line_approve" string="APPROVE" type="object" class="btn-success" groups="pr_account.custom_group_accounting_manager,account.group_account_manager" invisible="state != 'submit'"/>
-                            <button name="action_line_reject" string="REJECT" type="object" class="btn-danger" groups="pr_account.custom_group_accounting_manager,account.group_account_manager" invisible="state != 'submit'"/>
+                            <button name="action_line_approve" string="APPROVE" type="object" class="btn-success"
+                                    groups="pr_account.custom_group_accounting_manager,account.group_account_manager"
+                                    invisible="state != 'submit'"
+                            />
+                            <button name="action_line_reject" string="REJECT" type="object" class="btn-danger"
+                                    groups="pr_account.custom_group_accounting_manager,account.group_account_manager"
+                                    invisible="state != 'submit'"
+                            />
                             <field name="parent_state" column_invisible="True"/>
                         </tree>
                     </field>
+
                 </sheet>
                 <div class="oe_chatter">
                     <field name="message_follower_ids" widget="mail_followers"/>
@@ -211,8 +245,10 @@
                 <field name="account_name"/>
                 <field name="description"/>
                 <field name="accounting_date"/>
-                <field name="company_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}" column_invisible="True"/>
-                <field name="currency_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}" column_invisible="True"/>
+                <field name="company_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
+                       column_invisible="True"/>
+                <field name="currency_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
+                       column_invisible="True"/>
                 <field name="total_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'draft'"
@@ -238,8 +274,8 @@
     </record>
 
     <menuitem id="pr_account_cash_payment_view_menu"
-                  parent="payment_receipt_vouchers_main_menu"
-                  name="Cash Payments"
-                action="pr_account_cash_payment_view_action"
-                  sequence="2"/>
+              parent="payment_receipt_vouchers_main_menu"
+              name="Cash Payments"
+              action="pr_account_cash_payment_view_action"
+              sequence="2"/>
 </odoo>

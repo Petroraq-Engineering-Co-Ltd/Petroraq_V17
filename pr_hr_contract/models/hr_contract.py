@@ -359,7 +359,7 @@ class HrContract(models.Model):
             'description': 'Hr contract periods check',
             'implement_date': fields.Datetime.now(),
         }
-        cron_update_id = self.env['bof.cron.update'].sudo().create(cron_update_vals)
+       # cron_update_id = self.env['bof.cron.update'].sudo().create(cron_update_vals)
         try:
             today = fields.Date.today()
             # Check Contracts That After 3 Weeks Trial Period Ends,

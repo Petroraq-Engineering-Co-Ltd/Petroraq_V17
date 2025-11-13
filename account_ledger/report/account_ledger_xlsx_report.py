@@ -87,13 +87,19 @@ class CustomDynamicLedgerReport(models.AbstractModel):
         # === Data Rows ===
         row = 4  # Data starts from Excel row 6
         for entry in docs:
-            worksheet.write(row, 0, entry['transaction_ref'], text_format if entry["description"] != "Totals" else header_format )
+            worksheet.write(row, 0, entry['transaction_ref'],
+                            text_format if entry["description"] != "Totals" else header_format)
             worksheet.write(row, 1, entry['date'], date_format if entry["description"] != "Totals" else header_format)
-            worksheet.write(row, 2, entry['reference'], text_format if entry["description"] != "Totals" else header_format)
-            worksheet.write(row, 3, entry['description'], text_format if entry["description"] != "Totals" else header_format)
-            worksheet.write_number(row, 4, float(entry['debit'].replace(',', '')), money_format if entry["description"] != "Totals" else header_format)
-            worksheet.write_number(row, 5, float(entry['credit'].replace(',', '')), money_format if entry["description"] != "Totals" else header_format)
-            worksheet.write_number(row, 6, float(entry['balance'].replace(',', '')), money_format if entry["description"] != "Totals" else header_format)
+            worksheet.write(row, 2, entry['reference'],
+                            text_format if entry["description"] != "Totals" else header_format)
+            worksheet.write(row, 3, entry['description'],
+                            text_format if entry["description"] != "Totals" else header_format)
+            worksheet.write_number(row, 4, float(entry['debit'].replace(',', '')),
+                                   money_format if entry["description"] != "Totals" else header_format)
+            worksheet.write_number(row, 5, float(entry['credit'].replace(',', '')),
+                                   money_format if entry["description"] != "Totals" else header_format)
+            worksheet.write_number(row, 6, float(entry['balance'].replace(',', '')),
+                                   money_format if entry["description"] != "Totals" else header_format)
             row += 1
 
         # Column widths
@@ -123,7 +129,6 @@ class CustomDynamicLedgerReport(models.AbstractModel):
         project = False
         employee = False
         asset = False
-
 
         if report_data.get("department"):
             department = report_data['department']
@@ -173,18 +178,22 @@ class CustomDynamicLedgerReport(models.AbstractModel):
         today = datetime.today()
         report_date = today.strftime("%b-%d-%Y")
         ji_domain = [
-            ('company_id','=', company),
-            ('date','>=',datetime.strptime(str(date_start), DATE_FORMAT).date()),
-            ('date','<=',datetime.strptime(str(date_end), DATE_FORMAT).date()),
+            ('company_id', '=', company),
+            ('date', '>=', datetime.strptime(str(date_start), DATE_FORMAT).date()),
+            ('date', '<=', datetime.strptime(str(date_end), DATE_FORMAT).date()),
+            ('move_id.state', '=', 'posted'),
         ]
+
         opening_balance_domain = [
             ('company_id', '=', company),
             ('date', '>=', datetime.strptime(str(date_start), DATE_FORMAT).date()),
             ('date', '<=', datetime.strptime(str(date_end), DATE_FORMAT).date()),
+            ('move_id.state', '=', 'posted'),
         ]
+
         if account:
-            ji_domain.append(('account_id','in', account))
-            opening_balance_domain.append(('account_id','in', account))
+            ji_domain.append(('account_id', 'in', account))
+            opening_balance_domain.append(('account_id', 'in', account))
         else:
             return {
                 'account': " ",
@@ -197,20 +206,23 @@ class CustomDynamicLedgerReport(models.AbstractModel):
         if department:
             ji_domain.append(('analytic_distribution', 'in', [int(department)]))
 
-
         opening_balance_ids = self.env['account.move.line'].search(opening_balance_domain, order="date asc")
         JournalItems = self.env['account.move.line'].search(ji_domain, order="date asc")
         JournalAccounts = opening_balance_ids.mapped("account_id.id")
         TupleJournalAccounts = tuple(JournalAccounts)
 
         if JournalItems and section:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(section)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(section)])], order="date asc")
         if JournalItems and project:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(project)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(project)])], order="date asc")
         if JournalItems and employee:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(employee)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(employee)])], order="date asc")
         if JournalItems and asset:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(asset)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(asset)])], order="date asc")
 
         if len(JournalAccounts) == 1:
             where_statement = f"""
@@ -267,31 +279,31 @@ class CustomDynamicLedgerReport(models.AbstractModel):
         t_credit = 0 + initial_credit
         init_balance = initial_balance
         docs.append({
-                    'transaction_ref': ' ',
-                    'date': f'{str(date_start)}',
-                    'initial_balance': '{:,.2f}'.format(init_balance),
-                    'description': 'Opening Balance',
-                    'reference': ' ',
-                    'journal': ' ',
-                    'debit': '{:,.2f}'.format(initial_debit),
-                    'credit': '{:,.2f}'.format(initial_credit),
-                    'balance': '{:,.2f}'.format(init_balance)
-                    })
+            'transaction_ref': ' ',
+            'date': f'{str(date_start)}',
+            'initial_balance': '{:,.2f}'.format(init_balance),
+            'description': 'Opening Balance',
+            'reference': ' ',
+            'journal': ' ',
+            'debit': '{:,.2f}'.format(initial_debit),
+            'credit': '{:,.2f}'.format(initial_credit),
+            'balance': '{:,.2f}'.format(init_balance)
+        })
         for item in JournalItems:
             balance = initial_balance + (item.debit - item.credit)
             t_debit += item.debit
             t_credit += item.credit
             docs.append({
-                    'transaction_ref': item.move_id.name,
-                    'date': item.date,
-                    'initial_balance': '{:,.2f}'.format(initial_balance),
-                    'description':  item.name,
-                    'reference': item.ref,
-                    'journal': item.journal_id.name,
-                    'debit': '{:,.2f}'.format(item.debit),
-                    'credit': '{:,.2f}'.format(item.credit),
-                    'balance': '{:,.2f}'.format(balance)
-                    })
+                'transaction_ref': item.move_id.name,
+                'date': item.date,
+                'initial_balance': '{:,.2f}'.format(initial_balance),
+                'description': item.name,
+                'reference': item.ref,
+                'journal': item.journal_id.name,
+                'debit': '{:,.2f}'.format(item.debit),
+                'credit': '{:,.2f}'.format(item.credit),
+                'balance': '{:,.2f}'.format(balance)
+            })
             initial_balance = balance
         docs.append({
             'transaction_ref': ' ',
