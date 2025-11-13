@@ -13,3 +13,63 @@
   background-color: #0ea9a9;
   border-color: #0ea9a9;
 }
+
+
+/*******************************************************
+ * GLOBAL FREEZE + SCROLL FOR ALL ONE2MANY TABLES
+ * Supports:
+ *   - section_and_note_one2many widgets
+ *   - regular one2many list tables (o_list_table)
+ *   - Journal Voucher (account.move line_ids)
+ *******************************************************/
+
+/* SHARED SCROLL SETTINGS */
+.freeze-1many .o_section_and_note_list_view,
+.freeze-1many .o_list_table {
+    display: block !important;
+    max-height: 380px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+
+    width: 100% !important;
+    position: relative;
+}
+
+/* SECTION & NOTE SPECIFIC (CPV, BPV, BRV, CRV etc) */
+.freeze-1many .o_section_and_note_list_view thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+    background: #f8f9fa !important;  /* Odoo light header color */
+    white-space: nowrap;
+    padding: 4px 8px;
+}
+
+/* JV / REGULAR O2M TABLE HEADER */
+.freeze-1many .o_list_table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+    background: #f8f9fa !important;
+    white-space: nowrap;
+    padding: 4px 8px;
+}
+
+/* Consistent row layout & alignment */
+.freeze-1many .o_section_and_note_list_view th,
+.freeze-1many .o_section_and_note_list_view td,
+.freeze-1many .o_list_table th,
+.freeze-1many .o_list_table td {
+    white-space: nowrap;
+    text-align: left;
+    padding: 4px 8px;
+}
+
+/* Optional zebra striping */
+.freeze-1many .o_section_and_note_list_view tbody tr:nth-child(even),
+.freeze-1many .o_list_table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}

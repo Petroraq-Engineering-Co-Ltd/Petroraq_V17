@@ -49,7 +49,6 @@
         'web.assets_backend': [
             'pr_account/static/src/js/list_renderer_bottom_pager.js',
             'pr_account/static/src/xml/list_renderer_extend.xml',
-            "pr_account/static/src/js/cash_payment_line_patch.js",
             'pr_account/static/src/scss/list_renderer_bottom_pager.scss',
             'pr_account/static/src/css/custom.css',
         ]
