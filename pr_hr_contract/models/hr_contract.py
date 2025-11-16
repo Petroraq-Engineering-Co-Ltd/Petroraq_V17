@@ -29,7 +29,7 @@ class HrContract(models.Model):
     gosi_amount = fields.Float('GOSI Amount', compute='_compute_amount', store=True, tracking=True,
                                help='Amount Deducted from Saudi Employees based on GOSI Configuration')
     gross_amount = fields.Float('Gross Amount', compute='_compute_amount', store=True, tracking=True,
-                               help='Amount Deducted from Saudi Employees based on GOSI Configuration')
+                                help='Amount Deducted from Saudi Employees based on GOSI Configuration')
     net_amount = fields.Float('Net Amount', compute='_compute_amount', store=True, tracking=True,
                               help="Sum of Wage + all amounts of salary rules - GOSI\n"
                                    "NET means total package of the employee, whatever it is paid or company paid")
@@ -85,6 +85,7 @@ class HrContract(models.Model):
 
     # region [One 2 many Fields]
     contract_salary_rule_ids = fields.One2many('hr.contract.salary.rule', 'contract_id', 'Salary Rule', tracking=True)
+
     # endregion [One2many Fields]
 
     # endregion [Fields]
@@ -101,7 +102,8 @@ class HrContract(models.Model):
         else:
             self.job_id = self.department_id = False
 
-    @api.depends('employee_id', 'contract_salary_rule_ids', 'contract_salary_rule_ids.pay_in_payslip', 'gosi_salary')
+    @api.depends('employee_id', 'wage', 'contract_salary_rule_ids', 'contract_salary_rule_ids.pay_in_payslip',
+                 'gosi_salary')
     def _compute_amount(self):
         """
         This Method Calculates Contract Total Amounts
@@ -216,7 +218,7 @@ class HrContract(models.Model):
                 else:
                     # if salary_rule.code not in ["TRANSPORTATION", "FOOD"]:
                     if salary_rule.code == "ACCOMMODATION":
-                    # Filter the contract-specific salary rules that match the current salary rule
+                        # Filter the contract-specific salary rules that match the current salary rule
                         matched_salary_rules = contract.contract_salary_rule_ids.filtered(
                             lambda r: r.salary_rule_id == salary_rule
                         ) if contract.contract_salary_rule_ids else []
@@ -241,7 +243,6 @@ class HrContract(models.Model):
             if contract.trial_period and contract.date_start:
                 # Calculate a trial period in days
                 total_trial_days = contract.trial_period * 30
-
 
                 # Compute the trial end date by adding the total days to the start date
                 contract.trial_end_date = contract.date_start + relativedelta(days=total_trial_days)
@@ -359,7 +360,7 @@ class HrContract(models.Model):
             'description': 'Hr contract periods check',
             'implement_date': fields.Datetime.now(),
         }
-       # cron_update_id = self.env['bof.cron.update'].sudo().create(cron_update_vals)
+        # cron_update_id = self.env['bof.cron.update'].sudo().create(cron_update_vals)
         try:
             today = fields.Date.today()
             # Check Contracts That After 3 Weeks Trial Period Ends,
