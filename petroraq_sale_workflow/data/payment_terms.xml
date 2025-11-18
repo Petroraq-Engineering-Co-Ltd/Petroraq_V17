@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="payment_term_immediate" model="account.payment.term">
+            <field name="name">Immediate payment</field>
+            <field name="petroraq_selectable">True</field>
+        </record>
+
+        <record id="payment_term_15_days" model="account.payment.term">
+            <field name="name">15 days credit</field>
+            <field name="petroraq_selectable">True</field>
+        </record>
+
+        <record id="payment_term_30_days" model="account.payment.term">
+            <field name="name">30 days credit</field>
+            <field name="petroraq_selectable">True</field>
+        </record>
+
+        <record id="payment_term_45_days" model="account.payment.term">
+            <field name="name">45 days credit</field>
+            <field name="petroraq_selectable">True</field>
+        </record>
+
+        <record id="payment_term_60_days" model="account.payment.term">
+            <field name="name">60 days credit</field>
+            <field name="petroraq_selectable">True</field>
+        </record>
+    </data>
+</odoo>

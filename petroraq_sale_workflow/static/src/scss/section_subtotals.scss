@@ -1,0 +1,87 @@
+.o_section_and_note_list_view .o_is_line_section .o_data_cell .o_field_widget {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.o_section_subtotal_chip {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.o_section_subtotal_chip_label {
+    color: var(--o-gray-700);
+}
+
+.o_section_subtotal_chip_value {
+    color: var(--o-brand-900);
+}
+
+.o_petroraq_totals {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--o-gray-200);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.o_petroraq_total_row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+}
+
+.o_petroraq_total_label {
+    font-weight: 600;
+    color: var(--o-gray-700);
+    white-space: nowrap;
+    min-width: 130px;
+}
+
+.o_petroraq_total_left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.o_petroraq_total_left .o_field_widget {
+    flex: 0 0 auto;
+}
+
+.o_petroraq_percent_input {
+    width: 70px;
+}
+
+.o_petroraq_total_row > .o_field_widget {
+    flex: 0 0 auto;
+}
+
+.o_petroraq_total_value {
+    font-weight: 600;
+    color: var(--o-brand-900);
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.o_petroraq_total_row.o_petroraq_total_great .o_petroraq_total_value {
+    margin-left: auto;
+}
+
+.o_petroraq_total_row.o_petroraq_total_grand .o_petroraq_total_label {
+    text-transform: uppercase;
+}
+
+.o_petroraq_total_row.o_petroraq_total_great {
+    border-top: 1px dashed var(--o-gray-300);
+    padding-top: 6px;
+}
+
+.o_petroraq_total_row.o_petroraq_total_great .o_petroraq_total_label {
+    text-transform: uppercase;
+}
