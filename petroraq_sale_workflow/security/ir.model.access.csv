@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sale_inquiry_user,access_sale_inquiry_user,model_sale_inquiry,base.group_user,1,1,1,0
+access_sale_inquiry_manager,access_sale_inquiry_manager,model_sale_inquiry,sales_team.group_sale_manager,1,1,1,1
+
