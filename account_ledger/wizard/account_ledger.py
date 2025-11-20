@@ -290,8 +290,11 @@ class AccountLedger(models.TransientModel):
         return self.env.ref('account_ledger.account_ledger_xlsx_report_view_xlsx').report_action(self, data=None)
 
     def action_view_ledger_report(self):
-        """Open Account Ledger PDF inline (in browser)."""
         self.ensure_one()
+
+        # ---- CALL YOUR REPORT CLASS ----
+        Report = self.env["report.account_ledger.account_ledger_rep"]
+
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -307,9 +310,75 @@ class AccountLedger(models.TransientModel):
                 'asset': self.asset_id.id if self.asset_id else False,
             },
         }
-        url = f"/account_ledger/report/preview/{self.id}"
+
+        report_vals = Report._get_report_values(self.ids, data)
+
+        docs = report_vals.get("docs", [])
+
+        result = self.env["account.ledger.result"].create({
+            "wizard_id": self.id
+        })
+
+        for line in docs:
+            is_total = True if not line.get("transaction_ref") else False
+
+            self.env["account.ledger.result.line"].create({
+                "result_id": result.id,
+                "transaction_ref": line.get("transaction_ref") or "",
+                "reference": line.get("reference") or "",
+                "date": line.get("date") if line.get("transaction_ref") else False,
+                "label": line.get("description") or "",
+                "debit": float(line.get("debit").replace(",", "")) if line.get("debit") else 0.0,
+                "credit": float(line.get("credit").replace(",", "")) if line.get("credit") else 0.0,
+                "balance": float(line.get("balance").replace(",", "")) if line.get("balance") else 0.0,
+                "is_total": is_total,
+            })
+
+        # ---- RETURN TREE VIEW ----
         return {
-            'type': 'ir.actions.act_url',
-            'target': 'new',
-            'url': url,
+            "type": "ir.actions.act_window",
+            "name": f"{self.account_id.code} - {self.account_id.name}",
+            "res_model": "account.ledger.result",
+            "res_id": result.id,
+            "view_mode": "form",
+            "target": "current",
         }
+
+
+class AccountLedgerResult(models.TransientModel):
+    _name = "account.ledger.result"
+    _description = "Ledger Result Container"
+
+    wizard_id = fields.Many2one("account.ledger")
+    line_ids = fields.One2many("account.ledger.result.line", "result_id", string="Lines")
+
+    def name_get(self):
+        result = []
+        for rec in self:
+            name = rec.wizard_id.account_name or "Ledger Result"
+            result.append((rec.id, name))
+        return result
+
+    def action_export_pdf(self):
+        wizard = self.wizard_id
+        return wizard.get_report()  # <-- correct method for PDF
+
+    def action_export_xlsx(self):
+        wizard = self.wizard_id
+        return wizard.print_xlsx_report()  # <-- correct method for Excel
+
+
+class AccountLedgerResultLine(models.TransientModel):
+    _name = "account.ledger.result.line"
+    _description = "Ledger Result Line"
+
+    result_id = fields.Many2one("account.ledger.result")
+
+    transaction_ref = fields.Char("Transaction Ref")
+    reference = fields.Char("Reference")
+    label = fields.Char()
+    date = fields.Date("Date")
+    debit = fields.Float("Debit")
+    credit = fields.Float("Credit")
+    balance = fields.Float("Balance")
+    is_total = fields.Boolean("Is Total Line")
