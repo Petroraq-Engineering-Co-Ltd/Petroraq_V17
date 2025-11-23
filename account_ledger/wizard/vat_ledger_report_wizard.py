@@ -57,7 +57,6 @@ class VatLedgerReport(models.TransientModel):
         default="including_vat", required=True)
     # region [Account Filter Fields]
 
-
     main_head = fields.Selection([
         ("assets", "Assets"),
         ("liabilities", "Liabilities"),
@@ -313,8 +312,10 @@ class VatLedgerReport(models.TransientModel):
         return self.env.ref('account_ledger.vat_ledger_xlsx_report_view_xlsx').report_action(self, data=None)
 
     def action_view_vat_ledger_report(self):
-        """Open VAT Ledger PDF inline (in browser)."""
         self.ensure_one()
+
+        Report = self.env["report.account_ledger.vat_ledger_rep"]
+
         data = {
             'ids': self.ids,
             'model': self._name,
@@ -328,114 +329,37 @@ class VatLedgerReport(models.TransientModel):
                 'project': self.project_id.id if self.project_id else False,
                 'employee': self.employee_id.id if self.employee_id else False,
                 'asset': self.asset_id.id if self.asset_id else False,
-                'vat_option': self.vat_option or '',
+                'vat_option': self.vat_option,
             },
         }
-        url = f"/vat_ledger/report/preview/{self.id}"
-        return {
-            'type': 'ir.actions.act_url',
-            'target': 'new',
-            'url': url,
-        }
 
-    def action_view_vat_summary(self):
-        """Compute and show summary inside this wizard (inline, no popup)."""
-        self.ensure_one()
+        report_vals = Report._get_report_values(self.ids, data)
+        docs = report_vals.get("docs", [])
 
-        if not self.account_ids:
-            raise UserError("Please select at least one account to view the VAT summary.")
-
-        analytic_ids = [
-            aid for aid in [
-                self.department_id.id if self.department_id else None,
-                self.section_id.id if self.section_id else None,
-                self.project_id.id if self.project_id else None,
-                self.employee_id.id if self.employee_id else None,
-                self.asset_id.id if self.asset_id else None,
-            ] if aid
-        ]
-
-        ji_domain = [
-            ('company_id', '=', self.company_id.id),
-            ('date', '>=', self.date_start),
-            ('date', '<=', self.date_end),
-            ('account_id', 'in', self.account_ids.ids),
-        ]
-        if analytic_ids:
-            ji_domain.append(('analytic_distribution', 'in', analytic_ids))
-
-        JournalItems = self.env['account.move.line'].search(ji_domain, order="date asc")
-
-        # Apply VAT option
-        if self.vat_option == "including_vat":
-            filtered_items = JournalItems.filtered(lambda l: l.tax_ids)
-        elif self.vat_option == "excluding_vat":
-            filtered_items = JournalItems.filtered(lambda l: not l.tax_ids)
-        else:
-            filtered_items = JournalItems
-
-        report_model = self.env['report.account_ledger.vat_ledger_rep']
-
-        total_debit = sum(filtered_items.mapped('debit'))
-        total_credit = sum(filtered_items.mapped('credit'))
-        total_vat = 0.0
-        balances_by_account = {}
-
-        for line in filtered_items:
-            if line.tax_ids:
-                tax_amount_dict = report_model._get_tax_amount(line)
-                total_vat += round(tax_amount_dict.get("amount_tax", 0.0), 2)
-            acc = line.account_id
-            balances_by_account[acc.code + " - " + acc.name] = balances_by_account.get(acc.code + " - " + acc.name,
-                                                                                       0.0) + (line.debit - line.credit)
-
-        # === Generate HTML Table ===
-        html_content = """
-        <table class="table table-sm table-hover o_report_table"
-               style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid #ccc; font-size:14px;">
-            <thead style="background-color:#173b76; color:white;">
-                <tr>
-                    <th style="text-align:left; padding:10px 12px;">Account</th>
-                    <th style="text-align:right; padding:10px 12px;">Total Debit</th>
-                    <th style="text-align:right; padding:10px 12px;">Total Credit</th>
-                    <th style="text-align:right; padding:10px 12px;">Total VAT</th>
-                    <th style="text-align:right; padding:10px 12px;">Balance</th>
-                    <th style="text-align:right; padding:10px 12px;">Transactions</th>
-                </tr>
-            </thead>
-            <tbody>
-        """
-        for acc_name, balance in balances_by_account.items():
-            color = "#008000" if balance >= 0 else "#d00000"
-            html_content += f"""
-                <tr style="border-bottom:1px solid #e0e0e0;">
-                    <td style="padding:8px 12px; font-weight:500;">{acc_name}</td>
-                    <td style="text-align:right; padding:8px 12px;">{total_debit:,.2f}</td>
-                    <td style="text-align:right; padding:8px 12px;">{total_credit:,.2f}</td>
-                    <td style="text-align:right; padding:8px 12px;">{total_vat:,.2f}</td>
-                    <td style="text-align:right; color:{color}; padding:8px 12px; font-weight:600;">{balance:,.2f}</td>
-                    <td style="text-align:right; padding:8px 12px;">{len(filtered_items)}</td>
-                </tr>
-            """
-
-        html_content += """
-            </tbody>
-        </table>
-        """
-
-        # Save results in wizard
-        self.write({
-            'total_debit': total_debit,
-            'total_credit': total_credit,
-            'vat_total': total_vat,
-            'transaction_count': len(filtered_items),
-            'summary_html': html_content,
+        result = self.env["vat.ledger.result"].create({
+            "wizard_id": self.id
         })
 
+        for line in docs:
+            is_total = True if not line.get("transaction_ref") else False
+
+            self.env["vat.ledger.result.line"].create({
+                "result_id": result.id,
+                "transaction_ref": line.get("transaction_ref") or "",
+                "reference": line.get("reference") or "",
+                "date": line.get("date") if line.get("transaction_ref") else False,
+                "description": line.get("description") or "",
+                "amount": float(line.get("amount", '0').replace(",", "")) if not is_total else 0,
+                "tax_amount": float(line.get("tax_amount", '0').replace(",", "")) if not is_total else 0,
+                "total_amount": float(line.get("total_amount", '0').replace(",", "")) if not is_total else 0,
+                "is_total": is_total,
+            })
+
         return {
-            'type': 'ir.actions.act_window',
-            'res_model': self._name,
-            'view_mode': 'form',
-            'res_id': self.id,
-            'target': 'new',
+            "type": "ir.actions.act_window",
+            "name": "VAT Ledger Report",
+            "res_model": "vat.ledger.result",
+            "res_id": result.id,
+            "view_mode": "form",
+            "target": "current",
         }
