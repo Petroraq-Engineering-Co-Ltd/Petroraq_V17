@@ -26,7 +26,6 @@
     border-top: 1px solid var(--o-gray-200);
     display: flex;
     flex-direction: column;
-<<<<<<< HEAD
     gap: 6px;
 }
 
@@ -35,23 +34,11 @@
     grid-template-columns: 220px 160px 1fr;
     column-gap: 32px;
     align-items: center;
-=======
-    gap: 8px;
-}
-
-.o_petroraq_total_row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
->>>>>>> 0ed1bd3539b5c7c73473a8bae7b8641aab5463df
 }
 
 .o_petroraq_total_label {
     font-weight: 600;
     color: var(--o-gray-700);
-<<<<<<< HEAD
     padding-left: 16px;
     white-space: nowrap;
 }
@@ -66,35 +53,12 @@
 
 .o_petroraq_percent_input {
     width: 100%;
-=======
-    white-space: nowrap;
-    min-width: 130px;
-}
-
-.o_petroraq_total_left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.o_petroraq_total_left .o_field_widget {
-    flex: 0 0 auto;
-}
-
-.o_petroraq_percent_input {
-    width: 70px;
-}
-
-.o_petroraq_total_row > .o_field_widget {
-    flex: 0 0 auto;
->>>>>>> 0ed1bd3539b5c7c73473a8bae7b8641aab5463df
 }
 
 .o_petroraq_total_value {
     font-weight: 600;
     color: var(--o-brand-900);
     white-space: nowrap;
-<<<<<<< HEAD
     text-align: right;
     min-width: 180px;
     padding-right: 16px;
@@ -102,29 +66,11 @@
 
 .o_petroraq_total_row.o_petroraq_total_grand .o_petroraq_total_label,
 .o_petroraq_total_row.o_petroraq_total_great .o_petroraq_total_label {
-=======
-    margin-left: auto;
-}
-
-.o_petroraq_total_row.o_petroraq_total_great .o_petroraq_total_value {
-    margin-left: auto;
-}
-
-.o_petroraq_total_row.o_petroraq_total_grand .o_petroraq_total_label {
->>>>>>> 0ed1bd3539b5c7c73473a8bae7b8641aab5463df
     text-transform: uppercase;
 }
 
 .o_petroraq_total_row.o_petroraq_total_great {
     border-top: 1px dashed var(--o-gray-300);
-<<<<<<< HEAD
     padding-top: 12px;
     margin-top: 8px;
-=======
-    padding-top: 6px;
-}
-
-.o_petroraq_total_row.o_petroraq_total_great .o_petroraq_total_label {
-    text-transform: uppercase;
->>>>>>> 0ed1bd3539b5c7c73473a8bae7b8641aab5463df
 }
