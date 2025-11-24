@@ -269,14 +269,13 @@ class CustomDynamicLedgerReport(models.AbstractModel):
                 """
         self.env.cr.execute(sql)
         result = self.env.cr.fetchone()
-        if result and result[0]:
+        if result:
             initial_balance = result[0]
-            initial_debit = result[1]
-            initial_credit = result[2]
         else:
             initial_balance = 0
-            initial_debit = 0
-            initial_credit = 0
+
+        initial_debit = 0
+        initial_credit = 0
         t_debit = 0 + initial_debit
         t_credit = 0 + initial_credit
         init_balance = initial_balance
