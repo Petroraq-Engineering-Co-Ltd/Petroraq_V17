@@ -23,7 +23,7 @@
                         <group>
                             <field name="account_ids"
                                    widget="many2many_tags"
-                                   options="{'no_create': True, 'no_quick_create': True}"/>
+                                   options="{'no_create': True, 'no_quick_create': True}" invisible="1"/>
                         </group>
                     </group>
 
