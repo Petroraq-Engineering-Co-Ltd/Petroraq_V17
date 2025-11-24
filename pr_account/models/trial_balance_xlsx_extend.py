@@ -172,6 +172,8 @@ class AccountReportXlsxCustom(models.AbstractModel):
         # -------- COLUMN GROUP HEADERS (Odoo logic) --------
         column_headers_render_data = self._get_column_headers_render_data(options)
         for header_level_index, header_level in enumerate(options['column_headers']):
+            if header_level_index == 0: # critical override the odoos default TB header to pop first header
+                continue
             for header_to_render in header_level * column_headers_render_data['level_repetitions'][header_level_index]:
                 colspan = header_to_render.get('colspan',
                                                column_headers_render_data['level_colspan'][header_level_index])
