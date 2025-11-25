@@ -13,3 +13,61 @@
   background-color: #0ea9a9;
   border-color: #0ea9a9;
 }
+
+
+/* ----------------------------------------------------
+   ONE2MANY FREEZE HEADER + SCROLL (FULLY WORKING)
+   Works in Odoo 17 for: one2many list, x2many list,
+   account.move lines, section lists, custom renderers.
+---------------------------------------------------- */
+
+/* MAIN WRAPPER (the field) */
+.freeze-1many {
+    position: relative;
+}
+
+/* Odoo internal list view renderer is the TRUE scroll area */
+.freeze-1many .o_list_renderer {
+    max-height: 580px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    position: relative;
+}
+
+/* For section/note renderer cases */
+.freeze-1many .o_section_and_note_list_view {
+    max-height: 580px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    position: relative;
+}
+
+/* TABLE (keep as table so resizing still works) */
+.freeze-1many .o_list_table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+/* ---- STICKY HEADERS ---- */
+.freeze-1many thead th {
+    position: sticky !important;
+    top: 0;
+    z-index: 30 !important;
+    background: #f8f9fa !important;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+
+/* CELLS */
+.freeze-1many td,
+.freeze-1many th {
+    white-space: nowrap;
+    padding: 4px 8px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+/* ZEBRA ROWS */
+.freeze-1many tbody tr:nth-child(even) {
+    background-color: #f9f9f9 !important;
+}

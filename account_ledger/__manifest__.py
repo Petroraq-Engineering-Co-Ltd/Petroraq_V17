@@ -19,6 +19,8 @@
         'security/ir.model.access.csv',
         # 'views/dynamic_report_template.xml',
         'wizard/account_ledger.xml',
+        'views/account_ledger_result_views.xml',
+        'views/vat_ledger_result_views.xml',
         'wizard/vat_ledger_report_wizard.xml',
         'wizard/custom_dynamic_ledger_report_wizard.xml',
         'report/account_ledger_report.xml',

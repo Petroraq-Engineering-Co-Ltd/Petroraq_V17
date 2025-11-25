@@ -226,16 +226,18 @@ class CustomDynamicLedgerReport(models.AbstractModel):
 
         if len(JournalAccounts) == 1:
             where_statement = f"""
-                WHERE account_move_line.account_id = {JournalAccounts[0]} 
+                WHERE aml.account_id = {JournalAccounts[0]} 
                 AND 
-                account_move_line.date < '{str(date_start)}'"""
+                aml.date < '{date_start}'
+                AND am.state = 'posted'"""
         elif len(JournalAccounts) > 1:
             where_statement = f"""
-                WHERE account_move_line.account_id in {TupleJournalAccounts} 
+                WHERE aml.account_id in {TupleJournalAccounts} 
                 AND 
-                account_move_line.date < '{str(date_start)}'"""
+                aml.date < '{date_start}'
+                AND am.state = 'posted'"""
         else:
-            where_statement = f""""""
+            where_statement = ""
 
         if analytic_ids:
             if where_statement:
@@ -257,24 +259,23 @@ class CustomDynamicLedgerReport(models.AbstractModel):
             }
         sql = f"""
                     SELECT 
-                        SUM(balance) as balance,
-                        SUM(debit) as debit,
-                        SUM(credit) as credit 
+                        SUM(aml.balance)
                     FROM
-                        account_move_line
-                    {where_statement}    
-                    GROUP By account_move_line.account_id
+                        account_move_line aml
+                    JOIN
+                        account_move am ON aml.move_id = am.id
+                    {where_statement}
+                    GROUP BY aml.account_id
                 """
         self.env.cr.execute(sql)
         result = self.env.cr.fetchone()
-        if result and result[0]:
+        if result:
             initial_balance = result[0]
-            initial_debit = result[1]
-            initial_credit = result[2]
         else:
             initial_balance = 0
-            initial_debit = 0
-            initial_credit = 0
+
+        initial_debit = 0
+        initial_credit = 0
         t_debit = 0 + initial_debit
         t_credit = 0 + initial_credit
         init_balance = initial_balance

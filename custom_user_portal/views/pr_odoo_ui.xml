@@ -80,6 +80,12 @@
                                 <field name="comments"/>
                             </group>
                         </page>
+                        <page string="Reason">
+                            <group>
+                                <field name="rejection_reason"
+                                       invisible="not is_supervisor"/>
+                            </group>
+                        </page>
                     </notebook>
                     <div class="total_amount_main">
                         <div class="total_amount_quotation">
@@ -111,9 +117,46 @@
         <field name="domain">[('pr_type', '!=', 'cash')]</field>
     </record>
     <!-- Menu item under Purchase -->
+    <!-- End User Requisitions (folder, no action) -->
     <menuitem id="menu_purchase_requisition_main"
               name="Requisitions"
               parent="purchase.menu_purchase_root"
-              action="action_purchase_requisition_list"
-              sequence="130"/>
+              sequence="130"
+              groups="custom_pr_system.group_custom_pr_end_user"/>
+    <!-- Re-parent PR menu -->
+    <menuitem id="custom_pr_system.menu_pr"
+            name="Regular PR"
+            parent="custom_user_portal.menu_purchase_requisition_main"
+            action="custom_pr_system.action_custom_pr_standard"
+            sequence="10"
+            groups="custom_pr_system.group_custom_pr_end_user"/>
+
+    <!-- Re-parent Cash PR menu -->
+    <menuitem id="custom_pr_system.menu_cash_pr"
+            name="Cash PR"
+            parent="custom_user_portal.menu_purchase_requisition_main"
+            action="custom_pr_system.action_custom_pr_cash"
+            sequence="20"
+            groups="custom_pr_system.group_custom_pr_end_user"/>
+
+    <!-- Requisitions for other users (shows PR lists) -->
+    <menuitem id="menu_purchase_requisition_main_others"
+              name="Requisitions"
+              parent="purchase.menu_purchase_root"
+              sequence="131"
+              groups="custom_user_portal.procurement_admin,purchase.group_purchase_manager,custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director,custom_pr_system.inventory_qc,custom_pr_system.inventory_data_entry,custom_user_portal.inventory_admin"/>
+
+    <menuitem id="custom_user_portal.menu_pr_others"
+            name="Regular PR"
+            parent="custom_user_portal.menu_purchase_requisition_main_others"
+            action="custom_user_portal.action_purchase_requisition_list"
+            sequence="10"
+            groups="custom_user_portal.procurement_admin,purchase.group_purchase_manager,custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director,custom_pr_system.inventory_qc,custom_pr_system.inventory_data_entry,custom_user_portal.inventory_admin"/>
+
+    <menuitem id="custom_user_portal.menu_cash_pr_others"
+            name="Cash PR"
+            parent="custom_user_portal.menu_purchase_requisition_main_others"
+            action="custom_user_portal.action_purchase_requisition_cash"
+            sequence="20"
+            groups="custom_user_portal.procurement_admin,purchase.group_purchase_manager,custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director,custom_pr_system.inventory_qc,custom_pr_system.inventory_data_entry,custom_user_portal.inventory_admin"/>
 </odoo>

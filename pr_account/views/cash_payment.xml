@@ -176,9 +176,9 @@
                         </div>
 
                     </div>
-                    <field name="cash_payment_line_ids" class="cash_line_with_bottom_pager"
+                    <field name="cash_payment_line_ids" class="cash_line_with_bottom_pager freeze-1many"
                            widget="section_and_note_one2many" nolabel="1" readonly="state != 'draft'">
-                        <tree editable="bottom" limit="100">
+                        <tree editable="bottom" limit="25">
                             <field name="cash_payment_id" column_invisible="True"/>
                             <field name="company_id" column_invisible="True"/>
                             <field name="currency_id" column_invisible="True"/>

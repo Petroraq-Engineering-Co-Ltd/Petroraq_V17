@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_company_form_inherit_petroraq" model="ir.ui.view">
+        <field name="name">res.company.form.petroraq.approval</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Petroraq Quotation Approval">
+                    <field name="sale_mgr_approval_min_amount"/>
+                    <field name="sale_md_approval_min_amount"/>
+                    <field name="sale_md_user_id"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

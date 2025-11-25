@@ -198,6 +198,19 @@ class AccountLedgerReport(models.AbstractModel):
         t_debit = 0
         t_credit = 0
         init_balance = initial_balance
+        # --- Opening Balance Row (same as Excel) ---
+        docs.append({
+            'transaction_ref': 'Opening',
+            'date': date_start,
+            'description': 'Opening Balance',
+            'reference': ' ',
+            'journal': ' ',
+            'initial_balance': '{:,.2f}'.format(initial_balance),
+            'debit': '{:,.2f}'.format(0),
+            'credit': '{:,.2f}'.format(0),
+            'balance': '{:,.2f}'.format(initial_balance)
+        })
+
         for item in JournalItems:
             balance = initial_balance + (item.debit - item.credit)
             t_debit += item.debit

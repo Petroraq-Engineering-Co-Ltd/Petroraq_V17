@@ -125,6 +125,16 @@
                                     <field name="notes" readonly="1"/>
                                 </group>
                             </page>
+                            <!-- <page string="Reason">
+                                <group>
+                                    <field name="rejection_reason"
+                                           placeholder="Enter Reason for Rejection"
+                                           groups="custom_user_portal.procurement_admin" readonly="1"/>
+                                    <field name="rejection_reason"
+                                           placeholder="Enter Reason for Rejection"
+                                           groups="custom_user_portal.project_engineer,custom_user_portal.project_manager,custom_user_portal.operations_director,custom_user_portal.managing_director"/>
+                                </group>
+                            </page> -->
                         </notebook>
                         <div class="total_amount_main">
                             <div class="total_amount_quotation">
@@ -146,7 +156,7 @@
             </form>
         </field>
     </record>
-    <record id="action_purchase_quotation_list" model="ir.actions.act_window">
+    <!-- <record id="action_purchase_quotation_list" model="ir.actions.act_window">
         <field name="name">Quotations</field>
         <field name="res_model">purchase.quotation</field>
         <field name="view_mode">tree,form</field>
@@ -156,5 +166,35 @@
               name="Quotations"
               parent="purchase.menu_purchase_root"
               action="action_purchase_quotation_list"
-              sequence="140"/>
+              sequence="140"/> -->
+    <!-- Main Menu: Quotations -->
+    <menuitem id="menu_purchase_quotation_main"
+          name="Quotations"
+          parent="purchase.menu_purchase_root"
+          sequence="140"/>
+    <!-- Action for Submitted Quotations (list + form) -->
+    <record id="action_purchase_quotation_list" model="ir.actions.act_window">
+        <field name="name">Submitted Quotations</field>
+        <field name="res_model">purchase.quotation</field>
+        <field name="view_mode">tree,form</field>
+        <field name="type">ir.actions.act_window</field>
+    </record>
+    <!-- Submenu: Submitted Quotations -->
+    <menuitem id="menu_purchase_quotation_submitted"
+          name="Submitted Quotations"
+          parent="menu_purchase_quotation_main"
+          action="action_purchase_quotation_list"
+          sequence="10"/>
+    <!-- action -->
+    <record id="action_purchase_quotation_form_page" model="ir.actions.client">
+        <field name="name">Create Quotation</field>
+        <field name="tag">quotation_form_page</field>
+    </record>
+    <!-- menu -->
+    <menuitem id="menu_purchase_quotation_create"
+          name="Create Quotation"
+          parent="menu_purchase_quotation_main"
+          action="action_purchase_quotation_form_page"
+          sequence="20"
+          groups="custom_user_portal.procurement_admin"/>
 </odoo>

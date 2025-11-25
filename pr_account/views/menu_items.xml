@@ -2,7 +2,7 @@
 <odoo>
     <menuitem id="financial_accounting_main_menu"
           parent="account_accountant.menu_accounting"
-          name="Financial Accounting"
+          name="Petroraq Accounting"
           sequence="5"/>
 
         <menuitem id="account_chart_of_accounts_main_menu"
