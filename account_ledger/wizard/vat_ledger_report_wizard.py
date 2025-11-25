@@ -214,11 +214,13 @@ class VatLedgerReport(models.TransientModel):
     @api.depends("date_start", "date_end")
     def _compute_account_id_domain(self):
         for rec in self:
-            if self.env.user.has_group('account.group_account_manager') or self.env.user.has_group(
-                    'pr_account.custom_group_accounting_manager'):
-                rec.account_id_domain = "[]"
+            if self.env.user.has_group('account.group_account_manager') \
+                    or self.env.user.has_group('pr_account.custom_group_accounting_manager'):
+                # Managers: All ACTIVE accounts
+                rec.account_id_domain = "[('deprecated','=',False)]"
             else:
-                rec.account_id_domain = "[('id', '!=', 749)]"
+                # Restricted users: active AND not forbidden account(s)
+                rec.account_id_domain = "[('deprecated','=',False), ('id','!=',749)]"
 
     @api.constrains("main_head", "assets_main_head", "liability_main_head", "current_assets_category",
                     "fixed_assets_category", "other_assets_category",

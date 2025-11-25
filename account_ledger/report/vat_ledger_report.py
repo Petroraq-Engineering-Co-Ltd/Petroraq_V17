@@ -114,7 +114,7 @@ class AccountLedgerReport(models.AbstractModel):
                 AND 
                 account_move_line.date < '{date_start}'"""
         else:
-            where_statement = f""""""
+            where_statement = "1 = 1"
         # where_statement = f"""
         # account_move_line.account_id in {TupleJournalAccounts}
         # AND

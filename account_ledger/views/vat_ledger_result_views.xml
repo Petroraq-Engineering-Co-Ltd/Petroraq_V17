@@ -16,19 +16,23 @@
                 </header>
 
                 <sheet>
-                    <field name="line_ids" nolabel="1">
-                        <tree create="false" delete="false" editable="false" class="oe_inline" limit="1000">
+                    <div class="oe_title"/>
 
-                            <field name="transaction_ref"/>
-                            <field name="reference"/>
-                            <field name="date"/>
-                            <field name="description"/>
-                            <field name="amount"/>
-                            <field name="tax_amount"/>
-                            <field name="total_amount"/>
+                    <div class="oe_full">
+                        <field name="line_ids" class="freeze-1many" nolabel="1">
+                            <tree create="false" delete="false" editable="false" class="oe_inline" limit="1000">
 
-                        </tree>
-                    </field>
+                                <field name="transaction_ref"/>
+                                <field name="reference"/>
+                                <field name="date"/>
+                                <field name="description"/>
+                                <field name="amount"/>
+                                <field name="tax_amount"/>
+                                <field name="total_amount"/>
+
+                            </tree>
+                        </field>
+                    </div>
                 </sheet>
 
             </form>

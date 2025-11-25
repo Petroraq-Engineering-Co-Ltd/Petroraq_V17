@@ -15,61 +15,59 @@
 }
 
 
-/*******************************************************
- * GLOBAL FREEZE + SCROLL FOR ALL ONE2MANY TABLES
- * Supports:
- *   - section_and_note_one2many widgets
- *   - regular one2many list tables (o_list_table)
- *   - Journal Voucher (account.move line_ids)
- *******************************************************/
+/* ----------------------------------------------------
+   ONE2MANY FREEZE HEADER + SCROLL (FULLY WORKING)
+   Works in Odoo 17 for: one2many list, x2many list,
+   account.move lines, section lists, custom renderers.
+---------------------------------------------------- */
 
-/* SHARED SCROLL SETTINGS */
-.freeze-1many .o_section_and_note_list_view,
-.freeze-1many .o_list_table {
-    display: block !important;
-    max-height: 380px !important;
-    overflow-y: auto !important;
-    overflow-x: auto !important;
-
-    border-collapse: separate !important;
-    border-spacing: 0 !important;
-
-    width: 100% !important;
+/* MAIN WRAPPER (the field) */
+.freeze-1many {
     position: relative;
 }
 
-/* SECTION & NOTE SPECIFIC (CPV, BPV, BRV, CRV etc) */
-.freeze-1many .o_section_and_note_list_view thead th {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 20 !important;
-    background: #f8f9fa !important;  /* Odoo light header color */
-    white-space: nowrap;
-    padding: 4px 8px;
+/* Odoo internal list view renderer is the TRUE scroll area */
+.freeze-1many .o_list_renderer {
+    max-height: 580px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    position: relative;
 }
 
-/* JV / REGULAR O2M TABLE HEADER */
-.freeze-1many .o_list_table thead th {
+/* For section/note renderer cases */
+.freeze-1many .o_section_and_note_list_view {
+    max-height: 580px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    position: relative;
+}
+
+/* TABLE (keep as table so resizing still works) */
+.freeze-1many .o_list_table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+/* ---- STICKY HEADERS ---- */
+.freeze-1many thead th {
     position: sticky !important;
-    top: 0 !important;
-    z-index: 20 !important;
+    top: 0;
+    z-index: 30 !important;
     background: #f8f9fa !important;
-    white-space: nowrap;
     padding: 4px 8px;
+    white-space: nowrap;
 }
 
-/* Consistent row layout & alignment */
-.freeze-1many .o_section_and_note_list_view th,
-.freeze-1many .o_section_and_note_list_view td,
-.freeze-1many .o_list_table th,
-.freeze-1many .o_list_table td {
+/* CELLS */
+.freeze-1many td,
+.freeze-1many th {
     white-space: nowrap;
-    text-align: left;
     padding: 4px 8px;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
-/* Optional zebra striping */
-.freeze-1many .o_section_and_note_list_view tbody tr:nth-child(even),
-.freeze-1many .o_list_table tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
+/* ZEBRA ROWS */
+.freeze-1many tbody tr:nth-child(even) {
+    background-color: #f9f9f9 !important;
 }
