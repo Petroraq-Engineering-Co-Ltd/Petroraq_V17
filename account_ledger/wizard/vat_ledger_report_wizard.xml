@@ -139,17 +139,10 @@
                                options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
                     </group>
                 </group>
-                <group col="2" colspan="4">
-                    <group string="Summary Table" style="width:100%; ">
-                        <field name="summary_html" nolabel="1" readonly="1" widget="html"
-                               style="width:100%; "/>
-                    </group>
-                </group>
+
                 <footer>
                     <button name="action_view_vat_ledger_report" string="VIEW REPORT" type="object"
                             class="btn-primary"/>
-                    <button name="action_view_vat_summary" string="VIEW SUMMARY" type="object" class="btn-secondary"/>
-
                     <button name="get_report" string="PRINT PDF" type="object" class="btn-info"/>
                     <button name="print_xlsx_report" string="PRINT XLSX" type="object" class="btn-teal-custom"/>
                     <button string="CANCEL" special="cancel" class="btn-danger"/>

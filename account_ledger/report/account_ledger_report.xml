@@ -12,7 +12,7 @@
         <field name="margin_bottom">10</field>
         <field name="margin_left">5</field>
         <field name="header_line" eval="False"/>
-        <field name="header_spacing">15</field>
+        <field name="header_spacing">20</field>
         <field name="dpi">90</field>
     </record>
 
@@ -27,77 +27,174 @@
 
     <template id="account_ledger_rep">
         <t t-call="web.html_container">
-            <!-- <t t-call="web.internal_layout"> -->
-                <div class="header" style="border-bottom: 2px solid black">
-                    <h3 class="text-center">Account Ledger</h3>
-                </div>
-                <page>
-                    <div class="article">
-                        <table class="table" style="height: 29px; width=100%; border: 1px solid black" >
-                            <thead>
-                                <th class="text-center" style="width: 50%; border: 1px solid black; height: 25px; vertical-align: middle">Account</th>
-                                <th class="text-center" style="width: 50%; border: 1px solid black; height: 25px; vertical-align: middle">Reporting Period</th>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="text-center" style="border: 1px solid black; height: 50px; vertical-align: middle;">
-                                        <strong><span t-esc="account"/></strong>
+
+            <div class="header" style="padding:0; margin:0;">
+                <table style="width:100%; border-collapse:collapse;">
+
+                    <tr>
+                        <td style="
+                background:#173b76;
+                color:#ffffff;
+                font-size:20px;
+                font-weight:bold;
+                text-align:center;
+                padding:3px;
+                border:1px solid #000;">
+                            Petroraq Engineering &amp; Construction - VAT Number 311428741500003
+                        </td>
+                    </tr>
+
+                    <!-- ROW 2 -->
+                    <tr>
+                        <td style="
+                background:#173b76;
+                color:#ffffff;
+                font-size:18px;
+                font-weight:bold;
+                text-align:center;
+                padding:3px;
+                border:1px solid #000;">
+                            <t t-if="',' not in account">
+                                <span t-esc="account"/>
+                            </t>
+                            <t t-if="',' in account">
+                                Multiple Accounts
+                            </t>
+                        </td>
+                    </tr>
+
+                    <!-- ROW 3 -->
+                    <tr>
+                        <td style="
+                background:#173b76;
+                color:#ffffff;
+                font-size:18px;
+                font-weight:bold;
+                text-align:center;
+                padding:3px;
+                border:1px solid #000;">
+                            Period:
+                            <span t-esc="valuation_date"/>
+                        </td>
+                    </tr>
+
+                </table>
+            </div>
+
+            <!-- PAGE BODY -->
+            <page style="margin-top:40mm;">
+                <div class="article">
+
+                    <!-- Removed duplicate Account / Reporting Period table -->
+
+                    <!-- DATA TABLE -->
+                    <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
+
+                        <thead>
+                            <tr>
+                                <th style="background:#173b76; color:#ffffff; font-size:16px;
+                    padding:4px; text-align:center; border:1px solid #000;">
+                                    Transaction Ref
+                                </th>
+                                <th style="background:#173b76; color:#ffffff; font-size:16px;
+                   padding:4px; text-align:center; border:1px solid #000;">
+                                    Reference
+                                </th>
+                                <th style="background:#173b76; color:#ffffff; font-size:16px;
+                   padding:4px; text-align:center; border:1px solid #000;">
+                                    Date
+                                </th>
+                                <th style="background:#173b76; color:#ffffff; font-size:16px;
+                   padding:4px; text-align:center; border:1px solid #000;">
+                                    Description
+                                </th>
+                                <th style="background:#173b76; color:#ffffff; font-size:16px;
+                   padding:4px; text-align:center; border:1px solid #000;">
+                                    Debit
+                                </th>
+                                <th style="background:#173b76; color:#ffffff; font-size:16px;
+                   padding:4px; text-align:center; border:1px solid #000;">
+                                    Credit
+                                </th>
+                                <th style="background:#173b76; color:#ffffff; font-size:16px;
+                   padding:4px; text-align:center; border:1px solid #000;">
+                                    Balance
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <t t-foreach="docs" t-as="doc">
+
+                                <!-- normal rows -->
+                                <tr t-if="doc['transaction_ref'] != False">
+                                    <td style="text-align:center; border-bottom:1px solid #ddd;">
+                                        <span t-esc="doc['transaction_ref']"/>
                                     </td>
-                                    <td class="text-center" style="border: 1px solid black; height: 50px; vertical-align: middle;">
-                                        <strong><span t-esc="valuation_date"/></strong>
+                                    <td style="text-align:center; border-bottom:1px solid #ddd;">
+                                        <span t-esc="doc['reference']"/>
+                                    </td>
+                                    <td style="text-align:center; border-bottom:1px solid #ddd;">
+                                        <span t-esc="doc['date']"/>
+                                    </td>
+                                    <td style="text-align:left; border-bottom:1px solid #ddd;">
+                                        <span t-esc="doc['description']"/>
+                                    </td>
+                                    <td style="text-align:center; border-bottom:1px solid #ddd;">
+                                        <span t-esc="doc['debit']"/>
+                                    </td>
+                                    <td style="text-align:center; border-bottom:1px solid #ddd;">
+                                        <span t-esc="doc['credit']"/>
+                                    </td>
+                                    <td style="text-align:center; border-bottom:1px solid #ddd;">
+                                        <span t-esc="doc['balance']"/>
                                     </td>
                                 </tr>
-                            </tbody>
-                        </table>
-                        <div style="min-height: 3px;">
-                        </div>
-                        <table style="width: 100%;border-collapse: collapse;border: 1px solid #ddd; text-align: left;">
-                            <thead>
-                                <th style="text-align: center;border-bottom: 1px solid #ddd;">Transcation Ref</th>
-                                <th style="text-align: center;border-bottom: 1px solid #ddd;">Reference</th>
-                                <th style="text-align: center;border-bottom: 1px solid #ddd;">Date</th>
-                                <th style="text-align: center;border-bottom: 1px solid #ddd;">Description</th>
-<!--                                <th style="text-align: center;border-bottom: 1px solid #ddd;">Journal</th>-->
-<!--                                <th style="text-align: center;border-bottom: 1px solid #ddd;">Initial Balance</th>-->
-                                <th style="text-align: center;border-bottom: 1px solid #ddd;">Debit</th>
-                                <th style="text-align: center;border-bottom: 1px solid #ddd;">Credit</th>
-                                <th style="text-align: center;border-bottom: 1px solid #ddd;">Balance</th>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="docs" t-as="doc">
-                                    <tr t-if="not doc['transaction_ref'] == False">
-                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><span t-esc="doc['transaction_ref']"/></td>
-                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><span t-esc="doc['reference']"/></td>
-                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><span t-esc="doc['date']"/></td>
-                                        <td style="text-align: left;border-bottom: 1px solid #ddd;"><span t-esc="doc['description']"/></td>
-<!--                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><span t-esc="doc['journal']"/></td>-->
-<!--                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><span t-esc="doc['initial_balance']"/></td>-->
-                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><span t-esc="doc['debit']"/></td>
-                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><span t-esc="doc['credit']"/></td>
-                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><span t-esc="doc['balance']"/></td>
-                                    </tr>
-                                    <tr t-if="doc['transaction_ref'] == False">
-                                        <td colspan="9" style="text-align: left;border-bottom: 1px solid #ddd;"><p>`</p></td>
-                                    </tr>
-                                    <tr t-if="doc['transaction_ref'] == False">
-                                        <td colspan="4" style="text-align: center;border-bottom: 1px solid #ddd;"><strong>Total</strong></td>
-<!--                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><strong><span t-esc="doc['initial_balance']"/></strong></td>-->
-                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><strong><span t-esc="doc['debit']"/></strong></td>
-                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><strong><span t-esc="doc['credit']"/></strong></td>
-                                        <td style="text-align: center;border-bottom: 1px solid #ddd;"><strong><span t-esc="doc['balance']"/></strong></td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                        </table>
-                    </div>
-                </page>
-                <div class="footer">
-                    <div class="row text-center" style="border-top: 1px solid black;">
-                        <div>Report Date: <span t-esc="report_date"/></div>
+
+                                <!-- Total row -->
+                                <tr t-if="doc['transaction_ref'] == False">
+                                    <td colspan="4"
+                                        style="background:#173b76; color:#ffffff; text-align:center; border:1px solid #000; padding:4px;">
+                                        <strong>Total</strong>
+                                    </td>
+
+                                    <td style="background:#173b76; color:#ffffff; text-align:center; border:1px solid #000; padding:4px;">
+                                        <strong>
+                                            <span t-esc="doc['debit']"/>
+                                        </strong>
+                                    </td>
+
+                                    <td style="background:#173b76; color:#ffffff; text-align:center; border:1px solid #000; padding:4px;">
+                                        <strong>
+                                            <span t-esc="doc['credit']"/>
+                                        </strong>
+                                    </td>
+
+                                    <td style="background:#173b76; color:#ffffff; text-align:center; border:1px solid #000; padding:4px;">
+                                        <strong>
+                                            <span t-esc="doc['balance']"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+
+                            </t>
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </page>
+
+            <!-- FOOTER -->
+            <div class="footer">
+                <div class="row text-center" style="border-top: 1px solid black;">
+                    <div>Report Date:
+                        <span t-esc="report_date"/>
                     </div>
                 </div>
-            <!-- </t> -->
+            </div>
+
         </t>
     </template>
-    
+
 </odoo>
