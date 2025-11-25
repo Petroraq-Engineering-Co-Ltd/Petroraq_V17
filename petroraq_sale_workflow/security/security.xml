@@ -8,6 +8,11 @@
         <record id="group_sale_approval_md" model="res.groups">
             <field name="name">Sales Approval - MD / Final Authority</field>
         </record>
+        <!-- Explicit model record to ensure access rights can reference the wizard -->
+        <record id="model_sale_order_reject_wizard" model="ir.model">
+            <field name="name">sale.order.reject.wizard</field>
+            <field name="model">sale.order.reject.wizard</field>
+            <field name="transient" eval="True"/>
+        </record>
     </data>
 </odoo>
-

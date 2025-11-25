@@ -15,6 +15,7 @@
         "views/sale_order_views.xml",
         "views/inquiry_views.xml",
         "views/company_views.xml",   # new: company form settings (v17-safe)
+        "views/reject_wizard_views.xml",
         "data/mail_template.xml",
     ],
     "assets": {

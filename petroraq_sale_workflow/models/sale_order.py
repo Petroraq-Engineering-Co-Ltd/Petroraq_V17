@@ -185,6 +185,18 @@ class SaleOrder(models.Model):
             order.message_post(body=_("Quotation has been rejected."))
         return True
 
+    def action_open_reject_wizard(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "sale.order.reject.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_order_id": self.id,
+            },
+        }
+
     def action_reset_to_draft(self):
         for order in self:
             order.approval_state = "draft"

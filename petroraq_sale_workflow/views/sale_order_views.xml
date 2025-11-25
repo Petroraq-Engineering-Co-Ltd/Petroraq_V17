@@ -22,8 +22,8 @@
                         groups="petroraq_sale_workflow.group_sale_approval_md"/>
                 <button string="Reject"
                         type="object"
-                        name="action_reject"
-                        class="btn-secondary"
+                        name="action_open_reject_wizard"
+                        class="oe_highlight"
                         modifiers="{'invisible': [('approval_state', 'not in', ['to_manager', 'to_md'])]}"
                         groups="petroraq_sale_workflow.group_sale_approval_manager,petroraq_sale_workflow.group_sale_approval_md,sales_team.group_sale_manager"/>
             </xpath>
