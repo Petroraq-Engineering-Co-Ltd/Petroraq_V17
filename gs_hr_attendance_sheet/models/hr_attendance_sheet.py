@@ -465,7 +465,7 @@ class AttendanceSheet(models.Model):
                     tot_overtime_custom = 0
                 sheet.tot_overtime = tot_overtime_custom if sheet.employee_id.add_overtime else 0
                 sheet.tot_overtime_amount = (((
-                                                          tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.gross_amount) / monthly_working_hours) if sheet.employee_id.add_overtime else 0
+                                                          tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.wage) / monthly_working_hours) if sheet.employee_id.add_overtime else 0
             # sheet.tot_overtime_amount = (((tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.wage) / 208) if sheet.employee_id.add_overtime else 0
             sheet.no_overtime = len(overtime_lines)
             # Compute Total Late In
