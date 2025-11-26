@@ -70,6 +70,15 @@
             <field name="number_increment">1</field>
             <field name="company_id" eval="False"/>
         </record>
+        <record id="seq_pr_account_journal_voucher" model="ir.sequence">
+            <field name="name">Journal Voucher</field>
+            <field name="code">pr.account.journal.voucher.seq.code</field>
+            <field name="prefix">JJV/%(year)s/</field>
+            <field name="padding">4</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field name="company_id" eval="False"/>
+        </record>
 
     </data>
 </odoo>
