@@ -234,19 +234,21 @@ class AccountJournalVoucher(models.Model):
 
     def action_reset_to_draft(self):
         for rec in self:
-            if rec.state not in ("submit", "supervisor_approve", "manager_approve"):
-                raise ValidationError(
-                    _(
-                        "You can reset to Draft only from Submitted / "
-                        "Supervisor Approved / Manager Approved states."
-                    )
-                )
-            # If JE exists, unpost and delete
+
+            # Allow reset from ANY state except draft
+            if rec.state == "draft":
+                raise ValidationError(_("Already in Draft."))
+
             if rec.journal_entry_id:
-                if rec.journal_entry_id.state == "posted":
-                    rec.journal_entry_id.sudo().button_draft()
-                rec.journal_entry_id.unlink()
+                move = rec.journal_entry_id.sudo()
+
+                if move.state == "posted":
+                    move.button_draft()
+
+                move.unlink()
+
                 rec.journal_entry_id = False
+
             rec.state = "draft"
 
     def action_cancel(self):

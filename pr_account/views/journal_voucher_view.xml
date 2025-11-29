@@ -42,14 +42,14 @@
 
                     <!-- DRAFT → SUBMIT -->
                     <button name="action_submit"
-                            string="SUBMIT"
+                            string="Submit"
                             type="object"
                             class="btn-primary"
                             invisible="state != 'draft'"/>
 
                     <!-- SUBMIT → SUPERVISOR -->
                     <button name="action_supervisor_approve"
-                            string="SUPERVISOR APPROVE"
+                            string="Approve"
                             type="object"
                             class="btn-info"
                             invisible="state != 'submit'"
@@ -57,11 +57,11 @@
 
                     <!-- SUPERVISOR → MANAGER -->
                     <button name="action_manager_approve"
-                            string="MANAGER APPROVE"
+                            string="Approve and Post"
                             type="object"
                             class="btn-success"
                             invisible="state != 'supervisor_approve'"
-                            groups="account.group_account_manager"/>
+                            groups="account.custom_group_accounting_manager"/>
 
                     <!-- MANAGER → POST -->
                     <button name="action_post"
@@ -71,12 +71,11 @@
                             invisible="state != 'manager_approve'"
                             groups="account.group_account_manager"/>
 
-                    <!-- RESET TO DRAFT -->
                     <button name="action_reset_to_draft"
                             string="RESET TO DRAFT"
                             type="object"
                             class="btn-secondary"
-                            invisible="state not in ['submit','supervisor_approve','manager_approve']"
+                            invisible="state not in ['submit','supervisor_approve','manager_approve','cancel']"
                             groups="account.group_account_manager"/>
 
                     <!-- CANCEL -->
@@ -85,7 +84,7 @@
                             type="object"
                             class="btn-danger"
                             invisible="state not in ['draft','submit','supervisor_approve','manager_approve']"
-                            groups="account.group_account_manager"/>
+                            groups="account.group_account_manager,pr_account.custom_group_account_supervisor"/>
 
                     <field name="state" widget="statusbar"/>
                 </header>
