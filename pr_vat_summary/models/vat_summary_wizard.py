@@ -29,6 +29,8 @@ class VatSummaryWizard(models.TransientModel):
     date_start = fields.Date(string="Start Date", required=True)
     date_end = fields.Date(string="End Date", required=True)
 
+    summary_title = fields.Char(string="Summary Title", compute="_compute_summary_title")
+
     account_ids = fields.Many2many(
         "account.account",
         string="Filter Accounts (for Non-Vated)",
@@ -96,6 +98,25 @@ class VatSummaryWizard(models.TransientModel):
             self.date_end = date(last_year, 12, 31)
 
         # "custom" → user manually sets dates
+
+    @api.depends('date_filter', 'date_start', 'date_end')
+    def _compute_summary_title(self):
+        for rec in self:
+            if rec.date_filter == 'this_month':
+                rec.summary_title = "SUMMARY OF " + rec.date_start.strftime('%B %Y')
+
+            elif rec.date_filter == 'this_quarter':
+                quarter = (rec.date_start.month - 1) // 3 + 1
+                rec.summary_title = f"SUMMARY OF Q{quarter} {rec.date_start.year}"
+
+            elif rec.date_filter == 'this_year':
+                rec.summary_title = f"SUMMARY OF {rec.date_start.year}"
+
+            else:
+                # Custom date range
+                start = rec.date_start.strftime('%d-%b-%Y')
+                end = rec.date_end.strftime('%d-%b-%Y')
+                rec.summary_title = f"SUMMARY OF {start} TO {end}"
 
     # -------------------------------------------------------------------------
     # Helpers
@@ -250,7 +271,8 @@ class VatSummaryWizard(models.TransientModel):
                 <th colspan="5" 
                     style="background-color:#29608f;color:white;padding:10px;
                            border:2px solid #000;font-size:18px;text-align:center;">
-                    VAT Report {self.date_start.strftime('%Y-%m-%d')} to {self.date_end.strftime('%Y-%m-%d')}
+                    VAT Report {self.date_start.strftime('%d-%m-%Y')
+        } to {self.date_end.strftime('%d-%m-%Y')}
                 </th>
             </tr>
 
@@ -300,7 +322,7 @@ class VatSummaryWizard(models.TransientModel):
                 <td style="border:1.8px solid #000;padding:10px;">ii</td>
                 <td style="border:1.8px solid #000;padding:10px;">Non Vated Purchase/Expenses</td>
                 <td style="border:1.8px solid #000;padding:10px;text-align:right;">{self.non_vated_purchases_amount:,.2f}</td>
-                <td style="border:1.8px solid #000;padding:10px;">-</td>
+                <td style="border:1.8px solid #000;padding:10px;text-align:right;">0.00</td>
                 <td style="border:1.8px solid #000;padding:10px;text-align:right;">{non_vated_total:,.2f}</td>
             </tr>
 

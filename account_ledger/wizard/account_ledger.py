@@ -34,7 +34,15 @@ class AccountLedger(models.TransientModel):
 
     # endregion [Default Methods]
 
-    date_start = fields.Date(string="Start Date", required=True, default=date(2025, 1, 1))
+    def _default_date_start(self):
+        today = fields.Date.context_today(self)
+        return today.replace(day=1)
+
+    date_start = fields.Date(
+        string="Start Date",
+        required=True,
+        default=_default_date_start
+    )
     date_end = fields.Date(string="End Date", required=True, default=fields.Date.today)
     account_id = fields.Many2one('account.account', required=False, string="Account")
     account_id_domain = fields.Char(compute="_compute_account_id_domain")

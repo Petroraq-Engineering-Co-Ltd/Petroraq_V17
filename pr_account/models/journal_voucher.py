@@ -215,11 +215,12 @@ class AccountJournalVoucher(models.Model):
                     "name": line.description or (rec.description or "/"),
                     "debit": line.debit,
                     "credit": line.credit,
-                    "partner_id": line.partner_id.id if line.partner_id else False,
+                    "partner_id": line.partner_id.id or False,
                     "analytic_distribution": line.analytic_distribution or False,
-                    "cs_project_id": line.cs_project_id.id
-                    if line.cs_project_id
-                    else False,
+                    "cs_project_id": line.cs_project_id.id or False,
+                    "cs_employee_id": line.cs_employee_id.id or False,
+                    "asset_id": line.asset_id.id or False,
+                    "tax_ids": [(6, 0, line.tax_ids.ids)],
                 }
                 line_model.create(line_vals)
 
@@ -324,14 +325,16 @@ class AccountJournalVoucher(models.Model):
 
     @api.model
     def create(self, vals):
+        if vals.get('name'):
+            vals['name'] = False
+
         res = super().create(vals)
+
         if not res.name:
-            res.name = (
-                    self.env["ir.sequence"].next_by_code(
-                        "pr.account.journal.voucher.seq.code"
-                    )
-                    or ""
+            res.name = self.env["ir.sequence"].next_by_code(
+                "pr.account.journal.voucher.seq.code"
             )
+
         return res
 
     def unlink(self):
@@ -345,6 +348,32 @@ class AccountJournalVoucher(models.Model):
                     _("You cannot delete a voucher linked to a Journal Entry.")
                 )
         return super().unlink()
+
+    def copy(self, default=None):
+        self.ensure_one()
+        default = dict(default or {})
+
+        default['name'] = False
+        default['journal_entry_id'] = False
+
+        default['line_ids'] = [
+            (0, 0, {
+                'account_id': l.account_id.id,
+                'cs_project_id': l.cs_project_id.id,
+                'partner_id': l.partner_id.id,
+                'cs_employee_id': l.cs_employee_id.id,
+                'asset_id': l.asset_id.id,
+                'description': l.description,
+                'reference_number': l.reference_number,
+                'analytic_distribution': l.analytic_distribution,
+                'debit': l.debit,
+                'credit': l.credit,
+                'tax_ids': [(6, 0, l.tax_ids.ids)],
+            })
+            for l in self.line_ids
+        ]
+
+        return super().copy(default)
 
     # endregion [CRUD]
 
@@ -403,6 +432,17 @@ class AccountJournalVoucherLine(models.Model):
         "res.partner",
         string="Project Manager",
         tracking=True,
+    )
+    cs_employee_id = fields.Many2one("account.analytic.account", string="Employee",
+                                     domain="[('analytic_plan_type', '=', 'employee')]")
+
+    asset_id = fields.Many2one('account.analytic.account', string="Asset",
+                               domain="[('analytic_plan_type', '=', 'asset')]")
+
+    tax_ids = fields.Many2many(
+        "account.tax",
+        string="Tax Grids",
+        domain="[('type_tax_use','in',('sale','purchase'))]"
     )
 
     description = fields.Text(string="Description", tracking=True)
