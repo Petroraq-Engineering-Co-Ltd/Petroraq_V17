@@ -18,13 +18,15 @@
                 <attribute name="groups">account.group_account_manager</attribute>
             </xpath>
 
-            <xpath expr="//header/button[@name='action_post']" position="after">
-                <button name="button_cancel" type="object" string="REJECT"
+            <xpath expr="//header/button[@name='action_post' and @type='object']" position="after">
+                <button name="button_cancel"
+                        type="object"
+                        string="REJECT"
                         class="btn-danger"
-                        invisible="move_type != 'entry' or state != 'draft'"
                         groups="account.group_account_manager"
-                />
+                        invisible="not id or move_type != 'entry' or state != 'draft'"/>
             </xpath>
+
 
             <xpath expr="//header/button[@name='button_draft']" position="attributes">
                 <attribute name="groups">account.group_account_manager</attribute>
@@ -120,9 +122,9 @@
         </field>
     </record>
 
-    <menuitem id="menu_move_journal_line_journal_vouchers"
-              parent="account_transactions_main_menu"
-              name="Journal Vouchers"
-              action="action_move_journal_line_journal_vouchers"
-              sequence="3"/>
+<!--    <menuitem id="menu_move_journal_line_journal_vouchers"-->
+<!--              parent="account_transactions_main_menu"-->
+<!--              name="Journal Vouchers"-->
+<!--              action="action_move_journal_line_journal_vouchers"-->
+<!--              sequence="3"/>-->
 </odoo>

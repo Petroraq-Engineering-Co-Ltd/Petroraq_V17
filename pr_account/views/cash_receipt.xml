@@ -172,7 +172,7 @@
         <field name="name">pr.account.cash.receipt.view.tree</field>
         <field name="model">pr.account.cash.receipt</field>
         <field name="arch" type="xml">
-            <tree string="Cash Receipts">
+            <tree string="Cash Receipts" default_order="name desc">
                 <field name="name" decoration-warning="1" string="Number"/>
                 <field name="account_id" options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
                 <field name="account_name"/>
