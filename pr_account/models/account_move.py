@@ -11,6 +11,102 @@ class AccountMove(models.Model):
 
     old_id = fields.Integer(string="Old ID")
     journal_voucher_view = fields.Boolean()
+    bpv_id = fields.Many2one(
+        "pr.account.bank.payment",
+        string="Bank Payment",
+        compute="_compute_pr_vouchers",
+        store=False,
+    )
+    cpv_id = fields.Many2one(
+        "pr.account.cash.payment",
+        string="Cash Payment",
+        compute="_compute_pr_vouchers",
+        store=False,
+    )
+    brv_id = fields.Many2one(
+        "pr.account.bank.receipt",
+        string="Bank Receipt",
+        compute="_compute_pr_vouchers",
+        store=False,
+    )
+    crv_id = fields.Many2one(
+        "pr.account.cash.receipt",
+        string="Cash Receipt",
+        compute="_compute_pr_vouchers",
+        store=False,
+    )
+    jv_id = fields.Many2one(
+        "pr.account.journal.voucher",
+        string="Journal Voucher",
+        compute="_compute_pr_vouchers",
+        store=False,
+    )
+
+    has_pr_voucher = fields.Boolean(
+        string="Has PR Voucher",
+        compute="_compute_pr_vouchers",
+        store=False,
+    )
+
+    def action_open_bpv(self):
+        self.ensure_one()
+        if not self.bpv_id:
+            return
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Bank Payment",
+            "res_model": "pr.account.bank.payment",
+            "view_mode": "form",
+            "res_id": self.bpv_id.id,
+        }
+
+    def action_open_cpv(self):
+        self.ensure_one()
+        if not self.cpv_id:
+            return
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Cash Payment",
+            "res_model": "pr.account.cash.payment",
+            "view_mode": "form",
+            "res_id": self.cpv_id.id,
+        }
+
+    def action_open_brv(self):
+        self.ensure_one()
+        if not self.brv_id:
+            return
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Bank Receipt",
+            "res_model": "pr.account.bank.receipt",
+            "view_mode": "form",
+            "res_id": self.brv_id.id,
+        }
+
+    def action_open_crv(self):
+        self.ensure_one()
+        if not self.crv_id:
+            return
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Cash Receipt",
+            "res_model": "pr.account.cash.receipt",
+            "view_mode": "form",
+            "res_id": self.crv_id.id,
+        }
+
+    def action_open_jjv(self):
+        self.ensure_one()
+        if not self.jv_id:
+            return
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Journal Voucher",
+            "res_model": "pr.account.journal.voucher",
+            "view_mode": "form",
+            "res_id": self.jv_id.id,
+        }
 
     def _search_default_journal(self):
         if self.payment_id and self.payment_id.journal_id:
@@ -48,6 +144,24 @@ class AccountMove(models.Model):
             raise UserError(error_msg)
 
         return journal
+
+    def _compute_pr_vouchers(self):
+        BankPayment = self.env["pr.account.bank.payment"]
+        CashPayment = self.env["pr.account.cash.payment"]
+        BankReceipt = self.env["pr.account.bank.receipt"]
+        CashReceipt = self.env["pr.account.cash.receipt"]
+        JournalVoucher = self.env["pr.account.journal.voucher"]
+
+        for move in self:
+            move.bpv_id = BankPayment.search([("journal_entry_id", "=", move.id)], limit=1)
+            move.cpv_id = CashPayment.search([("journal_entry_id", "=", move.id)], limit=1)
+            move.brv_id = BankReceipt.search([("journal_entry_id", "=", move.id)], limit=1)
+            move.crv_id = CashReceipt.search([("journal_entry_id", "=", move.id)], limit=1)
+            move.jv_id = JournalVoucher.search([("journal_entry_id", "=", move.id)], limit=1)
+
+            move.has_pr_voucher = bool(
+                move.bpv_id or move.cpv_id or move.brv_id or move.crv_id or move.jv_id
+            )
 
     def get_attachments_data(self):
         for move in self:

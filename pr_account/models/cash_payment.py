@@ -1,5 +1,7 @@
+from datetime import date
+
 from odoo import api, fields, models, _, Command
-from odoo.tools import  float_compare
+from odoo.tools import float_compare
 from odoo.exceptions import ValidationError
 
 
@@ -21,9 +23,9 @@ class AccountCashPayment(models.Model):
     currency_id = fields.Many2one('res.currency', string='Currency', related='company_id.currency_id', store=True,
                                   tracking=True)
     account_id = fields.Many2one('account.account', string='Code', required=True,
-                                 ondelete='restrict', tracking=True, index=True,)
+                                 ondelete='restrict', tracking=True, index=True, )
     account_name = fields.Char(string='Name', related="account_id.name", store=True,
-                                     tracking=True)
+                               tracking=True)
     # === Analytic fields === #
     analytic_line_ids = fields.One2many(
         comodel_name='account.analytic.line', inverse_name='cash_payment_id',
@@ -55,7 +57,8 @@ class AccountCashPayment(models.Model):
         ("posted", "Posted"),
         ("cancel", "Cancelled"),
     ], string="Acc Man Status", tracking=True, default="draft")
-    cash_payment_line_ids = fields.One2many("pr.account.cash.payment.line", "cash_payment_id", string="Cash Payment Lines")
+    cash_payment_line_ids = fields.One2many("pr.account.cash.payment.line", "cash_payment_id",
+                                            string="Cash Payment Lines")
     total_amount = fields.Float(string="Amount", compute="_compute_total_amount", store=True, tracking=True)
     approved_amount = fields.Float(string="Approved Amount", compute="_compute_approved_amount", store=True,
                                    tracking=True)
@@ -128,9 +131,14 @@ class AccountCashPayment(models.Model):
 
     def action_draft(self):
         for cash_payment in self:
+
             if cash_payment.journal_entry_id and cash_payment.journal_entry_id.state != "draft":
                 cash_payment.journal_entry_id.sudo().button_draft()
                 cash_payment.journal_entry_id.unlink()
+
+            for line in cash_payment.cash_payment_line_ids:
+                line.sudo().write({"state": "draft"})
+
             cash_payment.state = "draft"
             cash_payment.accounting_manager_state = "draft"
 
@@ -164,10 +172,11 @@ class AccountCashPayment(models.Model):
                         move_line.create(cash_payment.prepare_credit_move_line_vals(move_id=journal_entry_id))
                     ]
                     for line in cash_payment.cash_payment_line_ids.filtered(lambda l: l.state == "approve"):
-                    # for line in cash_payment.cash_payment_line_ids:
+                        # for line in cash_payment.cash_payment_line_ids:
                         line_ids.append(move_line.create(line.prepare_debit_move_line_vals(move_id=journal_entry_id)))
                         if line.tax_id:
-                            line_ids.append(move_line.create(line.prepare_debit_tax_move_line_vals(move_id=journal_entry_id)))
+                            line_ids.append(
+                                move_line.create(line.prepare_debit_tax_move_line_vals(move_id=journal_entry_id)))
                     journal_entry_id.action_post()
                     cash_payment.journal_entry_id = journal_entry_id.id
             cash_payment.state = "posted"
@@ -302,7 +311,34 @@ class AccountCashPayment(models.Model):
             raise ValidationError("This Cash Payment Should Be Draft To Can Delete !!")
         return super().unlink()
 
+
+    def copy(self, default=None):
+        default = dict(default or {})
+
+        # Reset sequence so new CPV gets new number
+        default['name'] = self.env['ir.sequence'].next_by_code(
+            'pr.account.cash.payment.seq.code'
+        )
+
+        # Copy lines
+        default['cash_payment_line_ids'] = [
+            (0, 0, {
+                'account_id': line.account_id.id,
+                'description': line.description,
+                'reference_number': line.reference_number,
+                'cs_project_id': line.cs_project_id.id if line.cs_project_id else False,
+                'partner_id': line.partner_id.id if line.partner_id else False,
+                'amount': line.amount,
+                'tax_id': line.tax_id.id if line.tax_id else False,
+                'analytic_distribution': line.analytic_distribution,
+            })
+            for line in self.cash_payment_line_ids
+        ]
+
+        return super(AccountCashPayment, self).copy(default)
+
     # endregion [Crud]
+
 
 class AccountCashPaymentLine(models.Model):
     # region [Initial]
@@ -322,6 +358,15 @@ class AccountCashPaymentLine(models.Model):
                                  ondelete='restrict', tracking=True, index=True)
     account_name = fields.Char(string='Name', related="account_id.name", store=True,
                                tracking=True)
+    account_name_button = fields.Char(
+        string="Name",
+        compute="_compute_account_name_button",
+    )
+
+    def _compute_account_name_button(self):
+        for rec in self:
+            rec.account_name_button = rec.account_name or ""
+
     description = fields.Text(string="Description", required=False, tracking=True)
     reference_number = fields.Char(string="Reference Number", required=False)
     # === Analytic fields === #
@@ -338,7 +383,8 @@ class AccountCashPaymentLine(models.Model):
         store=False,
     )
     amount = fields.Float(string="Amount", tracking=True)
-    tax_id = fields.Many2one('account.tax', string='Taxes', ondelete='restrict', check_company=True, domain="[('type_tax_use', '=', 'purchase')]")
+    tax_id = fields.Many2one('account.tax', string='Taxes', ondelete='restrict', check_company=True,
+                             domain="[('type_tax_use', '=', 'purchase')]")
     amount_tax = fields.Float(string="Tax Amount", tracking=True, compute="_compute_amount", store=True)
     total_amount = fields.Float(string="Total Amount", tracking=True, compute="_compute_amount", store=True)
     state = fields.Selection([
@@ -355,6 +401,7 @@ class AccountCashPaymentLine(models.Model):
         ("cancel", "Cancelled"),
     ], related="cash_payment_id.state", store=True, string="Parent Status")
     check_cost_centers_block = fields.Boolean(compute="_compute_check_cost_centers_block")
+
     # endregion [Fields]
 
     # region [Onchange Methods]
@@ -396,6 +443,38 @@ class AccountCashPaymentLine(models.Model):
     # endregion [Onchange Methods]
 
     # region [Constrains]
+
+    def action_open_reference_record(self):
+        self.ensure_one()
+        ref = self.reference_number
+
+        if not ref:
+            return
+
+        # detect model by prefix
+        model = None
+        if ref.startswith("CPV"):
+            model = "pr.account.cash.payment"
+        elif ref.startswith("BPV"):
+            model = "pr.account.bank.payment"
+        elif ref.startswith("BRV"):
+            model = "pr.account.bank.receipt"
+        elif ref.startswith("CRV"):
+            model = "pr.account.cash.receipt"
+
+        if not model:
+            return
+
+        record = self.env[model].search([('name', '=', ref)], limit=1)
+        if not record:
+            return
+
+        # OPEN IN NEW TAB
+        return {
+            "type": "ir.actions.act_url",
+            "target": "new",
+            "url": f"/web#id={record.id}&model={model}&view_type=form"
+        }
 
     @api.constrains("amount")
     def _check_amount(self):
@@ -544,7 +623,7 @@ class AccountCashPaymentLine(models.Model):
             distribution_on_each_plan = {}
             for account_ids, distribution in self.analytic_distribution.items():
                 line_values = self._prepare_analytic_distribution_line(float(distribution), account_ids,
-                                                                             distribution_on_each_plan)
+                                                                       distribution_on_each_plan)
                 if not self.currency_id.is_zero(line_values.get('amount')):
                     analytic_line_vals.append(line_values)
         return analytic_line_vals
@@ -579,5 +658,24 @@ class AccountCashPaymentLine(models.Model):
             'company_id': self.company_id.id or self.env.company.id,
         }
 
-    # endregion [Analytic Distribution Methods]
 
+
+    def action_open_header_account_ledger(self):
+        self.ensure_one()
+
+        if not self.account_id:
+            raise ValidationError(_("Account is missing."))
+
+        today = date.today()
+        first_day = today.replace(day=1)  # ← first day of current month
+
+        wizard = self.env["account.ledger"].create({
+            'company_id': self.company_id.id,
+            'account_ids': [(6, 0, [self.account_id.id])],
+            'date_start': first_day,
+            'date_end': today,
+        })
+
+        return wizard.action_view_ledger_report()
+
+    # endregion [Analytic Distribution Methods]

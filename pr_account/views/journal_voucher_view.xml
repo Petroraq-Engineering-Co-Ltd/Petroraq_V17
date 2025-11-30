@@ -61,7 +61,7 @@
                             type="object"
                             class="btn-success"
                             invisible="state != 'supervisor_approve'"
-                            groups="account.custom_group_accounting_manager"/>
+                            groups="account.group_account_manager"/>
 
                     <!-- MANAGER → POST -->
                     <button name="action_post"
@@ -157,14 +157,17 @@
 
                         <tree editable="bottom" limit="25">
 
-                            <field name="company_id" invisible="1"/>
-                            <field name="currency_id" invisible="1"/>
-                            <field name="check_cost_centers_block" invisible="1"/>
+                            <field name="company_id" column_invisible="True"/>
+                            <field name="currency_id" column_invisible="True"/>
+                            <field name="check_cost_centers_block" column_invisible="True"/>
 
                             <field name="account_id"
                                    options="{'no_create':True,'no_create_edit':True,'no_quick_create':True}"/>
 
                             <field name="account_name"/>
+
+                            <field name="description"/>
+
 
                             <field name="cs_project_id"
                                    readonly="check_cost_centers_block == False"
@@ -180,7 +183,9 @@
                                    options="{'no_create':True,'no_create_edit':True,'no_quick_create':True}"
                                    readonly="check_cost_centers_block == False"/>
 
-                            <field name="description"/>
+                            <field name="cs_employee_id"/>
+                            <field name="asset_id"/>
+
                             <field name="reference_number"/>
 
                             <field name="debit" widget="monetary"
@@ -188,6 +193,8 @@
 
                             <field name="credit" widget="monetary"
                                    options="{'currency_field': 'currency_id'}"/>
+                            <field name="tax_ids" widget="many2many_tags"/>
+
 
                         </tree>
 

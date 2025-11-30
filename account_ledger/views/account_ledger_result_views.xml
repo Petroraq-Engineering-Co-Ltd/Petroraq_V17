@@ -19,15 +19,15 @@
 
                     <div class="oe_full">
                         <field name="line_ids" class="freeze-1many" nolabel="1">
-                            <tree create="false" delete="false" editable="false" limit="1000">
-                                <field name="transaction_ref" string="Transaction Ref"/>
+                            <tree create="false" delete="false" editable="false" limit="100">
+<!--                                <field name="transaction_ref" string="Transaction Ref"/>-->
                                 <field name="reference" string="Reference"/>
                                 <field name="date" string="Date"/>
                                 <field name="label" string="Label"/>
                                 <field name="debit" string="Debit"/>
                                 <field name="credit" string="Credit"/>
                                 <field name="balance" string="Balance"/>
-                                <field name="is_total" invisible="1"/>
+                                <field name="is_total" column_invisible="True"/>
                             </tree>
                         </field>
                     </div>
