@@ -198,7 +198,9 @@ class AccountLedgerReport(models.AbstractModel):
         t_debit = 0
         t_credit = 0
         init_balance = initial_balance
-        # --- Opening Balance Row (same as Excel) ---
+        opening_debit = initial_balance if initial_balance > 0 else 0
+        opening_credit = abs(initial_balance) if initial_balance < 0 else 0
+
         docs.append({
             'transaction_ref': 'Opening',
             'date': date_start,
@@ -206,8 +208,8 @@ class AccountLedgerReport(models.AbstractModel):
             'reference': ' ',
             'journal': ' ',
             'initial_balance': '{:,.2f}'.format(initial_balance),
-            'debit': '{:,.2f}'.format(0),
-            'credit': '{:,.2f}'.format(0),
+            'debit': '{:,.2f}'.format(opening_debit),
+            'credit': '{:,.2f}'.format(opening_credit),
             'balance': '{:,.2f}'.format(initial_balance)
         })
 

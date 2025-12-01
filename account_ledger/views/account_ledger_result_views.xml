@@ -23,7 +23,7 @@
 <!--                                <field name="transaction_ref" string="Transaction Ref"/>-->
                                 <field name="reference" string="Reference"/>
                                 <field name="date" string="Date"/>
-                                <field name="label" string="Label"/>
+                                <field name="label" string="Description"/>
                                 <field name="debit" string="Debit"/>
                                 <field name="credit" string="Credit"/>
                                 <field name="balance" string="Balance"/>
