@@ -121,26 +121,33 @@
                             invisible="state != 'draft'"/>
                     <widget name="web_ribbon" title="CANCELLED" bg_color="bg-danger"
                             invisible="state != 'cancel'"/>
-                    <div class="oe_title">
+                    <div class="oe_title" style="margin-bottom:4px;">
                         <label for="name" string="Number"/>
-                        <h1>
+                        <h3 style="margin:0;">
                             <field name="name" style="color: purple;" readonly="1"/>
-                        </h1>
+                        </h3>
                     </div>
+
                     <group>
                         <group>
                             <label for="account_id" string="Code"/>
-                            <div class="o_row">
-                                <field name="account_id" readonly="state != 'draft'" width="25%"
+                            <div style="display:flex; align-items:center; gap:10px; flex-wrap:nowrap;">
+                                <!-- CODE -->
+                                <field name="account_id"
+                                       readonly="state != 'draft'"
                                        class="oe_inline"
-                                       options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"
-                                       style="font-size:16;font-weight:bold;color:green;" string="Code"/>
-                                <span>
-                                    <strong>Name</strong>
-                                </span>
-                                <field name="account_name" width="40%"
-                                       class="oe_inline" string="Name"
-                                       style="font-size:16;font-weight:bold;color:green;"/>
+                                       options="{'no_create':True,'no_create_edit':True,'no_quick_create':True}"
+                                       style="font-size:15px;font-weight:bold;color:green;width:auto;"/>
+
+                                <!-- NAME LABEL -->
+                                <span style="font-weight:bold; color:#444;">Name</span>
+
+                                <!-- ACCOUNT NAME -->
+                                <field name="account_name"
+                                       class="oe_inline"
+                                       style="font-size:15px;font-weight:bold;color:green;width:auto;"
+                                       readonly="1"/>
+
                             </div>
                             <field name="analytic_line_ids" invisible="1"/>
                             <field name="analytic_distribution" widget="analytic_distribution"
@@ -230,7 +237,13 @@
                             <field name="check_cost_centers_block" column_invisible="True"/>
                             <field name="account_id"
                                    options="{'no_create':True, 'no_create_edit':True, 'no_quick_create':True}"/>
-                            <field name="account_name"/>
+                            <button name="action_open_header_account_ledger"
+                                    type="object"
+                                    icon="fa-university"
+                                    class="oe_link"
+                            >
+                                <field name="account_name_button"/>
+                            </button>
                             <field name="analytic_line_ids" column_invisible="True"/>
                             <field name="analytic_precision" column_invisible="True"/>
                             <field name="cs_project_id"
@@ -243,6 +256,12 @@
                                    string="Project Manager" force_save="1"
                                    readonly="check_cost_centers_block == False"/>
                             <field name="description"/>
+                            <button name="action_open_reference_record"
+                                    type="object"
+                                    icon="fa-external-link"
+                                    class="oe_link"
+                                    invisible="not reference_number"
+                                    help="Open Linked Document"/>
                             <field name="reference_number"/>
                             <field name="amount" decoration-warning="1" widget="monetary"
                                    options="{'currency_field': 'currency_id'}"/>
