@@ -274,8 +274,13 @@ class CustomDynamicLedgerReport(models.AbstractModel):
         else:
             initial_balance = 0
 
-        initial_debit = 0
-        initial_credit = 0
+        if initial_balance >= 0:
+            initial_debit = initial_balance
+            initial_credit = 0
+        else:
+            initial_debit = 0
+            initial_credit = abs(initial_balance)
+
         t_debit = 0 + initial_debit
         t_credit = 0 + initial_credit
         init_balance = initial_balance
