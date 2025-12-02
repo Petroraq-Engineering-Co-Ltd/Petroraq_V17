@@ -1,3 +1,4 @@
+
 from odoo import models, fields, tools, api, exceptions, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import date_utils
@@ -7,8 +8,7 @@ from collections import defaultdict
 class HrPayslipRun(models.Model):
     _inherit = 'hr.payslip.run'
 
-    batch_employee_ids = fields.One2many("hr.payslip.run.employee", "payslip_batch_id",
-                                         string="Payslip Batch Employees")
+    batch_employee_ids = fields.One2many("hr.payslip.run.employee", "payslip_batch_id", string="Payslip Batch Employees")
     batch_summary_ids = fields.One2many("hr.payslip.run.summary", "payslip_batch_id", string="Payslip Batch Summary")
     total_basic_amount = fields.Float(string="Basic Amount", readonly=True)
     total_alw_amount = fields.Float(string="Allowance Amount", readonly=True)
@@ -19,12 +19,10 @@ class HrPayslipRun(models.Model):
     paid_date = fields.Date(string="Paid Date", readonly=True)
     approval_state = fields.Selection([
         ('draft', 'New'),
-        ('submitted', 'Submitted to HR'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-    ], string='Approval Status', default='draft', copy=False,tracking=True)
-
-    rejection_reason = fields.Text(string="Rejection Reason", readonly=True,tracking=True)
+        ('verify', 'Pending Approval'),
+        ('close', 'Pending Approval'),
+        ('paid', 'Paid'),
+    ], string='Status', copy=False, default='draft', store=True, compute='_compute_approval_state')
 
     @api.depends("state")
     def _compute_approval_state(self):
@@ -56,6 +54,7 @@ class HrPayslipRun(models.Model):
             total_net_amount = 0
 
             # -- Batch Summary -- #
+
 
             batch_employee_list = []
             salary_rule_total_dict = defaultdict(float)
@@ -139,45 +138,13 @@ class HrPayslipRun(models.Model):
             self.batch_summary_ids.unlink()
         return res
 
-    def action_hr_reject_batch(self):
-        self.ensure_one()
-        if self.approval_state != 'submitted':
-            raise UserError(_("Only submitted batches can be rejected."))
-
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Reject Batch'),
-            'view_mode': 'form',
-            'res_model': 'payslip.run.reject.wizard',
-            'target': 'new',
-            'context': {
-                'default_payslip_run_id': self.id,
-            },
-        }
-
-    def action_hr_approve_batch(self):
-        for rec in self:
-            if rec.approval_state != 'submitted':
-                raise UserError(_("Only submitted batches can be approved."))
-            rec.action_validate()
-            rec.approval_state = 'approved'
-            rec.rejection_reason = False
-
-    def action_submit_to_hr(self):
-        for rec in self:
-            if rec.approval_state != 'draft':
-                raise UserError(_("Only batches in 'New' state can be submitted to HR."))
-            rec.approval_state = 'submitted'
-            rec.rejection_reason = False
-
     def action_validate(self):
         res = super().action_validate()
         for rec in self:
             move_line_ids = []
             for slip in rec.slip_ids:
                 move_line_ids += slip.prepare_payslip_entry_vals_lines()
-            salary_journal_entry_id = self.env['account.move'].sudo().with_context(check_move_validity=False,
-                                                                                   skip_invoice_sync=True).create({
+            salary_journal_entry_id = self.env['account.move'].sudo().with_context(check_move_validity=False, skip_invoice_sync=True).create({
                 'ref': f"Salary For Month {rec.date_end.month} year {rec.date_end.year}",
                 'date': fields.Date.today(),
                 'move_type': 'entry',
@@ -195,10 +162,8 @@ class HrPayslipRun(models.Model):
     def action_paid(self):
         for rec in self:
             if rec.salary_journal_entry_id and rec.salary_journal_entry_id.state != "posted":
-                rec.salary_journal_entry_id.sudo().with_context(check_move_validity=False,
-                                                                skip_invoice_sync=True).action_post()
-            for slip_sa in rec.slip_ids.filtered(
-                    lambda s: s.salary_journal_entry_id.id == rec.salary_journal_entry_id.id):
+                rec.salary_journal_entry_id.sudo().with_context(check_move_validity=False, skip_invoice_sync=True).action_post()
+            for slip_sa in rec.slip_ids.filtered(lambda s: s.salary_journal_entry_id.id == rec.salary_journal_entry_id.id):
                 slip_sa.sudo().write({
                     'state': 'paid',
                     'paid_date': fields.Date.today(),
@@ -263,17 +228,3 @@ class HrPayslipRunSummary(models.Model):
     category_id = fields.Many2one("hr.salary.rule.category", string="Category", related="salary_rule_id.category_id")
     total_amount = fields.Float(string="Total", readonly=True)
 
-
-class PayslipRunRejectWizard(models.TransientModel):
-    _name = 'payslip.run.reject.wizard'
-    _description = 'Payslip Run Reject Wizard'
-
-    payslip_run_id = fields.Many2one('hr.payslip.run', string="Batch", required=True)
-    reason = fields.Text(string="Reason", required=True)
-
-    def action_reject_confirm(self):
-        self.ensure_one()
-        batch = self.payslip_run_id
-        batch.rejection_reason = self.reason
-        batch.approval_state = 'draft'
-        return {'type': 'ir.actions.act_window_close'}

@@ -10,12 +10,6 @@ class HrPayslip(models.Model):
     other_amount = fields.Float(string="Other Amount", default=0.0)
     salary_journal_entry_id = fields.Many2one("account.move", readonly=True)
 
-    attendance_sheet_line_ids = fields.One2many(
-        related='attendance_sheet_id.line_ids',
-        string="Attendance Lines",
-        readonly=True
-    )
-
     def _get_payslip_lines(self):
         line_vals = super()._get_payslip_lines()
         for payslip in self:
