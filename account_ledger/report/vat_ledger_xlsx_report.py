@@ -313,9 +313,9 @@ class VatLedgerXlsxReport(models.AbstractModel):
             })
             initial_balance = balance
         docs.append({
-            'transaction_ref': False,
+            'transaction_ref': '',
             'date': ' ',
-            'description': ' ',
+            'description': 'Total',
             'reference': ' ',
             'journal': ' ',
             'initial_balance': '{:,.2f}'.format(init_balance),
