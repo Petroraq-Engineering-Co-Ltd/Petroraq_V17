@@ -207,7 +207,7 @@ class VatSummaryWizard(models.TransientModel):
 
         non_vated_pur_amount = 0.0
         for line in expense_lines:
-            non_vated_pur_amount += abs(line.balance)
+            non_vated_pur_amount += line.balance
 
         # ---------------------------------------------------------------
         # 4) STORE FIELDS + TOTALS

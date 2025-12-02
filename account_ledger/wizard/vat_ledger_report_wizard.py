@@ -289,6 +289,16 @@ class VatLedgerReport(models.TransientModel):
             else:
                 self.account_ids = False
 
+        # ----------------------------------------------------------
+        # FORCE MATCH WITH VAT SUMMARY IF expense + excluding_vat
+        # ----------------------------------------------------------
+        if self.main_head == "expense" and self.vat_option == "excluding_vat":
+            self.account_ids = self.env['account.account'].search([
+                ('account_type', 'in', ['expense', 'cost_of_revenue']),
+                ('deprecated', '=', False),
+            ]).ids
+            return
+
     def get_report(self):
         """Call when button 'Get Report' clicked.
         """
