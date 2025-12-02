@@ -88,13 +88,25 @@ class VatLedgerXlsxReport(models.AbstractModel):
         # === Data Rows ===
         row = 4  # Data starts from Excel row 6
         for entry in docs:
-            worksheet.write(row, 0, entry['transaction_ref'], text_format if entry["description"] != "Totals" else header_format )
-            worksheet.write(row, 1, entry['reference'], text_format if entry["description"] != "Totals" else header_format)
+            worksheet.write(row, 0, entry['transaction_ref'],
+                            text_format if entry["description"] != "Totals" else header_format)
+            worksheet.write(row, 1, entry['reference'],
+                            text_format if entry["description"] != "Totals" else header_format)
             worksheet.write(row, 2, entry['date'], date_format if entry["description"] != "Totals" else header_format)
-            worksheet.write(row, 3, entry['description'], text_format if entry["description"] != "Totals" else header_format)
-            worksheet.write_number(row, 4, float(entry['amount'].replace(',', '') if not entry.get('tot_amount') else entry['tot_amount'].replace(',', '')), money_format if entry["description"] != "Totals" else header_format)
-            worksheet.write_number(row, 5, float(entry['tax_amount'].replace(',', '') if not entry.get('tot_tax_amount') else entry['tot_tax_amount'].replace(',', '')), money_format if entry["description"] != "Totals" else header_format)
-            worksheet.write_number(row, 6, float(entry['total_amount'].replace(',', '') if not entry.get('tot_total_amount') else entry['tot_total_amount'].replace(',', '')), money_format if entry["description"] != "Totals" else header_format)
+            worksheet.write(row, 3, entry['description'],
+                            text_format if entry["description"] != "Totals" else header_format)
+            worksheet.write_number(row, 4, float(
+                entry['amount'].replace(',', '') if not entry.get('tot_amount') else entry['tot_amount'].replace(',',
+                                                                                                                 '')),
+                                   money_format if entry["description"] != "Totals" else header_format)
+            worksheet.write_number(row, 5, float(
+                entry['tax_amount'].replace(',', '') if not entry.get('tot_tax_amount') else entry[
+                    'tot_tax_amount'].replace(',', '')),
+                                   money_format if entry["description"] != "Totals" else header_format)
+            worksheet.write_number(row, 6, float(
+                entry['total_amount'].replace(',', '') if not entry.get('tot_total_amount') else entry[
+                    'tot_total_amount'].replace(',', '')),
+                                   money_format if entry["description"] != "Totals" else header_format)
             row += 1
 
         # Column widths
@@ -173,6 +185,8 @@ class VatLedgerXlsxReport(models.AbstractModel):
             ('company_id', '=', company),
             ('date', '>=', datetime.strptime(str(date_start), DATE_FORMAT).date()),
             ('date', '<=', datetime.strptime(str(date_end), DATE_FORMAT).date()),
+            ('move_id.state', '=', 'posted'),
+
         ]
         if account:
             ji_domain.append(('account_id', 'in', account))
@@ -194,13 +208,17 @@ class VatLedgerXlsxReport(models.AbstractModel):
         TupleJournalAccounts = tuple(JournalAccounts)
 
         if JournalItems and section:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(section)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(section)])], order="date asc")
         if JournalItems and project:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(project)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(project)])], order="date asc")
         if JournalItems and employee:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(employee)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(employee)])], order="date asc")
         if JournalItems and asset:
-            JournalItems = self.env['account.move.line'].search([("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(asset)])], order="date asc")
+            JournalItems = self.env['account.move.line'].search(
+                [("id", "in", JournalItems.ids), ("analytic_distribution", "in", [int(asset)])], order="date asc")
 
         tuple_account = tuple(account)
         if len(JournalAccounts) == 1:
@@ -250,7 +268,14 @@ class VatLedgerXlsxReport(models.AbstractModel):
         if vat_option == "including_vat":
             FilteredJournalItems = JournalItems.filtered(lambda l: l.tax_ids)
         elif vat_option == "excluding_vat":
-            FilteredJournalItems = JournalItems.filtered(lambda l: not l.tax_ids)
+            FilteredJournalItems = JournalItems.filtered(
+                lambda l: (
+                        not l.tax_ids
+                        and not l.tax_line_id
+                        and not l.tax_tag_ids
+                        and l.account_id.account_type in ("expense", "cost_of_revenue")  # <-- FIX 2
+                )
+            )
         else:
             FilteredJournalItems = JournalItems
 
@@ -288,9 +313,9 @@ class VatLedgerXlsxReport(models.AbstractModel):
             })
             initial_balance = balance
         docs.append({
-            'transaction_ref': False,
+            'transaction_ref': '',
             'date': ' ',
-            'description': ' ',
+            'description': 'Total',
             'reference': ' ',
             'journal': ' ',
             'initial_balance': '{:,.2f}'.format(init_balance),

@@ -5,10 +5,11 @@ from datetime import datetime
 from odoo import api, models
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
 import logging
+
 _logger = logging.getLogger(__name__)
 
-class AccountLedgerReport(models.AbstractModel):
 
+class AccountLedgerReport(models.AbstractModel):
     _name = 'report.account_ledger.vat_ledger_rep'
 
     def _get_valuation_dates(self, start_date, end_date):
@@ -35,8 +36,6 @@ class AccountLedgerReport(models.AbstractModel):
         employee = False
         asset = False
 
-
-
         if data['form'].get("department"):
             department = data['form']['department']
 
@@ -51,7 +50,6 @@ class AccountLedgerReport(models.AbstractModel):
 
         if data['form'].get("asset"):
             asset = data['form']['asset']
-
 
         if department:
             analytic_ids.append(int(department))
@@ -73,17 +71,18 @@ class AccountLedgerReport(models.AbstractModel):
             analytic_ids.append(int(asset))
             str_analytic_ids.append(str(asset))
 
-
         today = datetime.today()
         report_date = today.strftime("%b-%d-%Y")
         # user_type_receivable_id = self.env['ir.model.data'].xmlid_to_res_id('account.data_account_type_receivable')
         ji_domain = [
-            ('company_id','=', company),
-            ('date','>=',datetime.strptime(date_start, DATE_FORMAT).date()),
-            ('date','<=',datetime.strptime(date_end, DATE_FORMAT).date()),
+            ('company_id', '=', company),
+            ('date', '>=', datetime.strptime(date_start, DATE_FORMAT).date()),
+            ('date', '<=', datetime.strptime(date_end, DATE_FORMAT).date()),
+            ('move_id.state', '=', 'posted'),  # <-- FIX 1
         ]
+
         if account:
-            ji_domain.append(('account_id','in', account))
+            ji_domain.append(('account_id', 'in', account))
         else:
             return {
                 'doc_ids': data['ids'],
@@ -163,7 +162,14 @@ class AccountLedgerReport(models.AbstractModel):
         if vat_option == "including_vat":
             FilteredJournalItems = JournalItems.filtered(lambda l: l.tax_ids)
         elif vat_option == "excluding_vat":
-            FilteredJournalItems = JournalItems.filtered(lambda l: not l.tax_ids)
+            FilteredJournalItems = JournalItems.filtered(
+                lambda l: (
+                        not l.tax_ids
+                        and not l.tax_line_id
+                        and not l.tax_tag_ids
+                        and l.account_id.account_type in ("expense", "cost_of_revenue")  # <-- FIX 2
+                )
+            )
         else:
             FilteredJournalItems = JournalItems
 
@@ -186,40 +192,40 @@ class AccountLedgerReport(models.AbstractModel):
             t_debit += item.debit
             t_credit += item.credit
             docs.append({
-                    'transaction_ref': item.move_id.name,
-                    'date': item.date,
-                    'description':  item.name,
-                    'reference': item.ref,
-                    'journal': item.journal_id.name,
-                    'initial_balance': '{:,.2f}'.format(initial_balance),
-                    'debit': '{:,.2f}'.format(item.debit),
-                    'credit': '{:,.2f}'.format(item.credit),
-                    'balance': '{:,.2f}'.format(item.balance),
-                    'amount': '{:,.2f}'.format(amount),
-                    'tax_amount': '{:,.2f}'.format(tax_amount),
-                    'total_amount': '{:,.2f}'.format(total_amount)
-                    })
+                'transaction_ref': item.move_id.name,
+                'date': item.date,
+                'description': item.name,
+                'reference': item.ref,
+                'journal': item.journal_id.name,
+                'initial_balance': '{:,.2f}'.format(initial_balance),
+                'debit': '{:,.2f}'.format(item.debit),
+                'credit': '{:,.2f}'.format(item.credit),
+                'balance': '{:,.2f}'.format(item.balance),
+                'amount': '{:,.2f}'.format(amount),
+                'tax_amount': '{:,.2f}'.format(tax_amount),
+                'total_amount': '{:,.2f}'.format(total_amount)
+            })
             initial_balance = balance
         docs.append({
-                    'transaction_ref': False,
-                    'date': ' ',
-                    'description': ' ',
-                    'reference': ' ',
-                    'journal': ' ',
-                    'initial_balance': '{:,.2f}'.format(init_balance),
-                    'debit': '{:,.2f}'.format(t_debit),
-                    'credit': '{:,.2f}'.format(t_credit),
-                    'balance': '{:,.2f}'.format(init_balance+t_debit-t_credit),
-                    'tot_amount': '{:,.2f}'.format(tot_amount),
-                    'tot_tax_amount': '{:,.2f}'.format(tot_tax_amount),
-                    'tot_total_amount': '{:,.2f}'.format(tot_total_amount)
-                    })
+            'transaction_ref': False,
+            'date': ' ',
+            'description': ' ',
+            'reference': ' ',
+            'journal': ' ',
+            'initial_balance': '{:,.2f}'.format(init_balance),
+            'debit': '{:,.2f}'.format(t_debit),
+            'credit': '{:,.2f}'.format(t_credit),
+            'balance': '{:,.2f}'.format(init_balance + t_debit - t_credit),
+            'tot_amount': '{:,.2f}'.format(tot_amount),
+            'tot_tax_amount': '{:,.2f}'.format(tot_tax_amount),
+            'tot_total_amount': '{:,.2f}'.format(tot_total_amount)
+        })
         account_names = ", ".join(self.env['account.account'].browse(account).mapped('name'))
 
         return {
             'doc_ids': data['ids'],
             'doc_model': data['model'],
-            'valuation_date':self._get_valuation_dates(data['form']['date_start'], data['form']['date_end']),
+            'valuation_date': self._get_valuation_dates(data['form']['date_start'], data['form']['date_end']),
             'account': account_names or "All",
             'report_date': report_date,
             'docs': docs
