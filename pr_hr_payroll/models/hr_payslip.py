@@ -1,4 +1,3 @@
-
 from odoo import models, fields, tools, api, exceptions, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import date_utils
@@ -9,6 +8,12 @@ class HrPayslip(models.Model):
 
     other_amount = fields.Float(string="Other Amount", default=0.0)
     salary_journal_entry_id = fields.Many2one("account.move", readonly=True)
+
+    attendance_sheet_line_ids = fields.One2many(
+        related='attendance_sheet_id.line_ids',
+        string="Attendance Lines",
+        readonly=True
+    )
 
     def _get_payslip_lines(self):
         line_vals = super()._get_payslip_lines()
@@ -173,15 +178,23 @@ class HrPayslip(models.Model):
                             'slip_id': payslip.id,
                         })
 
-            # Calculate net and gross amounts, excluding "NET" and "GROSS" codes
             net_amount = sum(vals.get("total", 0) for vals in line_vals if vals.get("code") not in ["NET", "GROSS"])
-            gross_amount = sum(
+            attendance_ded_codes = ["ABS", "LATE", "DIFFT", "UNPAID", "PAID87", "LEAVE90", "SICKTO89", "BTD", "ECO"]
+
+            earnings = sum(
                 vals.get("total", 0)
                 for vals in line_vals
-                # if vals.get("total", 0) > 0 and vals.get("code") not in ["NET", "GROSS", "BTA", "PAID86", "SICKTO88", "OTHER", "OVT"]
-                if vals.get("total", 0) > 0 and vals.get("code") in ["BASIC", "ACCOMMODATION", "TRANSPORTATION", "FOT", "FOOD", "OTA"]
+                if vals.get("total", 0) > 0 and vals.get("code") not in ["NET", "GROSS"]
             )
-            # Update the amounts in line_vals based on the code
+
+            attendance_deductions = sum(
+                vals.get("total", 0)
+                for vals in line_vals
+                if vals.get("code") in attendance_ded_codes
+            )
+
+            gross_amount = earnings + attendance_deductions
+
             for val_line in line_vals:
                 code = val_line.get("code")
                 if code == "NET":
@@ -204,12 +217,20 @@ class HrPayslip(models.Model):
                     line.sudo().write({"amount": amount, "total": amount})
             # Calculate net and gross amounts, excluding "NET" and "GROSS" codes
             net_amount = sum(vals.total for vals in payslip.line_ids if vals.code not in ["NET", "GROSS"])
-            gross_amount = sum(
-                vals.total
-                for vals in payslip.line_ids if vals.total > 0 and vals.code in ["BASIC", "ACCOMMODATION", "TRANSPORTATION", "FOT",
-                                                                  "FOOD"]
+            attendance_ded_codes = ["ABS", "LATE", "DIFFT", "UNPAID", "PAID87", "LEAVE90", "SICKTO89", "BTD", "ECO"]
+
+            earnings = sum(
+                l.total for l in payslip.line_ids
+                if l.total > 0 and l.code not in ["NET", "GROSS"]
             )
-            # Update the amounts in line_vals based on the code
+
+            attendance_deductions = sum(
+                l.total for l in payslip.line_ids
+                if l.code in attendance_ded_codes
+            )
+
+            gross_amount = earnings + attendance_deductions
+
             for val_line in payslip.line_ids:
                 code = val_line.code
                 if code == "NET":
@@ -222,7 +243,7 @@ class HrPayslip(models.Model):
     def prepare_payslip_entry_vals_lines(self):
         for rec in self:
             payslip_entry_vals_lines = []
-            if rec.state != 'done' :
+            if rec.state != 'done':
                 # raise UserError(_('Cannot mark payslip as paid if not confirmed.'))
                 raise UserError(_('Cannot pay the payslip if not confirmed.'))
             if not rec.employee_id.employee_cost_center_id:
@@ -233,7 +254,8 @@ class HrPayslip(models.Model):
                     f"This employee {rec.employee_id.name} does not have account, please check !!")
             for line in rec.line_ids:
                 if not line.salary_rule_id.account_id:
-                    raise ValidationError(f"This salary rule {line.salary_rule_id.name} does not have account, please check !!")
+                    raise ValidationError(
+                        f"This salary rule {line.salary_rule_id.name} does not have account, please check !!")
                 payslip_entry_line_vals = self.prepare_payslip_entry_line_vals(line=line)
                 if payslip_entry_line_vals:
                     payslip_entry_vals_lines.append((0, 0, payslip_entry_line_vals))
@@ -246,7 +268,7 @@ class HrPayslip(models.Model):
                 str(self.employee_id.section_cost_center_id.id): 100,
                 str(self.employee_id.project_cost_center_id.id): 100,
                 str(self.employee_id.employee_cost_center_id.id): 100,
-                                     }
+            }
             # if line.slip_id.employee_id.department_id and line.slip_id.employee_id.department_id.department_cost_center_id:
             #     analytic_distribution.update({str(line.slip_id.employee_id.department_id.department_cost_center_id.id): 100})
             line_vals = {
@@ -262,7 +284,7 @@ class HrPayslip(models.Model):
             if line.category_id.code in ["BASIC", "ALW"]:
                 line_vals.update({
                     "name": f"{line.slip_id.employee_id.code} - {line.slip_id.employee_id.name} {line.salary_rule_id.name} of month {self.date_to.month} year {self.date_to.year}",
-                    "debit": abs( line.total),
+                    "debit": abs(line.total),
                     "credit": 0.0,
                 })
             elif line.category_id.code == "DED":
@@ -285,7 +307,3 @@ class HrPayslip(models.Model):
             "target": "current",
             "name": self.name
         }
-
-
-
-
