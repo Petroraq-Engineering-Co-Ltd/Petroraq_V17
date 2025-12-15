@@ -33,6 +33,8 @@
         'views/account_move.xml',
         'views/account_move_line.xml',
         'views/payment_receipt.xml',
+        'views/reject_reason_wizard.xml',
+        'views/bank_payment_reject_reason_wizard.xml',
         'views/transaction_payment.xml',
         'views/cash_receipt.xml',
         'views/cash_payment.xml',

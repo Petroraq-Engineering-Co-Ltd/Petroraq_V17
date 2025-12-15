@@ -228,6 +228,9 @@ class AccountBankPayment(models.Model):
                 if line.state == "submit":
                     line.sudo().write({"state": "reject"})
 
+                bank_payment_id = self.env['pr.account.bank.payment'].search([('id', '=', line.bank_payment_id.id)])
+                bank_payment_id.write({'state': 'draft'})
+
     # endregion [Actions]
 
     # region [Analytic Distribution Methods]
@@ -347,6 +350,7 @@ class AccountBankPaymentLine(models.Model):
     # endregion [Initial]
 
     # region [Fields]
+    reject_reason = fields.Char(string="Reject Reason")
 
     bank_payment_id = fields.Many2one('pr.account.bank.payment', 'Bank Payment', required=True)
     company_id = fields.Many2one('res.company', string='Company', related="bank_payment_id.company_id", store=True)
@@ -547,8 +551,17 @@ class AccountBankPaymentLine(models.Model):
             line.sudo().write({"state": "approve"})
 
     def action_line_reject(self):
-        for line in self:
-            line.sudo().write({"state": "reject"})
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Reject Reason",
+            'res_model': "bank.payment.reject.reason.wizard",
+            'view_mode': "form",
+            'target': "new",
+            'context': {
+                'default_line_id': self.id,
+            },
+        }
 
     # endregion [Actions]
 
@@ -666,7 +679,8 @@ class AccountBankPaymentLine(models.Model):
             raise ValidationError(_("Account is missing."))
 
         today = date.today()
-        first_day = today.replace(day=1)  # ← first day of current month
+        # Start of current year (January 1st)
+        first_day = today.replace(month=1, day=1)
 
         wizard = self.env["account.ledger"].create({
             'company_id': self.company_id.id,
@@ -676,3 +690,32 @@ class AccountBankPaymentLine(models.Model):
         })
 
         return wizard.action_view_ledger_report()
+
+
+from odoo import models, fields
+
+class BankPaymentRejectReasonWizard(models.TransientModel):
+    _name = "bank.payment.reject.reason.wizard"
+    _description = "Bank Payment Line Reject Reason"
+
+    line_id = fields.Many2one("pr.account.bank.payment.line", required=True)
+    reason = fields.Char(string="Reason", required=True)
+
+    def action_confirm(self):
+        line = self.line_id
+        parent = line.bank_payment_id
+
+        line.sudo().write({
+            'state': 'reject',
+            'reject_reason': self.reason,
+        })
+
+        # If ALL lines rejected → reset parent to draft
+        if parent.bank_payment_line_ids and \
+           all(l.state == "reject" for l in parent.bank_payment_line_ids):
+            parent.sudo().write({
+                'state': 'draft',
+                'accounting_manager_state': 'draft'
+            })
+
+        return True

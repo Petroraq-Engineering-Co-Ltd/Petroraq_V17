@@ -110,7 +110,7 @@ class AccountLedgerReport(models.AbstractModel):
         opening_balance_ids = self.env['account.move.line'].search(opening_balance_domain, order="date asc")
         JournalItems = self.env['account.move.line'].search(ji_domain, order="date asc")
         # JournalAccounts = JournalItems.mapped("account_id.id")
-        JournalAccounts = opening_balance_ids.mapped("account_id.id")
+        JournalAccounts = account
         TupleJournalAccounts = tuple(JournalAccounts)
 
         if JournalItems and section:
@@ -168,16 +168,16 @@ class AccountLedgerReport(models.AbstractModel):
                 where_statement += f""" 
                                 WHERE analytic_distribution ?& array{str_analytic_ids}"""
 
-        if not where_statement:
-            return {
-                'doc_ids': data['ids'],
-                'doc_model': data['model'],
-                'valuation_date': self._get_valuation_dates(data['form']['date_start'], data['form']['date_end']),
-                # 'account':self.env['account.account'].search([('id', '=', account)]).name,
-                'account': " ",
-                'report_date': report_date,
-                'docs': []
-            }
+        # if not where_statement:
+        #     return {
+        #         'doc_ids': data['ids'],
+        #         'doc_model': data['model'],
+        #         'valuation_date': self._get_valuation_dates(data['form']['date_start'], data['form']['date_end']),
+        #         # 'account':self.env['account.account'].search([('id', '=', account)]).name,
+        #         'account': " ",
+        #         'report_date': report_date,
+        #         'docs': []
+        #     }
         sql = f"""
             SELECT 
                 SUM(aml.balance)
