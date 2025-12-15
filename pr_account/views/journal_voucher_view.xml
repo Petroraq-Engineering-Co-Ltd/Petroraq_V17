@@ -75,10 +75,11 @@
                             string="RESET TO DRAFT"
                             type="object"
                             class="btn-secondary"
-                            invisible="state not in ['submit','supervisor_approve','manager_approve','cancel']"
-                            groups="account.group_account_manager"/>
+                            invisible="state not in ('cancel','posted')"
+                            groups="account.group_account_manager
 
-                    <!-- CANCEL -->
+"/>
+
                     <button name="action_cancel"
                             string="CANCEL"
                             type="object"

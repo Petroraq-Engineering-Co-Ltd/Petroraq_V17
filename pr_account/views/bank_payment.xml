@@ -242,7 +242,7 @@
                                     icon="fa-university"
                                     class="oe_link"
                             >
-                                <field name="account_name_button"/>
+                                <field name="account_name"/>
                             </button>
                             <field name="analytic_line_ids" column_invisible="True"/>
                             <field name="analytic_precision" column_invisible="True"/>
@@ -283,6 +283,10 @@
                             <button name="action_line_reject" string="REJECT" type="object" class="btn-danger"
                                     groups="account.group_account_manager,pr_account.custom_group_accounting_manager"
                                     invisible="state != 'submit'"/>
+                            <field name="reject_reason"
+                                   string="Reason"
+                                   decoration-danger="1"/>
+
                             <field name="parent_state" column_invisible="True"/>
                         </tree>
                     </field>

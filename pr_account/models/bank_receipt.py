@@ -533,8 +533,6 @@ class AccountBankReceiptLine(models.Model):
             'company_id': self.company_id.id or self.env.company.id,
         }
 
-
-
     def action_open_header_account_ledger(self):
         self.ensure_one()
 
@@ -542,7 +540,8 @@ class AccountBankReceiptLine(models.Model):
             raise ValidationError(_("Account is missing."))
 
         today = date.today()
-        first_day = today.replace(day=1)  # ← first day of current month
+        # Start of current year (January 1st)
+        first_day = today.replace(month=1, day=1)
 
         wizard = self.env["account.ledger"].create({
             'company_id': self.company_id.id,

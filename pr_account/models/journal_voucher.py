@@ -378,6 +378,8 @@ class AccountJournalVoucher(models.Model):
     # endregion [CRUD]
 
 
+
+
 class AccountJournalVoucherLine(models.Model):
     # region [Initial]
     _name = "pr.account.journal.voucher.line"
