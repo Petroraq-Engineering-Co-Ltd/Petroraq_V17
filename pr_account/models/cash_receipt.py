@@ -55,9 +55,18 @@ class AccountCashReceipt(models.Model):
     journal_entry_id = fields.Many2one("account.move", string="Journal Entry", readonly=True, tracking=True)
     check_process_state = fields.Boolean(compute="_compute_check_process_state")
 
-    # endregion [Fields]
+    @api.constrains("cash_receipt_line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.cash_receipt_line_ids
 
-    # region [Constrains]
+            # Block empty voucher
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            # Block if all lines have zero or negative amount
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
 
     @api.constrains("company_id")
     def _check_company(self):
@@ -288,6 +297,8 @@ class AccountCashReceiptLine(models.Model):
         string="Name",
         compute="_compute_account_name_button",
     )
+
+
 
     def _compute_account_name_button(self):
         for rec in self:

@@ -116,6 +116,17 @@ class AccountJournalVoucher(models.Model):
                     _("You should select the current company, please check!")
                 )
 
+    @api.constrains("line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.line_ids
+
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
+
     # endregion [Constraints]
 
     # region [Compute]
@@ -535,5 +546,8 @@ class AccountJournalVoucherLine(models.Model):
                         "or a positive Credit (but not both)."
                     )
                 )
+
+
+
 
     # endregion [Constraints]

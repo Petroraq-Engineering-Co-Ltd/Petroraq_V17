@@ -74,6 +74,19 @@ class AccountCashPayment(models.Model):
                 raise ValidationError("You Should Select The Current Company !!, Please Check"
                                       "")
 
+    @api.constrains("cash_payment_line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.cash_payment_line_ids
+
+            # Block empty voucher
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            # Block if all lines have zero or negative amount
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
+
     # endregion [Constrains
 
     # region [Compute Methods]
@@ -133,7 +146,8 @@ class AccountCashPayment(models.Model):
                 cash_payment.journal_entry_id.unlink()
 
             for line in cash_payment.cash_payment_line_ids:
-                line.sudo().write({"state": "draft"})
+                line.sudo().write({"state": "draft","reject_reason": ""})
+
 
             cash_payment.state = "draft"
             cash_payment.accounting_manager_state = "draft"
@@ -142,7 +156,7 @@ class AccountCashPayment(models.Model):
         for rec in self:
             if rec.cash_payment_line_ids:
                 for line in rec.cash_payment_line_ids:
-                    line.sudo().write({"state": "submit"})
+                    line.sudo().write({"state": "submit", "reject_reason": ""})
             rec.state = "submit"
             rec.accounting_manager_state = "submit"
 
