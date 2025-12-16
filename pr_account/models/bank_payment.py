@@ -68,6 +68,18 @@ class AccountBankPayment(models.Model):
     check_process_state = fields.Boolean(compute="_compute_check_process_state")
 
     # endregion [Fields]
+    @api.constrains("bank_payment_line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.bank_payment_line_ids
+
+            # Block empty voucher
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            # Block if all lines have zero or negative amount
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
 
     # region [Constrains]
 
@@ -137,7 +149,7 @@ class AccountBankPayment(models.Model):
                 bank_payment.journal_entry_id.unlink()
 
             for line in bank_payment.bank_payment_line_ids:
-                line.sudo().write({"state": "draft"})
+                line.sudo().write({"state": "draft", "reject_reason": ""})
 
             bank_payment.state = "draft"
             bank_payment.accounting_manager_state = "draft"
@@ -146,7 +158,7 @@ class AccountBankPayment(models.Model):
         for bank_payment in self:
             if bank_payment.bank_payment_line_ids:
                 for line in bank_payment.bank_payment_line_ids:
-                    line.sudo().write({"state": "submit"})
+                    line.sudo().write({"state": "submit", "reject_reason": ""})
             bank_payment.state = "submit"
             bank_payment.accounting_manager_state = "submit"
 
@@ -366,6 +378,7 @@ class AccountBankPaymentLine(models.Model):
         string="Name",
         compute="_compute_account_name_button",
     )
+
 
     def _compute_account_name_button(self):
         for rec in self:

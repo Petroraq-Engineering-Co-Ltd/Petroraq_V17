@@ -54,6 +54,19 @@ class AccountBankReceipt(models.Model):
     total_amount = fields.Float(string="Amount", compute="_compute_total_amount", store=True, tracking=True)
     journal_entry_id = fields.Many2one("account.move", string="Journal Entry", readonly=True, tracking=True)
 
+    @api.constrains("bank_receipt_line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.bank_receipt_line_ids
+
+            # Block empty voucher
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            # Block if all lines have zero or negative amount
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
+
     # endregion [Fields]
 
     # region [Constrains]

@@ -179,7 +179,7 @@ class HrPayslip(models.Model):
                         })
 
             net_amount = sum(vals.get("total", 0) for vals in line_vals if vals.get("code") not in ["NET", "GROSS"])
-            attendance_ded_codes = ["ABS", "LATE", "DIFFT", "UNPAID", "PAID87", "LEAVE90", "SICKTO89", "BTD", "ECO"]
+            attendance_ded_codes = ["ABS", "LATE", "LEAVE90", "ECO"]
 
             earnings = sum(
                 vals.get("total", 0)
