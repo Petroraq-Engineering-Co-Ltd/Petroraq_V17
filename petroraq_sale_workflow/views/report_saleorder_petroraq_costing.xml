@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="report_saleorder_document_petroraq_costing"
+              inherit_id="sale.report_saleorder_document">
+
+        <xpath expr="//th[@name='th_taxes']" position="replace"/>
+
+        <xpath expr="//td[@name='td_taxes']" position="replace"/>
+
+
+        <xpath expr="//td[@name='td_priceunit']/span" position="replace">
+            <t t-set="base" t-value="line.price_unit"/>
+            <t t-set="oh" t-value="base * (doc.overhead_percent / 100.0)"/>
+            <t t-set="risk" t-value="base * (doc.risk_percent / 100.0)"/>
+            <t t-set="unit_or" t-value="base + oh + risk"/>
+            <t t-set="profit" t-value="unit_or * (doc.profit_percent / 100.0)"/>
+            <t t-set="final_unit" t-value="unit_or + profit"/>
+            <span t-esc="round(final_unit,2)"/>
+        </xpath>
+        <xpath expr="//th[@name='th_subtotal']/span" position="replace">
+            <span>Total</span>
+        </xpath>
+
+        <xpath expr="//td[@name='td_subtotal']/span" position="replace">
+            <t t-set="base" t-value="line.price_unit"/>
+            <t t-set="oh" t-value="base * (doc.overhead_percent / 100.0)"/>
+            <t t-set="risk" t-value="base * (doc.risk_percent / 100.0)"/>
+            <t t-set="unit_or" t-value="base + oh + risk"/>
+            <t t-set="profit" t-value="unit_or * (doc.profit_percent / 100.0)"/>
+            <t t-set="final_unit" t-value="unit_or + profit"/>
+            <t t-set="final_total" t-value="final_unit * line.product_uom_qty"/>
+            <span t-esc="round(final_total,2)"/>
+        </xpath>
+
+        <xpath expr="//t[@t-call='sale.document_tax_totals']" position="replace">
+
+            <!-- Compute totals -->
+            <t t-set="total_cost"
+               t-value="sum([(l.price_unit * l.product_uom_qty) for l in lines_to_report if not l.display_type])"/>
+
+            <t t-set="oh_amt" t-value="total_cost * (doc.overhead_percent / 100.0)"/>
+            <t t-set="total_cost_oh" t-value="total_cost + oh_amt"/>
+
+            <t t-set="risk_amt" t-value="total_cost * (doc.risk_percent / 100.0)"/>
+            <t t-set="grand_total_cost" t-value="total_cost_oh + risk_amt"/>
+
+            <t t-set="profit_amt" t-value="grand_total_cost * (doc.profit_percent / 100.0)"/>
+            <t t-set="final_total" t-value="grand_total_cost + profit_amt"/>
+
+            <t t-set="vat_amt" t-value="final_total * 0.15"/>
+            <t t-set="grand_total_with_vat" t-value="final_total + vat_amt"/>
+
+            <!-- Replace Odoo summary totals with ours -->
+            <tbody>
+                <tr>
+                    <td class="text-end">
+                        <strong>Total Price</strong>
+                    </td>
+                    <td class="text-end">
+                        <span t-esc="round(final_total,2)"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-end">
+                        <strong>15% VAT Amount</strong>
+                    </td>
+                    <td class="text-end">
+                        <span t-esc="round(vat_amt,2)"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-end">
+                        <strong>Net Total:</strong>
+                    </td>
+                    <td class="text-end">
+                        <span t-esc="round(grand_total_with_vat,2)"/>
+                    </td>
+                </tr>
+            </tbody>
+
+        </xpath>
+
+
+    </template>
+</odoo>

@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_order_inq,access.order.inq,sale_order_inquiry.model_order_inq,,1,1,1,1
+access_order_inq_reject_reason_wizard,access.order.inq.reject.reason.wizard,sale_order_inquiry.model_order_inq_reject_reason_wizard,,1,1,1,1

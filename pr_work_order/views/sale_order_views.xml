@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_order_form_inherit_pr_work_order" model="ir.ui.view">
+        <field name="name">sale.order.form.pr.work.order</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" name="action_work_order"
+                        string="Work Order" type="object"
+                        icon="fa-book" invisible="work_order_id == False"/>
+
+            </xpath>
+
+            <xpath expr="//header" position="inside">
+                <field name="work_order_id" invisible="1"/>
+
+
+                <button name="action_create_work_order"
+                        type="object"
+                        string="Create Work Order"
+                        class="btn-primary"
+                        invisible="state not in ('sale','done') or work_order_id"
+                />
+
+            </xpath>
+
+            <xpath expr="//sheet/notebook/page[@name='order_lines']" position="after">
+                <page string="Work Order">
+                    <group>
+                        <field name="work_order_id"/>
+                        <field name="project_id"/>
+                        <field name="analytic_account_id"/>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

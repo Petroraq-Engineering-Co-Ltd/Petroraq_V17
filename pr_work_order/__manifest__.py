@@ -1,0 +1,29 @@
+{
+    "name": "PR Work Order",
+    "version": "17.0.1.0.0",
+    "category": "Projects",
+    "summary": "Construction Work Orders integrated with Sales, Accounting, Inventory",
+    "author": "Petroraq Engineering",
+    "website": "",
+    "license": "LGPL-3",
+    "depends": [
+        "sale_management",
+        "project",
+        "analytic",
+        "account",
+        "stock",
+    ],
+    "data": [
+        "security/ir.model.access.csv",
+        "security/groups.xml",
+        "views/work_order_views.xml",
+        "data/sequence.xml",
+        "views/menu_views.xml",
+        "views/sale_order_views.xml",
+        "views/project_views.xml",
+        "views/account_move_views.xml",
+
+    ],
+    "installable": True,
+    "application": True,
+}
