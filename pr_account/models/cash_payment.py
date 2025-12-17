@@ -67,16 +67,25 @@ class AccountCashPayment(models.Model):
     journal_entry_id = fields.Many2one("account.move", string="Journal Entry", readonly=True, tracking=True)
     check_process_state = fields.Boolean(compute="_compute_check_process_state")
 
-    # endregion [Fields]
-
-    # region [Constrains]
-
     @api.constrains("company_id")
     def _check_company(self):
         for cash_payment in self:
             if cash_payment.company_id and cash_payment.company_id.id != self.env.company.id:
                 raise ValidationError("You Should Select The Current Company !!, Please Check"
                                       "")
+
+    @api.constrains("cash_payment_line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.cash_payment_line_ids
+
+            # Block empty voucher
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            # Block if all lines have zero or negative amount
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
 
     # endregion [Constrains
 
@@ -137,7 +146,8 @@ class AccountCashPayment(models.Model):
                 cash_payment.journal_entry_id.unlink()
 
             for line in cash_payment.cash_payment_line_ids:
-                line.sudo().write({"state": "draft"})
+                line.sudo().write({"state": "draft","reject_reason": ""})
+
 
             cash_payment.state = "draft"
             cash_payment.accounting_manager_state = "draft"
@@ -146,7 +156,7 @@ class AccountCashPayment(models.Model):
         for rec in self:
             if rec.cash_payment_line_ids:
                 for line in rec.cash_payment_line_ids:
-                    line.sudo().write({"state": "submit"})
+                    line.sudo().write({"state": "submit", "reject_reason": ""})
             rec.state = "submit"
             rec.accounting_manager_state = "submit"
 
@@ -226,6 +236,9 @@ class AccountCashPayment(models.Model):
             for line in rec.cash_payment_line_ids:
                 if line.state == "submit":
                     line.sudo().write({"state": "reject"})
+
+                    cash_payment_id = self.env['pr.account.cash.payment'].search([('id', '=', line.cash_payment_id.id)])
+                    cash_payment_id.action_draft()
 
     # endregion [Actions]
 
@@ -311,7 +324,6 @@ class AccountCashPayment(models.Model):
             raise ValidationError("This Cash Payment Should Be Draft To Can Delete !!")
         return super().unlink()
 
-
     def copy(self, default=None):
         default = dict(default or {})
 
@@ -362,6 +374,7 @@ class AccountCashPaymentLine(models.Model):
         string="Name",
         compute="_compute_account_name_button",
     )
+    reject_reason = fields.Char(string="Reject Reason", tracking=True)
 
     def _compute_account_name_button(self):
         for rec in self:
@@ -547,10 +560,17 @@ class AccountCashPaymentLine(models.Model):
             line.sudo().write({"state": "approve"})
 
     def action_line_reject(self):
-        for line in self:
-            line.sudo().write({"state": "reject"})
-
-    # endregion [Actions]
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Reject Reason",
+            'res_model': "cash.payment.reject.reason.wizard",
+            'view_mode': "form",
+            'target': "new",
+            'context': {
+                'default_line_id': self.id,
+            }
+        }
 
     # region [Move Line Vals]
 
@@ -658,8 +678,6 @@ class AccountCashPaymentLine(models.Model):
             'company_id': self.company_id.id or self.env.company.id,
         }
 
-
-
     def action_open_header_account_ledger(self):
         self.ensure_one()
 
@@ -667,7 +685,8 @@ class AccountCashPaymentLine(models.Model):
             raise ValidationError(_("Account is missing."))
 
         today = date.today()
-        first_day = today.replace(day=1)  # ← first day of current month
+        # Start of current year (January 1st)
+        first_day = today.replace(month=1, day=1)
 
         wizard = self.env["account.ledger"].create({
             'company_id': self.company_id.id,
@@ -679,3 +698,29 @@ class AccountCashPaymentLine(models.Model):
         return wizard.action_view_ledger_report()
 
     # endregion [Analytic Distribution Methods]
+
+
+class CashPaymentRejectReasonWizard(models.TransientModel):
+    _name = "cash.payment.reject.reason.wizard"
+    _description = "Reject Reason Wizard"
+
+    line_id = fields.Many2one("pr.account.cash.payment.line", required=True)
+    reason = fields.Char(string="Reason", required=True)
+
+    def action_confirm(self):
+        self.line_id.sudo().write({
+            'state': 'reject',
+            'reject_reason': self.reason
+        })
+
+        parent = self.line_id.cash_payment_id
+
+        # If ALL lines rejected → parent reset to draft
+        if parent.cash_payment_line_ids and \
+                all(l.state == "reject" for l in parent.cash_payment_line_ids):
+            parent.sudo().write({
+                'state': 'draft',
+                'accounting_manager_state': 'draft'
+            })
+
+        return True

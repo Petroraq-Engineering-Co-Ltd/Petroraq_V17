@@ -198,7 +198,7 @@
                                     icon="fa-university"
                                     class="oe_link"
                             >
-                                <field name="account_name_button"/>
+                                <field name="account_name"/>
                             </button>
                             <field name="analytic_line_ids" column_invisible="True"/>
                             <field name="analytic_precision" column_invisible="True"/>

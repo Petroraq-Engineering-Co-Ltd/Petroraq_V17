@@ -54,6 +54,19 @@ class AccountBankReceipt(models.Model):
     total_amount = fields.Float(string="Amount", compute="_compute_total_amount", store=True, tracking=True)
     journal_entry_id = fields.Many2one("account.move", string="Journal Entry", readonly=True, tracking=True)
 
+    @api.constrains("bank_receipt_line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.bank_receipt_line_ids
+
+            # Block empty voucher
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            # Block if all lines have zero or negative amount
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
+
     # endregion [Fields]
 
     # region [Constrains]
@@ -533,8 +546,6 @@ class AccountBankReceiptLine(models.Model):
             'company_id': self.company_id.id or self.env.company.id,
         }
 
-
-
     def action_open_header_account_ledger(self):
         self.ensure_one()
 
@@ -542,7 +553,8 @@ class AccountBankReceiptLine(models.Model):
             raise ValidationError(_("Account is missing."))
 
         today = date.today()
-        first_day = today.replace(day=1)  # ← first day of current month
+        # Start of current year (January 1st)
+        first_day = today.replace(month=1, day=1)
 
         wizard = self.env["account.ledger"].create({
             'company_id': self.company_id.id,

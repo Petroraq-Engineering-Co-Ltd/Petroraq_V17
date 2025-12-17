@@ -68,6 +68,18 @@ class AccountBankPayment(models.Model):
     check_process_state = fields.Boolean(compute="_compute_check_process_state")
 
     # endregion [Fields]
+    @api.constrains("bank_payment_line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.bank_payment_line_ids
+
+            # Block empty voucher
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            # Block if all lines have zero or negative amount
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
 
     # region [Constrains]
 
@@ -137,7 +149,7 @@ class AccountBankPayment(models.Model):
                 bank_payment.journal_entry_id.unlink()
 
             for line in bank_payment.bank_payment_line_ids:
-                line.sudo().write({"state": "draft"})
+                line.sudo().write({"state": "draft", "reject_reason": ""})
 
             bank_payment.state = "draft"
             bank_payment.accounting_manager_state = "draft"
@@ -146,7 +158,7 @@ class AccountBankPayment(models.Model):
         for bank_payment in self:
             if bank_payment.bank_payment_line_ids:
                 for line in bank_payment.bank_payment_line_ids:
-                    line.sudo().write({"state": "submit"})
+                    line.sudo().write({"state": "submit", "reject_reason": ""})
             bank_payment.state = "submit"
             bank_payment.accounting_manager_state = "submit"
 
@@ -227,6 +239,9 @@ class AccountBankPayment(models.Model):
             for line in rec.bank_payment_line_ids:
                 if line.state == "submit":
                     line.sudo().write({"state": "reject"})
+
+                bank_payment_id = self.env['pr.account.bank.payment'].search([('id', '=', line.bank_payment_id.id)])
+                bank_payment_id.write({'state': 'draft'})
 
     # endregion [Actions]
 
@@ -347,6 +362,7 @@ class AccountBankPaymentLine(models.Model):
     # endregion [Initial]
 
     # region [Fields]
+    reject_reason = fields.Char(string="Reject Reason")
 
     bank_payment_id = fields.Many2one('pr.account.bank.payment', 'Bank Payment', required=True)
     company_id = fields.Many2one('res.company', string='Company', related="bank_payment_id.company_id", store=True)
@@ -362,6 +378,7 @@ class AccountBankPaymentLine(models.Model):
         string="Name",
         compute="_compute_account_name_button",
     )
+
 
     def _compute_account_name_button(self):
         for rec in self:
@@ -547,8 +564,17 @@ class AccountBankPaymentLine(models.Model):
             line.sudo().write({"state": "approve"})
 
     def action_line_reject(self):
-        for line in self:
-            line.sudo().write({"state": "reject"})
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': "Reject Reason",
+            'res_model': "bank.payment.reject.reason.wizard",
+            'view_mode': "form",
+            'target': "new",
+            'context': {
+                'default_line_id': self.id,
+            },
+        }
 
     # endregion [Actions]
 
@@ -666,7 +692,8 @@ class AccountBankPaymentLine(models.Model):
             raise ValidationError(_("Account is missing."))
 
         today = date.today()
-        first_day = today.replace(day=1)  # ← first day of current month
+        # Start of current year (January 1st)
+        first_day = today.replace(month=1, day=1)
 
         wizard = self.env["account.ledger"].create({
             'company_id': self.company_id.id,
@@ -676,3 +703,32 @@ class AccountBankPaymentLine(models.Model):
         })
 
         return wizard.action_view_ledger_report()
+
+
+from odoo import models, fields
+
+class BankPaymentRejectReasonWizard(models.TransientModel):
+    _name = "bank.payment.reject.reason.wizard"
+    _description = "Bank Payment Line Reject Reason"
+
+    line_id = fields.Many2one("pr.account.bank.payment.line", required=True)
+    reason = fields.Char(string="Reason", required=True)
+
+    def action_confirm(self):
+        line = self.line_id
+        parent = line.bank_payment_id
+
+        line.sudo().write({
+            'state': 'reject',
+            'reject_reason': self.reason,
+        })
+
+        # If ALL lines rejected → reset parent to draft
+        if parent.bank_payment_line_ids and \
+           all(l.state == "reject" for l in parent.bank_payment_line_ids):
+            parent.sudo().write({
+                'state': 'draft',
+                'accounting_manager_state': 'draft'
+            })
+
+        return True

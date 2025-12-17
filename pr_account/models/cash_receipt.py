@@ -55,9 +55,18 @@ class AccountCashReceipt(models.Model):
     journal_entry_id = fields.Many2one("account.move", string="Journal Entry", readonly=True, tracking=True)
     check_process_state = fields.Boolean(compute="_compute_check_process_state")
 
-    # endregion [Fields]
+    @api.constrains("cash_receipt_line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.cash_receipt_line_ids
 
-    # region [Constrains]
+            # Block empty voucher
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            # Block if all lines have zero or negative amount
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
 
     @api.constrains("company_id")
     def _check_company(self):
@@ -239,7 +248,6 @@ class AccountCashReceipt(models.Model):
             raise ValidationError("This Cash Receipt Should Be Draft To Can Delete !!")
         return super().unlink()
 
-
     def copy(self, default=None):
         default = dict(default or {})
         # New sequence always on duplicate
@@ -289,6 +297,8 @@ class AccountCashReceiptLine(models.Model):
         string="Name",
         compute="_compute_account_name_button",
     )
+
+
 
     def _compute_account_name_button(self):
         for rec in self:
@@ -534,8 +544,6 @@ class AccountCashReceiptLine(models.Model):
             'company_id': self.company_id.id or self.env.company.id,
         }
 
-
-
     def action_open_header_account_ledger(self):
         self.ensure_one()
 
@@ -543,7 +551,8 @@ class AccountCashReceiptLine(models.Model):
             raise ValidationError(_("Account is missing."))
 
         today = date.today()
-        first_day = today.replace(day=1)
+        # Start of current year (January 1st)
+        first_day = today.replace(month=1, day=1)
 
         wizard = self.env["account.ledger"].create({
             'company_id': self.company_id.id,
@@ -553,5 +562,3 @@ class AccountCashReceiptLine(models.Model):
         })
 
         return wizard.action_view_ledger_report()
-
-
