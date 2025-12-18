@@ -8,7 +8,8 @@ class OrderInquiry(models.Model):
     _order = 'sequence, date_order, id'
     _rec_name = 'name'
 
-    name = fields.Char(default="New", readonly=True, copy=False, tracking=True)
+    name = fields.Char(default="New", readonly=True, copy=False, tracking=True,string="Inquiry No.")
+    description = fields.Char(string="Inquiry Description", required=True)
     company_id = fields.Many2one('res.company', default=lambda self: self.env.user.company_id.id, string='Company')
     contact_person = fields.Char(string="Contact Person", required=True)
     designation = fields.Char(string="Designation")

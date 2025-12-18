@@ -39,6 +39,7 @@
                     </div>
                     <group col="2">
                         <group>
+                            <field name="description" />
                             <field name="partner_id" required="1" readonly="state in ('confirm', 'cancel')"/>
                             <field name="company_id" readonly="1"/>
                             <field name="email"/>
@@ -73,6 +74,7 @@
             <tree class="o_sale_order" decoration-muted="state == 'cancel'">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
+                <field name="description"/>
                 <field name="partner_id"/>
                 <field name="contact_person"/>
                 <field name="contact_person_email"/>

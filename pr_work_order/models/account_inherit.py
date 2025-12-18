@@ -41,14 +41,11 @@ class AccountAnalyticLine(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """
-        Whenever Odoo auto-creates analytic lines from vendor bills:
-        - if the source move line belongs to a Work Order, copy it.
-        """
         lines = super().create(vals_list)
         for line in lines:
-            if not line.work_order_id and line.move_id and line.move_id.work_order_id:
-                line.work_order_id = line.move_id.work_order_id.id
+            aml = line.move_line_id  # <-- CORRECT FIELD IN ODOO 17
+            if aml and not line.work_order_id and aml.move_id.work_order_id:
+                line.work_order_id = aml.move_id.work_order_id.id
         return lines
 
 

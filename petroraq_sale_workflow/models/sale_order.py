@@ -138,6 +138,9 @@ class SaleOrder(models.Model):
             order.approval_state = "to_md"
 
     def action_confirm_quotation(self):
+        for order in self:
+            if not order.order_line:
+                raise UserError(_("Please add at least one line item to the quotation."))
         self.approval_state = "to_manager"
         self.approval_comment = False
 
@@ -395,3 +398,5 @@ class SaleOrderLine(models.Model):
             f"<span class='o_section_subtotal_chip_label'>{html_escape(label)}</span>"
             f"<span class='o_section_subtotal_chip_value'>{html_escape(amount_display)}</span>"
         )
+
+

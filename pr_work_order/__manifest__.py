@@ -11,11 +11,12 @@
         "project",
         "analytic",
         "account",
+        "account_budget",
         "stock",
     ],
     "data": [
-        "security/ir.model.access.csv",
         "security/groups.xml",
+        "security/ir.model.access.csv",
         "views/work_order_views.xml",
         "data/sequence.xml",
         "views/menu_views.xml",
