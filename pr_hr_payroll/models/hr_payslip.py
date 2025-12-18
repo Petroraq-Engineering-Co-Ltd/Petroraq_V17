@@ -21,6 +21,12 @@ class HrPayslip(models.Model):
             contract_id = payslip.employee_id.contract_id
             gosi_salary_rule = self.env.ref("pr_hr_payroll.hr_salary_rule_saudi_gosi")
             gosi_allow_salary_rule = self.env.ref("pr_hr_payroll.hr_salary_rule_saudi_gosi_allow")
+            # ===============================
+            # GOSI – single source of truth
+            # ===============================
+            company_gosi = contract_id.company_portion or 0.0
+            employee_gosi = contract_id.employee_portion or 0.0
+
             if payslip.employee_id.country_id and payslip.employee_id.country_id.is_homeland and contract_id.is_automatic_gosi:
                 start_of_month = date_utils.start_of(payslip.date_to, 'month')
                 end_of_month = date_utils.end_of(payslip.date_to, 'month')
@@ -44,19 +50,64 @@ class HrPayslip(models.Model):
                         elif payslip.date_from >= contract_id.date_start:
                             total_amount += rule_total_amount
                 if gosi_salary_rule:
+                    # line_vals.append({
+                    #     'sequence': gosi_salary_rule.sequence,
+                    #     'code': gosi_salary_rule.code,
+                    #     'name': gosi_salary_rule.name,
+                    #     'salary_rule_id': gosi_salary_rule.id,
+                    #     'contract_id': payslip.employee_id.contract_id.id,
+                    #     'employee_id': payslip.employee_id.id,
+                    #     'amount': (total_amount * -1 * .0975) or 0,
+                    #     'quantity': 1,
+                    #     'rate': 100,
+                    #     'total': (total_amount * -1 * .0975) or 0,
+                    #     'slip_id': payslip.id,
+                    # })
+                    # 1) Company GOSI → ADD to GROSS
                     line_vals.append({
-                        'sequence': gosi_salary_rule.sequence,
-                        'code': gosi_salary_rule.code,
-                        'name': gosi_salary_rule.name,
-                        'salary_rule_id': gosi_salary_rule.id,
-                        'contract_id': payslip.employee_id.contract_id.id,
+                        'sequence': 44,
+                        'code': 'GOSI_COMP_ADD',
+                        'name': 'GOSI Company Contribution',
+                        'salary_rule_id': gosi_allow_salary_rule.id,
+                        'contract_id': contract_id.id,
                         'employee_id': payslip.employee_id.id,
-                        'amount': (total_amount * -1 * .0975) or 0,
+                        'amount': company_gosi,
                         'quantity': 1,
                         'rate': 100,
-                        'total': (total_amount * -1 * .0975) or 0,
+                        'total': company_gosi,
                         'slip_id': payslip.id,
                     })
+
+                    # 2) Employee GOSI → DEDUCT from NET
+                    line_vals.append({
+                        'sequence': 45,
+                        'code': 'GOSI_EMP',
+                        'name': 'GOSI Employee Deduction',
+                        'salary_rule_id': gosi_salary_rule.id,
+                        'contract_id': contract_id.id,
+                        'employee_id': payslip.employee_id.id,
+                        'amount': -employee_gosi,
+                        'quantity': 1,
+                        'rate': 100,
+                        'total': -employee_gosi,
+                        'slip_id': payslip.id,
+                    })
+
+                    # 3) Company GOSI → DEDUCT from NET
+                    line_vals.append({
+                        'sequence': 46,
+                        'code': 'GOSI_COMP_DED',
+                        'name': 'GOSI Company Deduction',
+                        'salary_rule_id': gosi_salary_rule.id,
+                        'contract_id': contract_id.id,
+                        'employee_id': payslip.employee_id.id,
+                        'amount': -company_gosi,
+                        'quantity': 1,
+                        'rate': 100,
+                        'total': -company_gosi,
+                        'slip_id': payslip.id,
+                    })
+
 
             else:
                 start_of_month = date_utils.start_of(payslip.date_to, 'month')
