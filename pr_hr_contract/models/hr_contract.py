@@ -21,6 +21,15 @@ class HrContract(models.Model):
     # endregion [Initial]
 
     # region [Fields]
+    is_special_gosi = fields.Boolean(
+        string="Special GOSI (12.75%)",
+        help="Enable special company GOSI rate for this employee"
+    )
+
+    special_company_gosi_rate = fields.Float(
+        string="Special Company GOSI %",
+        default=12.75
+    )
 
     joining_date = fields.Date(string="Joining Date", required=True,
                                tracking=True)
@@ -161,42 +170,58 @@ class HrContract(models.Model):
 
     def _set_gosi_salary(self):
         """
-        This Method Calculates GOSI Salary in case of "automatic calculation" of GOSI Salary
-        if not calculated automatically → User adds Salary Manually
+        Calculates GOSI Salary and portions.
+        Supports special company GOSI rate for specific employees (e.g. 12.75%).
         """
         for contract in self:
-            gosi_salary = 0
+            gosi_salary = 0.0
 
-            if contract.is_automatic_gosi:
-                # Fetch GOSI configuration
-                gosi_configuration = self.env['hr.contract.gosi'].search([], limit=1)
-
-                if gosi_configuration:
-                    # gosi_salary_rule_ids = gosi_configuration.gosi_salary_rule_ids
-                    contract_salary_rule_ids = contract.contract_salary_rule_ids.mapped("salary_rule_id")
-                    basic_salary_rule_id = self.env.ref("hr_payroll.default_basic_salary_rule")
-                    if contract_salary_rule_ids:
-                        gosi_salary_rule_ids = contract_salary_rule_ids + basic_salary_rule_id
-                    else:
-                        gosi_salary_rule_ids = basic_salary_rule_id
-
-                    if gosi_salary_rule_ids:
-                        # Calculate total GOSI salary based on the configured salary rules
-                        gosi_salary = contract._compute_amount_of_salary_rules(gosi_salary_rule_ids)
-
-                    # Check if employee is a citizen or a resident and apply respective GOSI portions
-                    if contract.employee_id.country_id.is_homeland:
-                        contract.company_portion = gosi_salary * gosi_configuration.citizen_company_portion / 100
-                        contract.employee_portion = gosi_salary * gosi_configuration.citizen_employee_portion / 100
-                    else:
-                        contract.company_portion = gosi_salary * gosi_configuration.resident_company_portion / 100
-                        contract.employee_portion = gosi_salary * gosi_configuration.resident_employee_portion / 100
-
-                    # Assign the computed GOSI salary to the contract
-                    contract.gosi_salary = gosi_salary
-                    contract._compute_amount()
-            else:
+            if not contract.is_automatic_gosi:
                 contract.gosi_salary = 0.0
+                contract.company_portion = 0.0
+                contract.employee_portion = 0.0
+                continue
+
+            # Fetch GOSI configuration (single active record)
+            gosi_configuration = self.env['hr.contract.gosi'].search([], limit=1)
+            if not gosi_configuration:
+                continue
+
+            # --- Compute GOSI Salary (Base) ---
+            contract_salary_rule_ids = contract.contract_salary_rule_ids.mapped("salary_rule_id")
+            basic_salary_rule_id = self.env.ref("hr_payroll.default_basic_salary_rule")
+
+            if contract_salary_rule_ids:
+                gosi_salary_rule_ids = contract_salary_rule_ids + basic_salary_rule_id
+            else:
+                gosi_salary_rule_ids = basic_salary_rule_id
+
+            if gosi_salary_rule_ids:
+                gosi_salary = contract._compute_amount_of_salary_rules(gosi_salary_rule_ids)
+
+            # --- Determine Rates ---
+            is_citizen = contract.employee_id.country_id.is_homeland if contract.employee_id.country_id else False
+
+            if is_citizen:
+                employee_rate = gosi_configuration.citizen_employee_portion
+
+                # ⭐ SPECIAL CASE HANDLING (Shahd)
+                if contract.is_special_gosi:
+                    company_rate = contract.special_company_gosi_rate
+                else:
+                    company_rate = gosi_configuration.citizen_company_portion
+
+            else:
+                employee_rate = gosi_configuration.resident_employee_portion
+                company_rate = gosi_configuration.resident_company_portion
+
+            # --- Apply Calculations ---
+            contract.gosi_salary = gosi_salary
+            contract.employee_portion = gosi_salary * employee_rate / 100
+            contract.company_portion = gosi_salary * company_rate / 100
+
+            # Recompute totals
+            contract._compute_amount()
 
     def _compute_amount_of_salary_rules(self, salary_rule_ids):
         """
