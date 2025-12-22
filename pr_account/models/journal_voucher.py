@@ -116,11 +116,42 @@ class AccountJournalVoucher(models.Model):
                     _("You should select the current company, please check!")
                 )
 
-    @api.constrains("line_ids")
+
+
+    @api.constrains("line_ids", "line_ids.debit", "line_ids.credit")
     def _check_positive_amount_line(self):
         for rec in self:
             lines = rec.line_ids
 
+            # 1️⃣ Minimum two lines
+            if len(lines) < 2:
+                raise ValidationError(
+                    _("You must add at least two lines to match debit and credit.")
+                )
+
+            total_debit = sum(lines.mapped("debit"))
+            total_credit = sum(lines.mapped("credit"))
+
+            if float_compare(
+                    total_debit,
+                    total_credit,
+                    precision_rounding=rec.currency_id.rounding
+            ) != 0:
+                raise ValidationError(
+                    _(
+                        "Debit and Credit must be equal.\n"
+                        "Total Debit: %(debit).2f\n"
+                        "Total Credit: %(credit).2f"
+                    ) % {
+                        "debit": total_debit,
+                        "credit": total_credit,
+                    }
+                )
+
+            if total_debit <= 0:
+                raise ValidationError(
+                    _("Total amount must be greater than zero.")
+                )
             if len(lines) < 2:
                 raise ValidationError(
                     _("You must add at least two lines to match debit credit")
@@ -388,6 +419,8 @@ class AccountJournalVoucher(models.Model):
     # endregion [CRUD]
 
 
+
+
 class AccountJournalVoucherLine(models.Model):
     # region [Initial]
     _name = "pr.account.journal.voucher.line"
@@ -543,5 +576,8 @@ class AccountJournalVoucherLine(models.Model):
                         "or a positive Credit (but not both)."
                     )
                 )
+
+
+
 
     # endregion [Constraints]
