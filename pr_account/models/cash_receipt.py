@@ -1,5 +1,7 @@
+from datetime import date
+
 from odoo import api, fields, models, _, Command
-from odoo.tools import  float_compare
+from odoo.tools import float_compare
 from odoo.exceptions import ValidationError
 
 
@@ -21,9 +23,9 @@ class AccountCashReceipt(models.Model):
     currency_id = fields.Many2one('res.currency', string='Currency', related='company_id.currency_id', store=True,
                                   tracking=True)
     account_id = fields.Many2one('account.account', string='Code', required=True,
-                                 ondelete='restrict', tracking=True, index=True,)
+                                 ondelete='restrict', tracking=True, index=True, )
     account_name = fields.Char(string='Name', related="account_id.name", store=True,
-                                     tracking=True)
+                               tracking=True)
     # === Analytic fields === #
     analytic_line_ids = fields.One2many(
         comodel_name='account.analytic.line', inverse_name='cash_receipt_id',
@@ -47,14 +49,24 @@ class AccountCashReceipt(models.Model):
         ("posted", "Finance Approval"),
         ("cancel", "Cancelled"),
     ], string="Status", tracking=True, default="draft")
-    cash_receipt_line_ids = fields.One2many("pr.account.cash.receipt.line", "cash_receipt_id", string="Cash Receipt Lines")
+    cash_receipt_line_ids = fields.One2many("pr.account.cash.receipt.line", "cash_receipt_id",
+                                            string="Cash Receipt Lines")
     total_amount = fields.Float(string="Amount", compute="_compute_total_amount", store=True, tracking=True)
     journal_entry_id = fields.Many2one("account.move", string="Journal Entry", readonly=True, tracking=True)
     check_process_state = fields.Boolean(compute="_compute_check_process_state")
 
-    # endregion [Fields]
+    @api.constrains("cash_receipt_line_ids")
+    def _check_positive_amount_line(self):
+        for rec in self:
+            lines = rec.cash_receipt_line_ids
 
-    # region [Constrains]
+            # Block empty voucher
+            if not lines:
+                raise ValidationError(_("You must add at least one line with a positive amount."))
+
+            # Block if all lines have zero or negative amount
+            if all(line.total_amount <= 0 for line in lines):
+                raise ValidationError(_("At least one line must have a positive amount."))
 
     @api.constrains("company_id")
     def _check_company(self):
@@ -115,7 +127,8 @@ class AccountCashReceipt(models.Model):
                     for line in cash_receipt.cash_receipt_line_ids:
                         line_ids.append(move_line.create(line.prepare_credit_move_line_vals(move_id=journal_entry_id)))
                         if line.tax_id:
-                            line_ids.append(move_line.create(line.prepare_credit_tax_move_line_vals(move_id=journal_entry_id)))
+                            line_ids.append(
+                                move_line.create(line.prepare_credit_tax_move_line_vals(move_id=journal_entry_id)))
                     journal_entry_id.action_post()
                     cash_receipt.journal_entry_id = journal_entry_id.id
             cash_receipt.state = "posted"
@@ -235,7 +248,32 @@ class AccountCashReceipt(models.Model):
             raise ValidationError("This Cash Receipt Should Be Draft To Can Delete !!")
         return super().unlink()
 
+    def copy(self, default=None):
+        default = dict(default or {})
+        # New sequence always on duplicate
+        default['name'] = self.env['ir.sequence'].next_by_code(
+            'account.cash.receipt.seq.code'
+        ) or ''
+
+        # Duplicate line_ids
+        default['cash_receipt_line_ids'] = [
+            (0, 0, {
+                'account_id': line.account_id.id,
+                'description': line.description,
+                'amount': line.amount,
+                'tax_id': line.tax_id.id,
+                'reference_number': line.reference_number,
+                'cs_project_id': line.cs_project_id.id,
+                'partner_id': line.partner_id.id,
+                'analytic_distribution': line.analytic_distribution,
+            })
+            for line in self.cash_receipt_line_ids
+        ]
+
+        return super().copy(default)
+
     # endregion [Crud]
+
 
 class AccountCashReceiptLine(models.Model):
     # region [Initial]
@@ -255,6 +293,17 @@ class AccountCashReceiptLine(models.Model):
                                  ondelete='restrict', tracking=True, index=True)
     account_name = fields.Char(string='Name', related="account_id.name", store=True,
                                tracking=True)
+    account_name_button = fields.Char(
+        string="Name",
+        compute="_compute_account_name_button",
+    )
+
+
+
+    def _compute_account_name_button(self):
+        for rec in self:
+            rec.account_name_button = rec.account_name or ""
+
     description = fields.Text(string="Description", required=False, tracking=True)
     reference_number = fields.Char(string="Reference Number", required=False)
     # === Analytic fields === #
@@ -271,7 +320,8 @@ class AccountCashReceiptLine(models.Model):
         store=False,
     )
     amount = fields.Float(string="Amount", tracking=True)
-    tax_id = fields.Many2one('account.tax', string='Taxes', ondelete='restrict', check_company=True, domain="[('type_tax_use', '=', 'sale')]")
+    tax_id = fields.Many2one('account.tax', string='Taxes', ondelete='restrict', check_company=True,
+                             domain="[('type_tax_use', '=', 'sale')]")
     amount_tax = fields.Float(string="Tax Amount", tracking=True, compute="_compute_amount", store=True)
     total_amount = fields.Float(string="Total Amount", tracking=True, compute="_compute_amount", store=True)
     parent_state = fields.Selection([
@@ -281,6 +331,7 @@ class AccountCashReceiptLine(models.Model):
         ("cancel", "Cancelled"),
     ], related="cash_receipt_id.state", store=True, string="Parent Status")
     check_cost_centers_block = fields.Boolean(compute="_compute_check_cost_centers_block")
+
     # endregion [Fields]
 
     # region [Onchange Methods]
@@ -458,7 +509,7 @@ class AccountCashReceiptLine(models.Model):
             distribution_on_each_plan = {}
             for account_ids, distribution in self.analytic_distribution.items():
                 line_values = self._prepare_analytic_distribution_line(float(distribution), account_ids,
-                                                                             distribution_on_each_plan)
+                                                                       distribution_on_each_plan)
                 if not self.currency_id.is_zero(line_values.get('amount')):
                     analytic_line_vals.append(line_values)
         return analytic_line_vals
@@ -493,5 +544,21 @@ class AccountCashReceiptLine(models.Model):
             'company_id': self.company_id.id or self.env.company.id,
         }
 
-    # endregion [Analytic Distribution Methods]
+    def action_open_header_account_ledger(self):
+        self.ensure_one()
 
+        if not self.account_id:
+            raise ValidationError(_("Account is missing."))
+
+        today = date.today()
+        # Start of current year (January 1st)
+        first_day = today.replace(month=1, day=1)
+
+        wizard = self.env["account.ledger"].create({
+            'company_id': self.company_id.id,
+            'account_ids': [(6, 0, [self.account_id.id])],
+            'date_start': first_day,
+            'date_end': today,
+        })
+
+        return wizard.action_view_ledger_report()

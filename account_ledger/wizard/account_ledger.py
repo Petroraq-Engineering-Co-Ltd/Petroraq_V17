@@ -34,7 +34,15 @@ class AccountLedger(models.TransientModel):
 
     # endregion [Default Methods]
 
-    date_start = fields.Date(string="Start Date", required=True, default=date(2025, 1, 1))
+    def _default_date_start(self):
+        today = fields.Date.context_today(self)
+        return today.replace(day=1)
+
+    date_start = fields.Date(
+        string="Start Date",
+        required=True,
+        default=_default_date_start
+    )
     date_end = fields.Date(string="End Date", required=True, default=fields.Date.today)
     account_id = fields.Many2one('account.account', required=False, string="Account")
     account_id_domain = fields.Char(compute="_compute_account_id_domain")
@@ -318,6 +326,14 @@ class AccountLedger(models.TransientModel):
         result = self.env["account.ledger.result"].create({
             "wizard_id": self.id
         })
+        account_names = ", ".join(self.account_ids.mapped("name"))
+        date_range = f"{self.date_start} → {self.date_end}"
+
+        result.write({
+            "header_company": self.company_id.name,
+            "header_account": account_names,
+            "header_date_range": date_range,
+        })
 
         for line in docs:
             is_total = True if not line.get("transaction_ref") else False
@@ -348,6 +364,10 @@ class AccountLedger(models.TransientModel):
 class AccountLedgerResult(models.TransientModel):
     _name = "account.ledger.result"
     _description = "Ledger Result Container"
+    header_company = fields.Char()
+    header_account = fields.Char()
+    header_date_range = fields.Char()
+    header_opening_balance = fields.Char()
 
     wizard_id = fields.Many2one("account.ledger")
     line_ids = fields.One2many("account.ledger.result.line", "result_id", string="Lines")

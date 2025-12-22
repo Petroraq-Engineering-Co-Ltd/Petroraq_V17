@@ -64,10 +64,28 @@
     white-space: nowrap;
     padding: 4px 8px;
     text-overflow: ellipsis;
-    overflow: hidden;
+
 }
 
 /* ZEBRA ROWS */
 .freeze-1many tbody tr:nth-child(even) {
     background-color: #f9f9f9 !important;
 }
+.o_form_label_and_field {
+    display: flex;
+    flex-direction: column;
+    margin-right: 14px;
+}
+
+.o_form_label_and_field label {
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.o_date_amounts_row {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+
+

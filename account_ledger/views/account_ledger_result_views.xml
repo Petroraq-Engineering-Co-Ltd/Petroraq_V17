@@ -14,20 +14,51 @@
                             string="Export Excel" class="btn btn-secondary"/>
                 </header>
 
-                <sheet >
+                <sheet>
                     <div class="oe_title"/>
+                    <div style="display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-row-gap: 10px;
+            grid-column-gap: 20px;
+            background: #f4f6fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #173b76;
+            margin-bottom: 15px;">
+
+                        <div>
+                            <span style="color:#173b76; font-weight:600;">Company:</span>
+                            <field name="header_company" readonly="1"/>
+                        </div>
+
+                        <div>
+                            <span style="color:#173b76; font-weight:600;">Account:</span>
+                            <field name="header_account" readonly="1"/>
+                        </div>
+
+                        <div>
+                            <span style="color:#173b76; font-weight:600;">Date Range:</span>
+                            <field name="header_date_range" readonly="1"/>
+                        </div>
+
+
+                    </div>
+
+
+                    <separator string="Ledger Lines"/>
+
 
                     <div class="oe_full">
                         <field name="line_ids" class="freeze-1many" nolabel="1">
-                            <tree create="false" delete="false" editable="false" limit="1000">
-                                <field name="transaction_ref" string="Transaction Ref"/>
+                            <tree create="false" delete="false" editable="false" limit="100">
+                                <!--                                <field name="transaction_ref" string="Transaction Ref"/>-->
                                 <field name="reference" string="Reference"/>
                                 <field name="date" string="Date"/>
-                                <field name="label" string="Label"/>
+                                <field name="label" string="Description"/>
                                 <field name="debit" string="Debit"/>
                                 <field name="credit" string="Credit"/>
                                 <field name="balance" string="Balance"/>
-                                <field name="is_total" invisible="1"/>
+                                <field name="is_total" column_invisible="True"/>
                             </tree>
                         </field>
                     </div>

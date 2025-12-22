@@ -6,5 +6,16 @@
             <field name="category_id" ref="base.module_category_accounting_accounting"/>
             <field name="implied_ids" eval="[(4, ref('account.group_account_manager'))]"/>
         </record>
+        <record id="custom_group_account_supervisor" model="res.groups">
+            <field name="name">Account Supervisor</field>
+            <field name="category_id" ref="base.module_category_accounting_accounting"/>
+
+            <field name="implied_ids" eval="
+        [
+            (4, ref('account.group_account_invoice'))
+        ]
+    "/>
+        </record>
+
     </data>
 </odoo>

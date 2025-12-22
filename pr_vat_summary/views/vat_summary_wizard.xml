@@ -41,8 +41,18 @@
                         <button string="Cancel" class="btn-link" special="cancel"/>
                     </footer>
 
-                    <separator string="Summary" invisible="summary_html == False"/>
-                    <field name="summary_html" widget="html" sanitize="False" sanitize_tags="False" nolabel="1"/>
+                    <field name="summary_title"
+                           nolabel="1"
+                           readonly="1"
+                           class="oe_title"
+                           invisible="not summary_html"/>
+
+                    <field name="summary_html"
+                           widget="html"
+                           sanitize="False"
+                           sanitize_tags="False"
+                           nolabel="1"/>
+
                 </sheet>
             </form>
         </field>

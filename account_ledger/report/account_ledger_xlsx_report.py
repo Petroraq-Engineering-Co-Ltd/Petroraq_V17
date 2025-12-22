@@ -208,7 +208,7 @@ class CustomDynamicLedgerReport(models.AbstractModel):
 
         opening_balance_ids = self.env['account.move.line'].search(opening_balance_domain, order="date asc")
         JournalItems = self.env['account.move.line'].search(ji_domain, order="date asc")
-        JournalAccounts = opening_balance_ids.mapped("account_id.id")
+        JournalAccounts = account
         TupleJournalAccounts = tuple(JournalAccounts)
 
         if JournalItems and section:
@@ -251,12 +251,12 @@ class CustomDynamicLedgerReport(models.AbstractModel):
                 where_statement += f""" 
                                 WHERE analytic_distribution ?& array{str_analytic_ids}"""
 
-        if not where_statement:
-            return {
-                'account': " ",
-                'report_date': report_date,
-                'docs': []
-            }
+        # if not where_statement:
+        #     return {
+        #         'account': " ",
+        #         'report_date': report_date,
+        #         'docs': []
+        #     }
         sql = f"""
                     SELECT 
                         SUM(aml.balance)
@@ -274,8 +274,13 @@ class CustomDynamicLedgerReport(models.AbstractModel):
         else:
             initial_balance = 0
 
-        initial_debit = 0
-        initial_credit = 0
+        if initial_balance >= 0:
+            initial_debit = initial_balance
+            initial_credit = 0
+        else:
+            initial_debit = 0
+            initial_credit = abs(initial_balance)
+
         t_debit = 0 + initial_debit
         t_credit = 0 + initial_credit
         init_balance = initial_balance
