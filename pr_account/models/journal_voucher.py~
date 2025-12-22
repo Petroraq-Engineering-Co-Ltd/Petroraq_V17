@@ -123,6 +123,7 @@ class AccountJournalVoucher(models.Model):
         for rec in self:
             lines = rec.line_ids
 
+<<<<<<< HEAD
             # 1️⃣ Minimum two lines
             if len(lines) < 2:
                 raise ValidationError(
@@ -151,10 +152,11 @@ class AccountJournalVoucher(models.Model):
             if total_debit <= 0:
                 raise ValidationError(
                     _("Total amount must be greater than zero.")
-                )
+=======
             if len(lines) < 2:
                 raise ValidationError(
                     _("You must add at least two lines to match debit credit")
+>>>>>>> 983aaafd869d902c2a2a74d927c014838864669d
                 )
 
     # endregion [Constraints]
@@ -419,8 +421,6 @@ class AccountJournalVoucher(models.Model):
     # endregion [CRUD]
 
 
-
-
 class AccountJournalVoucherLine(models.Model):
     # region [Initial]
     _name = "pr.account.journal.voucher.line"
@@ -576,8 +576,5 @@ class AccountJournalVoucherLine(models.Model):
                         "or a positive Credit (but not both)."
                     )
                 )
-
-
-
 
     # endregion [Constraints]
