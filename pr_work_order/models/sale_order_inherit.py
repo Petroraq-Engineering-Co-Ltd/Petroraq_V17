@@ -35,7 +35,7 @@ class SaleOrder(models.Model):
         # 1) Create Project
         # --------------------------
         project_vals = {
-            "name": order.name,
+            "name": order.order_inquiry_id.description,
             "partner_id": order.partner_id.id,
             "company_id": order.company_id.id,
         }
@@ -48,12 +48,12 @@ class SaleOrder(models.Model):
         # 2) Create Work Order Header
         # --------------------------
         work_order_vals = {
-            "name": order.name,
+            # "name": order.name,
             "company_id": order.company_id.id,
             "sale_order_id": order.id,
             "partner_id": order.partner_id.id,
             "project_id": project.id,
-            "contract_amount": order.amount_total,
+            "contract_amount": order.final_grand_total,
         }
         if order.analytic_account_id:
             work_order_vals["analytic_account_id"] = order.analytic_account_id.id

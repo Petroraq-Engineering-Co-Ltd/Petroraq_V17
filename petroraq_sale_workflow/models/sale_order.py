@@ -88,6 +88,12 @@ class SaleOrder(models.Model):
         help="Grand total including profit."
     )
 
+    def action_cancel(self):
+        res = super(SaleOrder, self).action_cancel()
+        for order in self:
+            order.approval_state = "rejected"
+        return res
+
     @api.depends("order_line", "overhead_percent", "risk_percent", "profit_percent")
     def _compute_final_totals(self):
         for order in self:
@@ -142,6 +148,7 @@ class SaleOrder(models.Model):
             if not order.order_line:
                 raise UserError(_("Please add at least one line item to the quotation."))
         self.approval_state = "to_manager"
+        self.state = "draft"
         self.approval_comment = False
 
     def action_md_approve(self):

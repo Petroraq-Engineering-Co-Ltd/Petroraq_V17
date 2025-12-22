@@ -1,12 +1,15 @@
 from odoo import api, models, fields, _
 from odoo.exceptions import ValidationError
 from datetime import timedelta
+import re
+
 
 
 class OrderInquiry(models.Model):
     _name = 'order.inq'
     _order = 'sequence, date_order, id'
     _rec_name = 'name'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(default="New", readonly=True, copy=False, tracking=True,string="Inquiry No.")
     description = fields.Char(string="Inquiry Description", required=True)
@@ -14,10 +17,10 @@ class OrderInquiry(models.Model):
     contact_person = fields.Char(string="Contact Person", required=True)
     designation = fields.Char(string="Designation")
     user_id = fields.Many2one('res.users', string='Inquiry BY', default=lambda self: self.env.user)
-    partner_id = fields.Many2one('res.partner', string='Customer', required=True, domain=[('type', '!=', 'private')])
+    partner_id = fields.Many2one('res.partner', string='Customer', required=True, domain=[('is_company', '=', 'True')])
     email = fields.Char(string="Customer Email", related='partner_id.email')
-    contact_person_email = fields.Char(string="Contact Person Email")
-    contact_person_phone = fields.Char(string="Contact Person Phone")
+    contact_person_email = fields.Char(string="Contact Person Email",required=True)
+    contact_person_phone = fields.Char(string="Contact Person Phone",required=True)
     state = fields.Selection(
         [('pending', 'Pending'), ('confirm', 'Posted'), ('cancel', 'cancel'), ('reject', 'Rejected')],
         default='pending', string='state')
@@ -32,6 +35,24 @@ class OrderInquiry(models.Model):
     sequence = fields.Integer(string="Sequence", default=10)
 
     rejection_reason = fields.Text(string="Rejection Reason")
+
+    @api.constrains('contact_person_email', 'contact_person_phone')
+    def _check_email_and_phone(self):
+        email_regex = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+        phone_regex = r"^[0-9\s\-]{10,15}$"
+
+        for rec in self:
+            if rec.contact_person_email:
+                if not re.match(email_regex, rec.contact_person_email):
+                    raise ValidationError(
+                        _("Invalid email format. Example: name@example.com")
+                    )
+
+            if rec.contact_person_phone:
+                if not re.match(phone_regex, rec.contact_person_phone):
+                    raise ValidationError(
+                        _("Invalid phone number. Use digits only, optionally starting with +")
+                    )
 
     @api.depends('sale_order_ids')
     def compute_sale_count(self):

@@ -13,6 +13,8 @@
         "account",
         "account_budget",
         "stock",
+        "mail",
+        "purchase",
     ],
     "data": [
         "security/groups.xml",

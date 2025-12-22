@@ -21,12 +21,13 @@
                         string="Create Work Order"
                         class="btn-primary"
                         invisible="state not in ('sale','done') or work_order_id"
+                        groups="pr_work_order.custom_group_work_order_user"/>
                 />
 
             </xpath>
 
             <xpath expr="//sheet/notebook/page[@name='order_lines']" position="after">
-                <page string="Work Order">
+                <page string="Work Order" invisible="work_order_id == False">
                     <group>
                         <field name="work_order_id"/>
                         <field name="project_id"/>

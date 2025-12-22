@@ -9,7 +9,7 @@
         </record>
 
         <record id="custom_group_work_order_user" model="res.groups">
-            <field name="name">User</field>
+            <field name="name">Estimation</field>
             <field name="category_id" ref="module_category_work_order"/>
         </record>
 

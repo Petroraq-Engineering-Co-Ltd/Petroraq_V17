@@ -8,7 +8,8 @@
         <field name="arch" type="xml">
 
             <xpath expr="//header" position="inside">
-                <button name="action_set_to_draft" type="object" string="Set To Draft" class="btn-danger" invisible="state != 'open'"/>
+                <button name="action_set_to_draft" type="object" string="Set To Draft" class="btn-danger"
+                        invisible="state != 'open'"/>
             </xpath>
 
             <xpath expr="//notebook" position="replace">
@@ -48,10 +49,16 @@
                                 <div class="mb-3">/ month</div>
                             </div>
                             <field name="is_automatic_gosi" widget="boolean_toggle" readonly="state != 'draft'"/>
-                            <field name="gosi_salary" style="color: purple;" readonly="is_automatic_gosi == True or state != 'draft'"/>
-                            <field name="company_portion" style="color: green;" readonly="is_automatic_gosi == True or state != 'draft'"/>
-                            <field name="employee_portion" style="color: green;" readonly="is_automatic_gosi == True or state != 'draft'"/>
-<!--                            <field name="struct_id" required="0" invisible="1"/>-->
+                            <field name="gosi_salary" style="color: purple;"
+                                   readonly="is_automatic_gosi == True or state != 'draft'"/>
+                            <field name="company_portion" style="color: green;"
+                                   readonly="is_automatic_gosi == True or state != 'draft'"/>
+                            <field name="employee_portion" style="color: green;"
+                                   readonly="is_automatic_gosi == True or state != 'draft'"/>
+                            <field name="is_special_gosi"/>
+                            <field name="special_company_gosi_rate"/>
+
+                            <!--                            <field name="struct_id" required="0" invisible="1"/>-->
                             <field name="structure_type_id" required="0" invisible="1"/>
                             <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
                             <field name="currency_id" invisible="1"/>
@@ -64,12 +71,14 @@
                         </group>
                     </group>
                     <label for="contract_salary_rule_ids" string="Salary Rules"/>
-                    <field name="contract_salary_rule_ids" string="Salary Rules" widget="section_and_note_one2many" readonly="state != 'draft'">
+                    <field name="contract_salary_rule_ids" string="Salary Rules" widget="section_and_note_one2many"
+                           readonly="state != 'draft'">
                         <tree string="Contract Rules" editable="bottom">
                             <field name="contract_id" column_invisible="1"/>
                             <field name="salary_rule_domain" column_invisible="1"/>
                             <field name="sequence_ref"/>
-                            <field name="salary_rule_id" options="{'no_create': True, 'no_edit': True}" domain="salary_rule_domain" required="1"/>
+                            <field name="salary_rule_id" options="{'no_create': True, 'no_edit': True}"
+                                   domain="salary_rule_domain" required="1"/>
                             <field name="pay_in_payslip"/>
                             <field name="amount_type"/>
                             <field name="amount_value"/>

@@ -16,7 +16,7 @@ class PRWorkOrder(models.Model):
         default=lambda self: _("New"),
         tracking=True,
     )
-    budget_id = fields.Many2one("crossovered.budget", string="Budget", readonly=True)
+    # budget_id = fields.Many2one("crossovered.budget", string="Budget", readonly=True)
 
     company_id = fields.Many2one(
         "res.company",
@@ -25,7 +25,7 @@ class PRWorkOrder(models.Model):
         required=True,
     )
     boq_line_ids = fields.One2many(
-        "pr.work.order.boq",  # ✓ must match _name in BOQ model
+        "pr.work.order.boq",
         "work_order_id",
         string="BOQ / Budget Lines"
     )
@@ -58,7 +58,7 @@ class PRWorkOrder(models.Model):
         tracking=True,
     )
 
-    date_start = fields.Date(string="Planned Start Date")
+    date_start = fields.Date(string="Planned Start Date", )
     date_end = fields.Date(string="Planned End Date")
 
     # Budget / amounts
@@ -67,7 +67,16 @@ class PRWorkOrder(models.Model):
         currency_field="currency_id",
         help="Total selling value (from SO).",
     )
-    budgeted_cost = fields.Monetary(string="Budgeted Cost", currency_field="currency_id")
+    budgeted_cost = fields.Monetary(string="Budgeted Cost", currency_field="currency_id",
+                                    compute="_compute_budgeted_cost")
+
+    @api.depends("boq_line_ids.total")
+    def _compute_budgeted_cost(self):
+        for order in self:
+            order.budgeted_cost = sum(
+                order.boq_line_ids.mapped("total")
+            )
+
     budgeted_margin = fields.Monetary(
         string="Budgeted Margin",
         currency_field="currency_id",
@@ -169,6 +178,31 @@ class PRWorkOrder(models.Model):
             if rec.state != "draft":
                 continue
             rec.state = "ops_approval"
+            # # ---------------------------------------
+            # # AUTO CREATE BUDGET (ONLY IF NOT EXISTS)
+            # # ---------------------------------------
+            # if not rec.budget_id:
+            #     Budget = rec.env["crossovered.budget"]
+            #     BudgetLine = rec.env["crossovered.budget.lines"]
+            #
+            #     budget = Budget.create({
+            #         "name": f"Budget for {rec.name}",
+            #         "company_id": rec.company_id.id,
+            #         "user_id": rec.env.user.id,
+            #         "date_from": rec.date_start or fields.Date.today(),
+            #         "date_to": rec.date_end or fields.Date.today(),
+            #     })
+
+            # for cc in rec.cost_center_ids:
+            #     BudgetLine.create({
+            #         "crossovered_budget_id": budget.id,
+            #         "analytic_account_id": cc.analytic_account_id.id,
+            #         "date_from": rec.date_start or fields.Date.today(),
+            #         "date_to": rec.date_end or fields.Date.today(),
+            #         "planned_amount": -abs(cc.estimated_cost),
+            #     })
+            #
+            # rec.budget_id = budget.id
 
     def action_ops_approve(self):
         for rec in self:
@@ -178,33 +212,6 @@ class PRWorkOrder(models.Model):
             rec.ops_approver_id = self.env.user
             rec.ops_approved_date = fields.Datetime.now()
             rec.state = "acc_approval"
-
-            # ---------------------------------------
-            # AUTO CREATE BUDGET (ONLY IF NOT EXISTS)
-            # ---------------------------------------
-            if not rec.budget_id:
-                Budget = rec.env["crossovered.budget"]
-                BudgetLine = rec.env["crossovered.budget.lines"]
-
-                budget = Budget.create({
-                    "name": f"Budget for {rec.name}",
-                    "company_id": rec.company_id.id,
-                    "user_id": rec.env.user.id,
-                    "date_from": rec.date_start or fields.Date.today(),
-                    "date_to": rec.date_end or fields.Date.today(),
-                })
-
-                # Create budget lines per cost center
-                for cc in rec.cost_center_ids:
-                    BudgetLine.create({
-                        "crossovered_budget_id": budget.id,
-                        "analytic_account_id": cc.analytic_account_id.id,
-                        "date_from": rec.date_start or fields.Date.today(),
-                        "date_to": rec.date_end or fields.Date.today(),
-                        "planned_amount": -abs(cc.estimated_cost),
-                    })
-
-                rec.budget_id = budget.id
 
     def action_acc_approve(self):
         for rec in self:
@@ -262,6 +269,21 @@ class WorkOrderBOQ(models.Model):
 
     total = fields.Float("Total", compute="_compute_total", store=True)
 
+    can_edit_boq = fields.Boolean(
+        compute="_compute_can_edit_boq",
+        store=False
+    )
+
+    @api.depends()
+    def _compute_can_edit_boq(self):
+        user = self.env.user
+        can_edit = (
+                user.has_group("pr_work_order.custom_group_work_order_user")
+                or user.has_group("pr_work_order.custom_group_work_order_management")
+        )
+        for line in self:
+            line.can_edit_boq = can_edit
+
     @api.depends("qty", "unit_cost")
     def _compute_total(self):
         for rec in self:
@@ -297,6 +319,37 @@ class WorkOrderCostCenter(models.Model):
                                     domain="[('analytic_plan_type', '=', 'department')]")
     section_id = fields.Many2one('account.analytic.account', string="Section",
                                  domain="[('analytic_plan_type', '=', 'section')]")
+    spent_amount = fields.Monetary(
+        string="Spent",
+        currency_field="currency_id",
+        compute="_compute_spent_amount",
+        store=False,
+    )
+
+    remaining_amount = fields.Monetary(
+        string="Remaining",
+        currency_field="currency_id",
+        compute="_compute_remaining_amount",
+        store=False,
+    )
+
+    def _compute_spent_amount(self):
+        AnalyticLine = self.env["account.analytic.line"]
+        for rec in self:
+            if not rec.analytic_account_id:
+                rec.spent_amount = 0.0
+                continue
+
+            lines = AnalyticLine.search([
+                ("account_id", "=", rec.analytic_account_id.id),
+                ("move_line_id.move_id.state", "=", "posted"),
+            ])
+
+            rec.spent_amount = abs(sum(lines.mapped("amount")))
+
+    def _compute_remaining_amount(self):
+        for rec in self:
+            rec.remaining_amount = (rec.estimated_cost or 0.0) - (rec.spent_amount or 0.0)
 
     @api.depends(
         "work_order_id.boq_line_ids.qty",
