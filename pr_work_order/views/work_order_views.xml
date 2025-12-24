@@ -121,7 +121,7 @@
                     <notebook>
 
                         <!-- TASKS (editable only by OPERATIONS + MANAGEMENT) -->
-                        <page string="Spending Limits">
+                        <page string="Budgets" groups="custom_group_work_order_accounts">
                             <field name="cost_center_ids" nolabel="1">
                                 <tree editable="bottom" create="0" delete="0">
                                     <field name="section_name" readonly="1"/>
@@ -135,8 +135,7 @@
 
 
                         <!-- BOQ -->
-                        <page string="BOQ"
-                              groups="pr_work_order.custom_group_work_order_user,pr_work_order.custom_group_work_order_operations,pr_work_order.custom_group_work_order_management">
+                        <page string="BOQ">
                             <field name="boq_line_ids" widget="section_and_note_one2many">
                                 <tree editable="bottom" create="0" delete="0">
                                     <field name="display_type" column_invisible="1"/>

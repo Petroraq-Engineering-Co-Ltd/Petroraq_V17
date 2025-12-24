@@ -31,6 +31,7 @@
                     <widget name="web_ribbon" title="Confirmed" bg_color="bg-success" invisible="state != 'confirm'"/>
                     <widget name="web_ribbon" title="Pending" bg_color="bg-info" invisible="state != 'pending'"/>
                     <widget name="web_ribbon" title="Cancel" bg_color="bg-danger" invisible="state != 'cancel'"/>
+                    <widget name="web_ribbon" title="Rejected" bg_color="bg-danger" invisible="state != 'reject'"/>
                     <widget name="web_ribbon" title="Multi" bg_color="bg-success" invisible="sale_count &lt;= 1"/>
                     <div class="oe_title">
                         <h1>

@@ -142,6 +142,7 @@ class SaleOrder(models.Model):
                 raise UserError(_("This quotation is not awaiting manager approval."))
 
             order.approval_state = "to_md"
+            order.locked = True
 
     def action_confirm_quotation(self):
         for order in self:
@@ -359,6 +360,37 @@ class SaleOrderLine(models.Model):
         sanitize=False,
         help="Formatted subtotal snippet for section headers."
     )
+    final_price_unit = fields.Float(
+        string="Final Unit Price",
+        compute="_compute_final_price_unit",
+        store=True
+    )
+
+    @api.depends(
+        'price_unit',
+        'order_id.overhead_percent',
+        'order_id.risk_percent',
+        'order_id.profit_percent'
+    )
+    def _compute_final_price_unit(self):
+        for line in self:
+            base = line.price_unit or 0.0
+
+            overhead = base * (line.order_id.overhead_percent / 100.0)
+            risk = base * (line.order_id.risk_percent / 100.0)
+
+            unit_or = base + overhead + risk
+            profit = unit_or * (line.order_id.profit_percent / 100.0)
+
+            line.final_price_unit = unit_or + profit
+
+    def _prepare_invoice_line(self, **optional_values):
+        vals = super()._prepare_invoice_line(**optional_values)
+
+        # Inject final calculated price
+        vals['price_unit'] = self.final_price_unit
+
+        return vals
 
     @api.depends(
         "display_type",
@@ -405,5 +437,3 @@ class SaleOrderLine(models.Model):
             f"<span class='o_section_subtotal_chip_label'>{html_escape(label)}</span>"
             f"<span class='o_section_subtotal_chip_value'>{html_escape(amount_display)}</span>"
         )
-
-
