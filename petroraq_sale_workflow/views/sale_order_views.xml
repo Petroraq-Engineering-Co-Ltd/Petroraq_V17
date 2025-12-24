@@ -64,7 +64,15 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='payment_term_id']" position="attributes">
                 <attribute name="domain">[('petroraq_selectable','=',True)]</attribute>
+                <attribute name="readonly">locked</attribute>
             </xpath>
+            <xpath expr="//button[@name='action_unlock']" position="attributes">
+                <attribute name="groups">
+                    petroraq_sale_workflow.group_sale_approval_manager,
+                    petroraq_sale_workflow.group_sale_approval_md
+                </attribute>
+            </xpath>
+
         </field>
     </record>
 
@@ -122,7 +130,8 @@
                     <div class="o_petroraq_total_row o_petroraq_total_overhead">
                         <span class="o_petroraq_total_label">Over Head(%)</span>
                         <div class="o_petroraq_total_input">
-                            <field name="overhead_percent" class="o_petroraq_percent_input" nolabel="1" string=""/>
+                            <field name="overhead_percent" class="o_petroraq_percent_input" nolabel="1" string=""
+                                   readonly="locked"/>
                         </div>
                         <div class="o_petroraq_total_value">
                             <field name="overhead_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
@@ -131,7 +140,8 @@
                     <div class="o_petroraq_total_row o_petroraq_total_risk">
                         <span class="o_petroraq_total_label">Risk(%)</span>
                         <div class="o_petroraq_total_input">
-                            <field name="risk_percent" class="o_petroraq_percent_input" nolabel="1" string=""/>
+                            <field name="risk_percent" class="o_petroraq_percent_input" nolabel="1" string=""
+                                   readonly="locked"/>
                         </div>
                         <div class="o_petroraq_total_value">
                             <field name="risk_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
@@ -147,14 +157,15 @@
                     <div class="o_petroraq_total_row o_petroraq_total_profit">
                         <span class="o_petroraq_total_label">Profit(%)</span>
                         <div class="o_petroraq_total_input">
-                            <field name="profit_percent" class="o_petroraq_percent_input" nolabel="1" string=""/>
+                            <field name="profit_percent" class="o_petroraq_percent_input" nolabel="1" string=""
+                                   readonly="locked"/>
                         </div>
                         <div class="o_petroraq_total_value">
                             <field name="profit_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
                     <div class="o_petroraq_total_row o_petroraq_total_great">
-                        <span class="o_petroraq_total_label">Great Grand Total:</span>
+                        <span class="o_petroraq_total_label">Net Total:</span>
                         <div class="o_petroraq_total_input"></div>
                         <div class="o_petroraq_total_value">
                             <field name="profit_grand_total" widget="monetary" readonly="1" nolabel="1" string=""/>

@@ -23,7 +23,7 @@ class OrderInquiry(models.Model):
     contact_person_phone = fields.Char(string="Contact Person Phone",required=True)
     state = fields.Selection(
         [('pending', 'Pending'), ('confirm', 'Posted'), ('cancel', 'cancel'), ('reject', 'Rejected')],
-        default='pending', string='state')
+        default='pending', string='state', tracking=True)
     deadline_submission = fields.Date(string="Deadline of Submission", required=True)
     sale_order_id = fields.Many2one('sale.order', string='Sale Order')
     sale_order_ids = fields.Many2many('sale.order', string="Sale Order's")
@@ -34,7 +34,7 @@ class OrderInquiry(models.Model):
                                  default=fields.Datetime.now)
     sequence = fields.Integer(string="Sequence", default=10)
 
-    rejection_reason = fields.Text(string="Rejection Reason")
+    rejection_reason = fields.Text(string="Rejection Reason",tracking=True)
 
     @api.constrains('contact_person_email', 'contact_person_phone')
     def _check_email_and_phone(self):
@@ -51,7 +51,7 @@ class OrderInquiry(models.Model):
             if rec.contact_person_phone:
                 if not re.match(phone_regex, rec.contact_person_phone):
                     raise ValidationError(
-                        _("Invalid phone number. Use digits only, optionally starting with +")
+                        _("Invalid phone number. Use digits only, minimum 9 digits, optionally starting with +")
                     )
 
     @api.depends('sale_order_ids')
