@@ -121,7 +121,7 @@
                     <notebook>
 
                         <!-- TASKS (editable only by OPERATIONS + MANAGEMENT) -->
-                        <page string="Budgets" groups="custom_group_work_order_accounts">
+                        <page string="Budgets" groups="pr_work_order.custom_group_work_order_accounts">
                             <field name="cost_center_ids" nolabel="1">
                                 <tree editable="bottom" create="0" delete="0">
                                     <field name="section_name" readonly="1"/>
