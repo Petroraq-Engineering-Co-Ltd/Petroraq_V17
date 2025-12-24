@@ -14,5 +14,4 @@ from . import bank_payment
 from . import account_analytic_line
 from . import account_general_ledger
 from . import trial_balance_xlsx_extend
-from . import journal_voucher
 

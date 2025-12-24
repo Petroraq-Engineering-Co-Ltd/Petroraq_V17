@@ -22,12 +22,5 @@ access_pr_account_bank_payment_account_manager,pr.account.bank.payment.account.m
 access_pr_account_bank_payment_line_account_user,pr.account.bank.payment.line.account.user,model_pr_account_bank_payment_line,account.group_account_invoice,1,1,1,1
 
 
-access_pr_account_journal_voucher_user,pr.account.journal.voucher.user,model_pr_account_journal_voucher,account.group_account_invoice,1,1,1,0
-access_pr_account_journal_voucher_manager,pr.account.journal.voucher.manager,model_pr_account_journal_voucher,account.group_account_manager,1,1,1,1
-
-
-access_pr_account_journal_voucher_line_user,pr.account.journal.voucher.line.user,model_pr_account_journal_voucher_line,account.group_account_invoice,1,1,1,1
-access_pr_account_journal_voucher_line_manager,pr.account.journal.voucher.line.manager,model_pr_account_journal_voucher_line,account.group_account_manager,1,1,1,1
-
 access_cash_payment_reject_reason_wizard,access_cash_payment_reject_reason_wizard,model_cash_payment_reject_reason_wizard,base.group_user,1,1,1,1
 access_bank_payment_reject_reason_wizard,access_bank_payment_reject_reason_wizard,model_bank_payment_reject_reason_wizard,base.group_user,1,1,1,1

@@ -80,5 +80,28 @@
             <field name="company_id" eval="False"/>
         </record>
 
+<!--        <record id="seq_journal_voucher_jjv" model="ir.sequence">-->
+<!--            <field name="name">Journal Voucher Sequence</field>-->
+<!--            <field name="code">account.move.journal.jjv</field>-->
+<!--            <field name="prefix">JJVs/%(year)s/</field>-->
+<!--            <field name="padding">5</field>-->
+<!--            <field name="number_next">1</field>-->
+<!--            <field name="company_id" eval="False"/>-->
+<!--        </record>-->
+        <odoo>
+            <data noupdate="1">
+
+                <record id="journal_journal_voucher" model="account.journal">
+                    <field name="name">Journal Vouchers</field>
+                    <field name="type">general</field>
+                    <field name="code">JJV</field>
+                    <field name="company_id" eval="False"/>
+                    <field name="secure_sequence_id" ref="seq_journal_voucher_jjv"/>
+                </record>
+
+            </data>
+        </odoo>
+
+
     </data>
 </odoo>
