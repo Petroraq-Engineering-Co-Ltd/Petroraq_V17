@@ -45,6 +45,8 @@
         'data/ir_sequence.xml',
         'data/analytic_plan_data.xml',
 
+        'data/journal_voucher.xml',
+
     ],
     # only loaded in demonstration mode
     'demo': [
