@@ -783,4 +783,4 @@ msgstr "إلغاء"
 #. module: pr_work_order
 #: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
 msgid "Reject"
-msgstr "رفض"
+msgstr "إلغاء"

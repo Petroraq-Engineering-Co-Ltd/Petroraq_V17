@@ -33,10 +33,7 @@
 
                     <button name="action_submit_ops" type="object" string="Confirm"
                             class="btn-primary"
-                            groups="pr_work_order.custom_group_work_order_user,
-                                    pr_work_order.custom_group_work_order_operations,
-                                    pr_work_order.custom_group_work_order_accounts,
-                                    pr_work_order.custom_group_work_order_management"
+                            groups="pr_work_order.custom_group_work_order_user,"
                             invisible="state != 'draft'"/>
 
                     <button name="action_ops_approve" type="object" string="Operations Approve"

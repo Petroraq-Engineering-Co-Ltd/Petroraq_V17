@@ -35,7 +35,7 @@ class SaleOrder(models.Model):
         # 1) Create Project
         # --------------------------
         project_vals = {
-            "name": order.order_inquiry_id.description,
+            "name": order.order_inquiry_id.description or order.name,
             "partner_id": order.partner_id.id,
             "company_id": order.company_id.id,
         }
