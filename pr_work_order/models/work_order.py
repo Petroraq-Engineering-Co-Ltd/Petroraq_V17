@@ -132,6 +132,10 @@ class PRWorkOrder(models.Model):
 
     note = fields.Text(string="Internal Notes")
 
+    rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
+    rejected_by = fields.Many2one("res.users", string="Rejected By", tracking=True)
+    rejected_date = fields.Datetime(string="Rejected On", tracking=True)
+
     @api.depends("contract_amount", "budgeted_cost")
     def _compute_budgeted_margin(self):
         for rec in self:
@@ -176,8 +180,9 @@ class PRWorkOrder(models.Model):
     def action_submit_ops(self):
         for rec in self:
             if rec.state != "draft":
-                continue
+                raise UserError(_("Only draft work orders can be submitted for approval"))
             rec.state = "ops_approval"
+            rec.rejection_reason = ""
             # # ---------------------------------------
             # # AUTO CREATE BUDGET (ONLY IF NOT EXISTS)
             # # ---------------------------------------
@@ -228,6 +233,23 @@ class PRWorkOrder(models.Model):
             rec.final_approver_id = self.env.user
             rec.final_approved_date = fields.Datetime.now()
             rec.state = "approved"
+
+    def action_reject(self):
+        self.ensure_one()
+
+        if self.state in ("done", "cancel"):
+            raise UserError(_("You cannot reject a completed or cancelled Work Order."))
+
+        return {
+            "name": _("Reject Work Order"),
+            "type": "ir.actions.act_window",
+            "res_model": "pr.work.order.reject.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_work_order_id": self.id,
+            },
+        }
 
     def action_start_operations(self):
         for rec in self:
@@ -375,3 +397,48 @@ class WorkOrderCostCenter(models.Model):
                     "department_id": rec.department_id.id,
                     "section_id": rec.section_id.id,
                 })
+
+
+class PRWorkOrderRejectWizard(models.TransientModel):
+    _name = "pr.work.order.reject.wizard"
+    _description = "Reject Work Order"
+
+    work_order_id = fields.Many2one(
+        "pr.work.order",
+        string="Work Order",
+        required=True,
+        readonly=True,
+    )
+
+    reason = fields.Text(string="Rejection Reason", required=True)
+
+    def action_confirm_reject(self):
+        self.ensure_one()
+        wo = self.work_order_id
+
+        if wo.state in ("done", "cancel"):
+            raise UserError(_("You cannot reject a completed or cancelled Work Order."))
+
+        wo.write({
+            "state": "draft",
+            "rejection_reason": self.reason,
+            "rejected_by": self.env.user.id,
+            "rejected_date": fields.Datetime.now(),
+
+            # reset approvals
+            "ops_approver_id": False,
+            "ops_approved_date": False,
+            "acc_approver_id": False,
+            "acc_approved_date": False,
+            "final_approver_id": False,
+            "final_approved_date": False,
+        })
+
+        wo.message_post(
+            body=_(
+                "<b>Work Order Rejected</b><br/>"
+                "<b>Reason:</b> %s"
+            ) % self.reason
+        )
+
+        return {"type": "ir.actions.act_window_close"}
