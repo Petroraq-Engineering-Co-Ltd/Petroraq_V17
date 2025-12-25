@@ -784,3 +784,48 @@ msgstr "إلغاء"
 #: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
 msgid "Reject"
 msgstr "رفض"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Final"
+msgstr "نهائي"
+
+#. module: pr_work_order
+#: model:ir.model.fields.selection,name:pr_work_order.selection__pr_work_order__state__final_approval
+msgid "Final Approval"
+msgstr "الاعتماد النهائي"
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Final Approve"
+msgstr "اعتماد نهائي"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Start Operations"
+msgstr "بدء العمليات"
+
+
+#. module: pr_work_order
+#: model:res.groups,name:pr_work_order.custom_group_work_order_user
+msgid "Estimation"
+msgstr "التقدير"
+
+#. module: pr_work_order
+#: model:ir.model.fields,field_description:pr_work_order.field_account_analytic_line__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_account_bank_statement_line__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_account_move__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_account_payment__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order__name
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order_boq__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order_cost_center__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_project_task__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_sale_order__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_stock_move__work_order_id
+#: model:ir.module.category,name:pr_work_order.module_category_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_order_form_inherit_pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Work Order"
+msgstr "أمر عمل"

@@ -494,3 +494,19 @@ msgstr ""
 "                    <strong>تم رفض عرض السعر.</strong>\n"
 "                    <br/>\n"
 "                    سبب الرفض :"
+
+
+#. module: petroraq_sale_workflow
+#: model:res.groups,name:petroraq_sale_workflow.group_sale_approval_md
+msgid "Sales Approval - MD / Final Authority"
+msgstr "اعتماد المبيعات - المدير العام / السلطة النهائية"
+
+#. module: petroraq_sale_workflow
+#: model:res.groups,name:petroraq_sale_workflow.group_sale_approval_manager
+msgid "Sales Approval - Manager"
+msgstr "اعتماد المبيعات - المدير"
+
+#. module: petroraq_sale_workflow
+#: model:ir.model,name:petroraq_sale_workflow.model_sale_order_line
+msgid "Sales Order Line"
+msgstr "بند أمر المبيعات"

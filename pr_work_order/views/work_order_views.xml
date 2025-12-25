@@ -33,7 +33,7 @@
 
                     <button name="action_submit_ops" type="object" string="Confirm"
                             class="btn-primary"
-                            groups="pr_work_order.custom_group_work_order_user,"
+                            groups="pr_work_order.custom_group_work_order_user"
                             invisible="state != 'draft'"/>
 
                     <button name="action_ops_approve" type="object" string="Operations Approve"
@@ -67,14 +67,28 @@
                             class="btn-secondary"
                             groups="pr_work_order.custom_group_work_order_management"
                             invisible="state in ['done','cancel']"/>
+
                     <button name="action_reject"
                             type="object"
                             string="Reject"
                             class="btn-danger"
-                            groups="pr_work_order.custom_group_work_order_management,
-                pr_work_order.custom_group_work_order_operations,
-                pr_work_order.custom_group_work_order_accounts"
-                            invisible="state not in ['ops_approval','acc_approval','final_approval']"/>
+                            groups="pr_work_order.custom_group_work_order_operations"
+                            invisible="state != 'ops_approval'"/>
+
+                    <button name="action_reject"
+                            type="object"
+                            string="Reject"
+                            class="btn-danger"
+                            groups="pr_work_order.custom_group_work_order_accounts"
+                            invisible="state != 'acc_approval'"/>
+
+
+                    <button name="action_reject"
+                            type="object"
+                            string="Reject"
+                            class="btn-danger"
+                            groups="pr_work_order.custom_group_work_order_management"
+                            invisible="state != 'final_approval'"/>
 
 
                     <field name="state" widget="statusbar"
@@ -121,7 +135,7 @@
 
                         <group>
                             <field name="contract_amount" readonly="1"
-                                   groups="pr_work_order.custom_group_work_order_user"/>
+                                   groups="pr_work_order.custom_group_work_order_user,pr_work_order.custom_group_work_order_management,pr_work_order.custom_group_work_order_accounts"/>
                             <field name="date_start" required="1"/>
                             <field name="date_end" required="1"/>
                             <field name="budgeted_cost"/>
