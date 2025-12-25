@@ -301,7 +301,7 @@ msgstr "يرجى اختيار شرط سداد قبل حفظ عرض السعر."
 
 #. module: petroraq_sale_workflow
 #: model:ir.model.fields,field_description:petroraq_sale_workflow.field_sale_order__profit_percent
-msgid "Profit(%)"
+msgid "Profit (%)"
 msgstr "الربح (%)"
 
 #. module: petroraq_sale_workflow
@@ -321,7 +321,7 @@ msgstr "سبب الرفض"
 
 #. module: petroraq_sale_workflow
 #: model:ir.model.fields,field_description:petroraq_sale_workflow.field_sale_order__risk_percent
-msgid "Risk(%)"
+msgid "Risk (%)"
 msgstr "المخاطر (%)"
 
 #. module: petroraq_sale_workflow
