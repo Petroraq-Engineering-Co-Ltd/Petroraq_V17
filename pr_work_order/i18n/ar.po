@@ -642,3 +642,190 @@ msgstr "أمر العمل الذي ينتمي إليه هذا القيد الت�
 msgid "Work Orders"
 msgstr "أوامر العمل"
 
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "BOQ"
+msgstr "جدول الكميات"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Budgets"
+msgstr "الميزانيات"
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Final"
+msgstr "نهائي"
+
+#. module: pr_work_order
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order__task_ids
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Tasks"
+msgstr "المهام"
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Bills"
+msgstr "فواتير الموردين"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Approvals"
+msgstr "الاعتمادات"
+
+#. module: pr_work_order
+#: model:ir.model.fields.selection,name:pr_work_order.selection__pr_work_order__state__draft
+msgid "Draft"
+msgstr "مسودة"
+
+#. module: pr_work_order
+#: model:ir.model.fields.selection,name:pr_work_order.selection__pr_work_order__state__final_approval
+msgid "Final Approval"
+msgstr "الاعتماد النهائي"
+
+
+#. module: pr_work_order
+#: model:ir.model.fields.selection,name:pr_work_order.selection__pr_work_order__state__approved
+msgid "Approved"
+msgstr "معتمد"
+
+
+#. module: pr_work_order
+#: model:ir.model.fields.selection,name:pr_work_order.selection__pr_work_order__state__in_progress
+msgid "In Progress"
+msgstr "قيد التنفيذ"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Mark Done"
+msgstr "تحديد كمكتمل"
+
+
+#. module: pr_work_order
+#: model:ir.model.fields.selection,name:pr_work_order.selection__pr_work_order__state__done
+msgid "Done"
+msgstr "مكتمل"
+
+
+#. module: pr_work_order
+#: model:ir.model.fields.selection,name:pr_work_order.selection__pr_work_order__state__cancel
+msgid "Cancelled"
+msgstr "ملغي"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Confirm"
+msgstr "تأكيد"
+
+#. module: pr_work_order
+#: model:ir.model,name:pr_work_order.model_pr_work_order
+msgid "Construction Work Order"
+msgstr "أمر عمل إنشائي"
+
+
+#. module: pr_work_order
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order__analytic_account_id
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order_cost_center__analytic_account_id
+#: model:ir.model.fields,field_description:pr_work_order.field_project_project__analytic_account_id
+#: model:ir.model.fields,field_description:pr_work_order.field_sale_order__analytic_account_id
+msgid "Cost Center"
+msgstr "الحساب التحليلي"
+
+#. module: pr_work_order
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order__cost_center_ids
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Cost Centers"
+msgstr "مراكز التكلفة"
+
+#. module: pr_work_order
+#: model:ir.model.fields,help:pr_work_order.field_sale_order__analytic_account_id
+msgid "Cost center linked to this project / work order."
+msgstr "مركز التكلفة المرتبط بهذا المشروع / أمر العمل."
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_order_form_inherit_pr_work_order
+msgid "Create Work Order"
+msgstr "إنشاء أمر عمل"
+
+#. module: pr_work_order
+#: model_terms:ir.actions.act_window,help:pr_work_order.action_pr_work_order
+msgid ""
+"Create and manage construction work orders linked with Sales, Projects, "
+"Accounting and Inventory."
+msgstr ""
+"إنشاء وإدارة أوامر العمل الإنشائية المرتبطة بالمبيعات والمشاريع والحسابات "
+"والمخزون."
+
+
+
+#. module: pr_work_order
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order__cost_center_ids
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Cost Centers"
+msgstr "مراكز التكلفة"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_order_form_inherit_pr_work_order
+msgid "Create Work Order"
+msgstr "إنشاء أمر عمل"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Cancel"
+msgstr "إلغاء"
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Reject"
+msgstr "رفض"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Final"
+msgstr "نهائي"
+
+#. module: pr_work_order
+#: model:ir.model.fields.selection,name:pr_work_order.selection__pr_work_order__state__final_approval
+msgid "Final Approval"
+msgstr "الاعتماد النهائي"
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Final Approve"
+msgstr "اعتماد نهائي"
+
+
+#. module: pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Start Operations"
+msgstr "بدء العمليات"
+
+
+#. module: pr_work_order
+#: model:res.groups,name:pr_work_order.custom_group_work_order_user
+msgid "Estimation"
+msgstr "التقدير"
+
+#. module: pr_work_order
+#: model:ir.model.fields,field_description:pr_work_order.field_account_analytic_line__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_account_bank_statement_line__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_account_move__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_account_payment__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order__name
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order_boq__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_pr_work_order_cost_center__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_project_task__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_sale_order__work_order_id
+#: model:ir.model.fields,field_description:pr_work_order.field_stock_move__work_order_id
+#: model:ir.module.category,name:pr_work_order.module_category_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_order_form_inherit_pr_work_order
+#: model_terms:ir.ui.view,arch_db:pr_work_order.view_pr_work_order_form
+msgid "Work Order"
+msgstr "أمر عمل"

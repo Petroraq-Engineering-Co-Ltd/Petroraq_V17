@@ -95,6 +95,110 @@ msgid "Computed Total Amount"
 msgstr "إجمالي المبلغ المحسوب"
 
 #. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid "Unit"
+msgstr "الوحدة"
+
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid "Total Amount"
+msgstr "إجمالي المبلغ"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_form_inherit_petroraq_workflow
+msgid "Submit"
+msgstr "إرسال"
+
+
+#. module: petroraq_sale_workflow
+#: model:account.payment.term,name:petroraq_sale_workflow.payment_term_immediate
+msgid "Immediate payment"
+msgstr "دفع فوري"
+
+#. module: petroraq_sale_workflow
+#: model:ir.model,name:petroraq_sale_workflow.model_account_payment_term
+msgid "Payment Terms"
+msgstr "شروط الدفع"
+
+#. module: petroraq_sale_workflow
+#: model:account.payment.term,name:petroraq_sale_workflow.payment_term_15_days
+msgid "15 days credit"
+msgstr "ائتمان 15 يوم"
+
+#. module: petroraq_sale_workflow
+#: model:account.payment.term,name:petroraq_sale_workflow.payment_term_30_days
+msgid "30 days credit"
+msgstr "ائتمان 30 يوم"
+
+#. module: petroraq_sale_workflow
+#: model:account.payment.term,name:petroraq_sale_workflow.payment_term_45_days
+msgid "45 days credit"
+msgstr "ائتمان 45 يوم"
+
+#. module: petroraq_sale_workflow
+#: model:account.payment.term,name:petroraq_sale_workflow.payment_term_60_days
+msgid "60 days credit"
+msgstr "ائتمان 60 يوم"
+
+#. module: petroraq_sale_workflow
+#: model:ir.model.fields.selection,name:petroraq_sale_workflow.selection__sale_order__approval_state__draft
+msgid "Draft"
+msgstr "مسودة"
+
+#. module: petroraq_sale_workflow
+#: model:ir.model.fields.selection,name:petroraq_sale_workflow.selection__sale_order__approval_state__to_manager
+msgid "Waiting Next Manager Approval"
+msgstr "بانتظار اعتماد المدير التالي"
+
+#. module: petroraq_sale_workflow
+#: model:ir.model.fields.selection,name:petroraq_sale_workflow.selection__sale_order__approval_state__to_md
+msgid "Waiting MD Approval"
+msgstr "بانتظار اعتماد المدير العام"
+
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_form_inherit_petroraq_workflow
+msgid "Approve"
+msgstr "اعتماد"
+
+#. module: petroraq_sale_workflow
+#: model:ir.model.fields.selection,name:petroraq_sale_workflow.selection__sale_order__approval_state__approved
+msgid "Approved"
+msgstr "معتمد"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_sale_order_reject_wizard_form
+msgid "Cancel"
+msgstr "إلغاء"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_sale_order_reject_wizard_form
+msgid "Confirm Reject"
+msgstr "تأكيد الرفض"
+
+#. module: petroraq_sale_workflow
+#: model:ir.model.fields.selection,name:petroraq_sale_workflow.selection__sale_order__approval_state__draft
+msgid "Draft"
+msgstr "مسودة"
+
+
+#. module: petroraq_sale_workflow
+#: model:ir.model.fields.selection,name:petroraq_sale_workflow.selection__sale_order__approval_state__rejected
+msgid "Rejected"
+msgstr "مرفوض"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid "<span class=\"o_petroraq_total_label\">Total Amount:</span>"
+msgstr "<span class=\"o_petroraq_total_label\">إجمالي المبلغ:</span>"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid "<span class=\"o_petroraq_total_label\">Grand Total:</span>"
+msgstr "<span class=\"o_petroraq_total_label\">الإجمالي الكلي:</span>"
+
+#. module: petroraq_sale_workflow
 #: model:ir.model.fields,field_description:petroraq_sale_workflow.field_sale_order_reject_wizard__create_uid
 msgid "Created by"
 msgstr "أنشئ بواسطة"
@@ -162,7 +266,7 @@ msgstr "الطلب"
 
 #. module: petroraq_sale_workflow
 #: model:ir.model.fields,field_description:petroraq_sale_workflow.field_sale_order__overhead_percent
-msgid "Over Head (%)"
+msgid "Over Head(%)"
 msgstr "المصاريف الإدارية (%)"
 
 #. module: petroraq_sale_workflow
@@ -301,3 +405,108 @@ msgstr "يمكن إرسال عرض السعر للعميل بعد الاعتما
 #. odoo-python
 msgid "You cannot confirm the order before final approval."
 msgstr "لا يمكن تأكيد الطلب قبل الاعتماد النهائي."
+
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid "<span class=\"o_petroraq_total_label\">Over Head(%)</span>"
+msgstr "<span class=\"o_petroraq_total_label\">المصاريف الإدارية (%)</span>"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid "<span class=\"o_petroraq_total_label\">Profit(%)</span>"
+msgstr "<span class=\"o_petroraq_total_label\">الربح (%)</span>"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid "<span class=\"o_petroraq_total_label\">Risk(%)</span>"
+msgstr "<span class=\"o_petroraq_total_label\">المخاطر (%)</span>"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid "<span class=\"o_petroraq_total_label\">Total Amount:</span>"
+msgstr "<span class=\"o_petroraq_total_label\">إجمالي المبلغ:</span>"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.report_saleorder_document_petroraq_costing
+msgid "<span>Total</span>"
+msgstr "<span>الإجمالي</span>"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.report_saleorder_document_petroraq_costing
+msgid "<strong>15% VAT Amount</strong>"
+msgstr "<strong>قيمة ضريبة القيمة المضافة 15%</strong>"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.report_saleorder_document_petroraq_costing
+msgid "<strong>Net Total:</strong>"
+msgstr "<strong>الصافي:</strong>"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid "<span class=\"o_petroraq_total_label\">Net Total:</span>"
+msgstr "<span class=\"o_petroraq_total_label\">الصافي:</span>"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.report_saleorder_document_petroraq_costing
+msgid "<strong>Total Price</strong>"
+msgstr "<strong>السعر الإجمالي</strong>"
+
+
+#. module: petroraq_sale_workflow
+#: model:ir.model.fields,field_description:petroraq_sale_workflow.field_sale_order__profit_grand_total
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_quotation_tree_inherit_petroraq_great_total
+msgid "Great Grand Total"
+msgstr "الإجمالي النهائي الكبير"
+
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_form_inherit_petroraq_workflow
+msgid "Reject"
+msgstr "رفض"
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_sale_order_reject_wizard_form
+msgid "Reject Quotation"
+msgstr "رفض عرض السعر"
+
+#. module: petroraq_sale_workflow
+#: model:ir.model.fields.selection,name:petroraq_sale_workflow.selection__sale_order__approval_state__rejected
+msgid "Rejected"
+msgstr "مرفوض"
+
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_sale_order_reject_wizard_form
+msgid "Please enter the reason for rejection"
+msgstr "يرجى إدخال سبب الرفض"
+
+
+#. module: petroraq_sale_workflow
+#: model_terms:ir.ui.view,arch_db:petroraq_sale_workflow.view_order_line_hide_taxes
+msgid ""
+"❗\n"
+"                    <strong>This Quotation is Rejected.</strong>\n"
+"                    <br/>\n"
+"                    Rejection Reason :"
+msgstr ""
+"❗\n"
+"                    <strong>تم رفض عرض السعر.</strong>\n"
+"                    <br/>\n"
+"                    سبب الرفض :"
+
+
+#. module: petroraq_sale_workflow
+#: model:res.groups,name:petroraq_sale_workflow.group_sale_approval_md
+msgid "Sales Approval - MD / Final Authority"
+msgstr "اعتماد المبيعات - المدير العام / السلطة النهائية"
+
+#. module: petroraq_sale_workflow
+#: model:res.groups,name:petroraq_sale_workflow.group_sale_approval_manager
+msgid "Sales Approval - Manager"
+msgstr "اعتماد المبيعات - المدير"
+
+#. module: petroraq_sale_workflow
+#: model:ir.model,name:petroraq_sale_workflow.model_sale_order_line
+msgid "Sales Order Line"
+msgstr "بند أمر المبيعات"

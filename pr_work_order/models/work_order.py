@@ -136,6 +136,7 @@ class PRWorkOrder(models.Model):
     rejected_by = fields.Many2one("res.users", string="Rejected By", tracking=True)
     rejected_date = fields.Datetime(string="Rejected On", tracking=True)
 
+
     @api.depends("contract_amount", "budgeted_cost")
     def _compute_budgeted_margin(self):
         for rec in self:
