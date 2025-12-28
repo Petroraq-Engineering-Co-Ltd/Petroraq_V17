@@ -34,7 +34,7 @@ class OrderInquiry(models.Model):
     sequence = fields.Integer(string="Sequence", default=10)
 
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
-    inquiry_type = fields.Selection([('construction', 'Constructing'), ('trading', 'Trading')], string="Inquiry Type",
+    inquiry_type = fields.Selection([('construction', 'Contracting'), ('trading', 'Trading')], string="Inquiry Type",
                                     default="construction", required=True)
 
     @api.constrains('contact_person_email', 'contact_person_phone')

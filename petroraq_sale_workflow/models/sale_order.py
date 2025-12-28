@@ -11,8 +11,8 @@ class SaleOrder(models.Model):
 
     approval_state = fields.Selection([
         ("draft", "Draft"),
-        ("to_manager", "Waiting Next Manager Approval"),
-        ("to_md", "Waiting MD Approval"),
+        ("to_manager", "Manager Approve"),
+        ("to_md", "MD Approve"),
         ("approved", "Approved"),
         ("rejected", "Rejected"),
     ], default="draft", tracking=True, copy=False)
@@ -23,6 +23,8 @@ class SaleOrder(models.Model):
         sanitize=False,
         help="Displays a summary of section subtotals and their grand total."
     )
+    inquiry_type = fields.Selection([('construction', 'Contracting'), ('trading', 'Trading')], string="Inquiry Type",
+                                    default="construction", required=True)
 
     overhead_percent = fields.Float(
         string="Over Head (%)",
