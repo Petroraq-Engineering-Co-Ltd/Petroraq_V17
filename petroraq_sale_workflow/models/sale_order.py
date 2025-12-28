@@ -190,12 +190,12 @@ class SaleOrder(models.Model):
     #         auto_orders.action_request_manager_approval()
     #     return orders
 
-    def write(self, vals):
-        res = super().write(vals)
+    def action_reset_to_draft(self):
         for order in self:
             if order.approval_state == "rejected":
+                order.locked = False
                 order.approval_state = "draft"
-        return res
+
 
     @api.model
     def default_get(self, fields_list):

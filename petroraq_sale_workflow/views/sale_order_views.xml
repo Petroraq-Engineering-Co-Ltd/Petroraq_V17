@@ -24,6 +24,12 @@
                         class="btn-primary"
                         invisible="approval_state in ('to_manager','to_md','approved','rejected')"/>
 
+                <button string="Reset Draft"
+                        type="object"
+                        name="action_reset_to_draft"
+                        class="btn-secondary"
+                        invisible="approval_state in ('to_manager','to_md','approved','draft')"/>
+
                 <button string="Approve"
                         type="object"
                         name="action_manager_approve"
