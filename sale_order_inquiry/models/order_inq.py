@@ -10,22 +10,22 @@ class OrderInquiry(models.Model):
     _rec_name = 'name'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(default="New", readonly=True, copy=False, tracking=True, string="Inquiry No.")
+    name = fields.Char(default="New", readonly=True, copy=False, tracking=True, string="Inquiry No")
     description = fields.Char(string="Inquiry Description", required=True)
     company_id = fields.Many2one('res.company', default=lambda self: self.env.user.company_id.id, string='Company')
     contact_person = fields.Char(string="Contact Person", required=True)
     designation = fields.Char(string="Designation")
-    user_id = fields.Many2one('res.users', string='Inquiry BY', default=lambda self: self.env.user)
+    user_id = fields.Many2one('res.users', string='Inquiry By', default=lambda self: self.env.user)
     partner_id = fields.Many2one('res.partner', string='Customer', required=True, domain=[('is_company', '=', 'True')])
     email = fields.Char(string="Customer Email", related='partner_id.email')
     contact_person_email = fields.Char(string="Contact Person Email", required=True)
     contact_person_phone = fields.Char(string="Contact Person Phone", required=True)
     state = fields.Selection(
-        [('pending', 'Pending'), ('confirm', 'Posted'), ('accept', 'Accepted'), ('cancel', 'Cancelled'),
+        [('pending', 'Pending'), ('confirm', 'Confirmed'), ('accept', 'Accepted'), ('cancel', 'Cancelled'),
          ('reject', 'Rejected'),
          ('expire', 'Expired')],
-        default='pending', string='state', tracking=True)
-    deadline_submission = fields.Date(string="Deadline of Submission", required=True, tracking=True)
+        default='pending', string='State', tracking=True)
+    deadline_submission = fields.Date(string="Deadline", required=True, tracking=True)
     sale_order_id = fields.Many2one('sale.order', string='Sale Order')
     sale_order_ids = fields.Many2many('sale.order', string="Sale Order's")
     multi_order = fields.Boolean('Multi Orders')
@@ -39,12 +39,23 @@ class OrderInquiry(models.Model):
     inquiry_type = fields.Selection([('construction', 'Project'), ('trading', 'Trading')], string="Inquiry Type",
                                     default="construction", required=True)
 
+    def copy(self, default=None):
+        self.ensure_one()
+        default = dict(default or {})
+        default.update({
+            'sale_order_id': False,
+            'sale_order_ids': [(6, 0, [])],
+            'state': 'pending',
+            'name': 'New',
+        })
+        return super().copy(default)
+
     @api.model
     def _cron_expire_inquiries_without_quotation(self):
         today = fields.Date.today()
 
         inquiries = self.search([
-            ('state', 'in', ['confirm']),
+            ('state', 'in', ['accept', 'confirm']),
             ('deadline_submission', '<', today),
             ('sale_order_ids', '=', False),
         ])
@@ -104,7 +115,6 @@ class OrderInquiry(models.Model):
             self.sale_count = len(self.sale_order_ids)
         else:
             self.sale_count = None
-
 
     def action_accept(self):
         self.state = 'accept'

@@ -124,6 +124,11 @@
                        invisible="1"
                        column_invisible="True"/>
             </xpath>
+                <xpath expr="//form[1]/sheet[1]/group[@name='sale_header']/group[@name='order_details']/field[@name='date_order']"
+                       position="after">
+                    <xpath expr="//field[@name='validity_date']" position="move"/>
+                    <xpath expr="//field[@name='payment_term_id']" position="move"/>
+                </xpath>
             <xpath expr="//group[@name='sale_total']" position="replace">
                 <field name="inquiry_type" readonly="1" invisible="1"/>
                 <group class="oe_subtotal_footer o_petroraq_totals" colspan="2" name="sale_total">

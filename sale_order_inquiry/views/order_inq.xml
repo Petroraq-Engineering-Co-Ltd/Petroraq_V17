@@ -27,7 +27,7 @@
                             type="object"
                             class="btn-warning"
                             groups="petroraq_sale_workflow.group_sale_approval_manager"
-                            invisible="state != 'expire'"/>
+                            invisible="state in ('cancel', 'pending', 'cancel', 'confirm', 'accept')"/>
 
                     <field name="state" widget="statusbar"
                            statusbar_visible="pending,confirm,accept,cancel,reject,expire"/>
@@ -45,7 +45,7 @@
                     <widget name="web_ribbon" title="Confirmed" bg_color="bg-success" invisible="state != 'confirm'"/>
                     <widget name="web_ribbon" title="Pending" bg_color="bg-info" invisible="state != 'pending'"/>
                     <widget name="web_ribbon" title="Accepted" bg_color="bg-info" invisible="state != 'accept'"/>
-                    <widget name="web_ribbon" title="Cancel" bg_color="bg-danger" invisible="state != 'cancel'"/>
+                    <widget name="web_ribbon" title="Cancelled" bg_color="bg-danger" invisible="state != 'cancel'"/>
                     <widget name="web_ribbon" title="Rejected" bg_color="bg-danger" invisible="state != 'reject'"/>
                     <widget name="web_ribbon" title="Expired" bg_color="bg-danger" invisible="state != 'expire'"/>
                     <widget name="web_ribbon" title="Multi" bg_color="bg-success" invisible="sale_count &lt;= 1"/>
@@ -104,11 +104,12 @@
             <tree class="o_sale_order" decoration-muted="state == 'cancel'">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
+                <field name="inquiry_type"/>
+
                 <field name="description"/>
                 <field name="partner_id"/>
                 <field name="contact_person"/>
                 <field name="contact_person_email"/>
-                <field name="designation"/>
                 <field name="date_order" optional="show"/>
                 <field name="deadline_submission" optional="show"/>
                 <field name="user_id" optional="show"/>

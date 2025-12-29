@@ -16,8 +16,8 @@
     
     """,
 
-    'author': "Mudassir Amin",
-    'website': "https://mudassir.it.com",
+    'author': "Petroraq Engineering",
+    'website': "https://www.petroraq.com",
     'license': 'LGPL-3',
     'category': 'Sales',
     'depends': ['base', 'mail', 'sale'],
