@@ -35,12 +35,12 @@ class AccountMove(models.Model):
         compute="_compute_pr_vouchers",
         store=False,
     )
-    jv_id = fields.Many2one(
-        "pr.account.journal.voucher",
-        string="Journal Voucher",
-        compute="_compute_pr_vouchers",
-        store=False,
-    )
+    # jv_id = fields.Many2one(
+    #     "pr.account.journal.voucher",
+    #     string="Journal Voucher",
+    #     compute="_compute_pr_vouchers",
+    #     store=False,
+    # )
 
     has_pr_voucher = fields.Boolean(
         string="Has PR Voucher",
@@ -96,17 +96,17 @@ class AccountMove(models.Model):
             "res_id": self.crv_id.id,
         }
 
-    def action_open_jjv(self):
-        self.ensure_one()
-        if not self.jv_id:
-            return
-        return {
-            "type": "ir.actions.act_window",
-            "name": "Journal Voucher",
-            "res_model": "pr.account.journal.voucher",
-            "view_mode": "form",
-            "res_id": self.jv_id.id,
-        }
+    # def action_open_jjv(self):
+    #     self.ensure_one()
+    #     if not self.jv_id:
+    #         return
+    #     return {
+    #         "type": "ir.actions.act_window",
+    #         "name": "Journal Voucher",
+    #         "res_model": "pr.account.journal.voucher",
+    #         "view_mode": "form",
+    #         "res_id": self.jv_id.id,
+    #     }
 
     def _search_default_journal(self):
         if self.payment_id and self.payment_id.journal_id:
@@ -150,17 +150,17 @@ class AccountMove(models.Model):
         CashPayment = self.env["pr.account.cash.payment"]
         BankReceipt = self.env["pr.account.bank.receipt"]
         CashReceipt = self.env["pr.account.cash.receipt"]
-        JournalVoucher = self.env["pr.account.journal.voucher"]
+        # JournalVoucher = self.env["pr.account.journal.voucher"]
 
         for move in self:
             move.bpv_id = BankPayment.search([("journal_entry_id", "=", move.id)], limit=1)
             move.cpv_id = CashPayment.search([("journal_entry_id", "=", move.id)], limit=1)
             move.brv_id = BankReceipt.search([("journal_entry_id", "=", move.id)], limit=1)
             move.crv_id = CashReceipt.search([("journal_entry_id", "=", move.id)], limit=1)
-            move.jv_id = JournalVoucher.search([("journal_entry_id", "=", move.id)], limit=1)
+            # move.jv_id = JournalVoucher.search([("journal_entry_id", "=", move.id)], limit=1)
 
             move.has_pr_voucher = bool(
-                move.bpv_id or move.cpv_id or move.brv_id or move.crv_id or move.jv_id
+                move.bpv_id or move.cpv_id or move.brv_id or move.crv_id
             )
 
     def get_attachments_data(self):
