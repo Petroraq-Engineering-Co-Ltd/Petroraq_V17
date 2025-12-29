@@ -21,9 +21,11 @@ class OrderInquiry(models.Model):
     contact_person_email = fields.Char(string="Contact Person Email", required=True)
     contact_person_phone = fields.Char(string="Contact Person Phone", required=True)
     state = fields.Selection(
-        [('pending', 'Pending'), ('confirm', 'Posted'), ('cancel', 'cancel'), ('reject', 'Rejected')],
+        [('pending', 'Pending'), ('confirm', 'Posted'), ('accept', 'Accepted'), ('cancel', 'Cancelled'),
+         ('reject', 'Rejected'),
+         ('expire', 'Expired')],
         default='pending', string='state', tracking=True)
-    deadline_submission = fields.Date(string="Deadline of Submission", required=True)
+    deadline_submission = fields.Date(string="Deadline of Submission", required=True, tracking=True)
     sale_order_id = fields.Many2one('sale.order', string='Sale Order')
     sale_order_ids = fields.Many2many('sale.order', string="Sale Order's")
     multi_order = fields.Boolean('Multi Orders')
@@ -34,8 +36,23 @@ class OrderInquiry(models.Model):
     sequence = fields.Integer(string="Sequence", default=10)
 
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
-    inquiry_type = fields.Selection([('construction', 'Contracting'), ('trading', 'Trading')], string="Inquiry Type",
+    inquiry_type = fields.Selection([('construction', 'Project'), ('trading', 'Trading')], string="Inquiry Type",
                                     default="construction", required=True)
+
+    @api.model
+    def _cron_expire_inquiries_without_quotation(self):
+        today = fields.Date.today()
+
+        inquiries = self.search([
+            ('state', 'in', ['confirm']),
+            ('deadline_submission', '<', today),
+            ('sale_order_ids', '=', False),
+        ])
+
+        for inquiry in inquiries:
+            inquiry.write({
+                'state': 'expire',
+            })
 
     @api.constrains('contact_person_email', 'contact_person_phone')
     def _check_email_and_phone(self):
@@ -88,6 +105,10 @@ class OrderInquiry(models.Model):
         else:
             self.sale_count = None
 
+
+    def action_accept(self):
+        self.state = 'accept'
+
     @api.model
     def create(self, vals):
         if vals.get('name', 'New') == 'New':
@@ -134,6 +155,18 @@ class OrderInquiry(models.Model):
             'res_id': sale_order.id,
         }
 
+    def action_extend_deadline(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'order.inq.extend.deadline.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_inquiry_id': self.id,
+            }
+        }
+
     def action_open_reject_wizard(self):
         self.ensure_one()
         return {
@@ -162,3 +195,18 @@ class RejectReasonWizard(models.TransientModel):
 
     def action_confirm_reject(self):
         self.inquiry_id.write({'state': 'reject', 'rejection_reason': self.reason})
+
+
+class OrderInquiryExtendDeadlineWizard(models.TransientModel):
+    _name = 'order.inq.extend.deadline.wizard'
+    _description = 'Extend Inquiry Deadline'
+
+    inquiry_id = fields.Many2one('order.inq', required=True, readonly=True)
+    current_deadline = fields.Date(string="Current Deadline", readonly=True)
+    new_deadline = fields.Date(string="New Deadline", required=True)
+
+    def action_confirm_extend(self):
+        self.inquiry_id.write({
+            'deadline_submission': self.new_deadline,
+            'state': 'confirm',
+        })
