@@ -24,6 +24,9 @@
     'data': [
         'data/sequence.xml',
         'views/order_inq.xml',
+        'views/order_inquiry_extend_deadline_wizard.xml',
+        'views/order_inquiry_cron.xml',
+
         'security/ir.model.access.csv',
     ],
     'assets': {},

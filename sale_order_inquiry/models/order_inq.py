@@ -4,14 +4,13 @@ from datetime import timedelta
 import re
 
 
-
 class OrderInquiry(models.Model):
     _name = 'order.inq'
     _order = 'sequence, date_order, id'
     _rec_name = 'name'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(default="New", readonly=True, copy=False, tracking=True,string="Inquiry No.")
+    name = fields.Char(default="New", readonly=True, copy=False, tracking=True, string="Inquiry No.")
     description = fields.Char(string="Inquiry Description", required=True)
     company_id = fields.Many2one('res.company', default=lambda self: self.env.user.company_id.id, string='Company')
     contact_person = fields.Char(string="Contact Person", required=True)
@@ -19,12 +18,14 @@ class OrderInquiry(models.Model):
     user_id = fields.Many2one('res.users', string='Inquiry BY', default=lambda self: self.env.user)
     partner_id = fields.Many2one('res.partner', string='Customer', required=True, domain=[('is_company', '=', 'True')])
     email = fields.Char(string="Customer Email", related='partner_id.email')
-    contact_person_email = fields.Char(string="Contact Person Email",required=True)
-    contact_person_phone = fields.Char(string="Contact Person Phone",required=True)
+    contact_person_email = fields.Char(string="Contact Person Email", required=True)
+    contact_person_phone = fields.Char(string="Contact Person Phone", required=True)
     state = fields.Selection(
-        [('pending', 'Pending'), ('confirm', 'Posted'), ('cancel', 'cancel'), ('reject', 'Rejected')],
+        [('pending', 'Pending'), ('confirm', 'Posted'), ('accept', 'Accepted'), ('cancel', 'Cancelled'),
+         ('reject', 'Rejected'),
+         ('expire', 'Expired')],
         default='pending', string='state', tracking=True)
-    deadline_submission = fields.Date(string="Deadline of Submission", required=True)
+    deadline_submission = fields.Date(string="Deadline of Submission", required=True, tracking=True)
     sale_order_id = fields.Many2one('sale.order', string='Sale Order')
     sale_order_ids = fields.Many2many('sale.order', string="Sale Order's")
     multi_order = fields.Boolean('Multi Orders')
@@ -34,12 +35,29 @@ class OrderInquiry(models.Model):
                                  default=fields.Datetime.now)
     sequence = fields.Integer(string="Sequence", default=10)
 
-    rejection_reason = fields.Text(string="Rejection Reason",tracking=True)
+    rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
+    inquiry_type = fields.Selection([('construction', 'Project'), ('trading', 'Trading')], string="Inquiry Type",
+                                    default="construction", required=True)
+
+    @api.model
+    def _cron_expire_inquiries_without_quotation(self):
+        today = fields.Date.today()
+
+        inquiries = self.search([
+            ('state', 'in', ['confirm']),
+            ('deadline_submission', '<', today),
+            ('sale_order_ids', '=', False),
+        ])
+
+        for inquiry in inquiries:
+            inquiry.write({
+                'state': 'expire',
+            })
 
     @api.constrains('contact_person_email', 'contact_person_phone')
     def _check_email_and_phone(self):
         email_regex = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
-        phone_regex = r"^[0-9\s\-]{10,15}$"
+        phone_regex = r"^\+?[0-9\s\-]{7,15}$"
 
         for rec in self:
             if rec.contact_person_email:
@@ -54,12 +72,42 @@ class OrderInquiry(models.Model):
                         _("Invalid phone number. Use digits only, minimum 9 digits, optionally starting with +")
                     )
 
+    @api.constrains('contact_person')
+    def _check_contact_person_chars(self):
+        name_regex = r'^[A-Za-z\s]+$'
+        for rec in self:
+            if rec.contact_person and not re.match(name_regex, rec.contact_person):
+                raise ValidationError(
+                    _("Contact Person name must contain letters only (no numbers or special characters).")
+                )
+
+    @api.constrains('deadline_submission', 'date_order')
+    def _check_deadline_date(self):
+        for rec in self:
+            if rec.deadline_submission and rec.date_order:
+                inquiry_date = rec.date_order.date()
+                max_deadline = inquiry_date + timedelta(days=30)
+
+                if rec.deadline_submission < inquiry_date:
+                    raise ValidationError(
+                        _("Deadline of Submission cannot be before the Inquiry Date.")
+                    )
+
+                if rec.deadline_submission > max_deadline:
+                    raise ValidationError(
+                        _("Deadline of Submission cannot exceed 30 days from the Inquiry Date.")
+                    )
+
     @api.depends('sale_order_ids')
     def compute_sale_count(self):
         if self.sale_order_id:
             self.sale_count = len(self.sale_order_ids)
         else:
             self.sale_count = None
+
+
+    def action_accept(self):
+        self.state = 'accept'
 
     @api.model
     def create(self, vals):
@@ -70,7 +118,6 @@ class OrderInquiry(models.Model):
     def button_cancel(self):
         if self.state == 'pending':
             self.state = 'cancel'
-
 
     def reset_pending(self):
         self.state = 'pending'
@@ -94,6 +141,7 @@ class OrderInquiry(models.Model):
         sale_order = self.env['sale.order'].create({
             'partner_id': self.partner_id.id,
             'order_inquiry_id': self.id,
+            'inquiry_type': self.inquiry_type
         })
 
         self.sale_order_id = sale_order.id
@@ -107,13 +155,17 @@ class OrderInquiry(models.Model):
             'res_id': sale_order.id,
         }
 
-    @api.constrains('deadline_submission', 'date_order')
-    def _check_deadline_date(self):
-        for rec in self:
-            if rec.deadline_submission and rec.date_order:
-                min_deadline = rec.date_order.date() + timedelta(days=5)
-                if rec.deadline_submission < min_deadline:
-                    raise ValidationError(_("Deadline of Submission must be at least 5 days after the Inquiry Date."))
+    def action_extend_deadline(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'order.inq.extend.deadline.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_inquiry_id': self.id,
+            }
+        }
 
     def action_open_reject_wizard(self):
         self.ensure_one()
@@ -132,6 +184,7 @@ class SaleOrderInherit(models.Model):
     _inherit = 'sale.order'
 
     order_inquiry_id = fields.Many2one('order.inq', string='Order Inquiry ID')
+    inquiry_type = fields.Selection(related='order_inquiry_id.inquiry_type')
 
 
 class RejectReasonWizard(models.TransientModel):
@@ -142,3 +195,18 @@ class RejectReasonWizard(models.TransientModel):
 
     def action_confirm_reject(self):
         self.inquiry_id.write({'state': 'reject', 'rejection_reason': self.reason})
+
+
+class OrderInquiryExtendDeadlineWizard(models.TransientModel):
+    _name = 'order.inq.extend.deadline.wizard'
+    _description = 'Extend Inquiry Deadline'
+
+    inquiry_id = fields.Many2one('order.inq', required=True, readonly=True)
+    current_deadline = fields.Date(string="Current Deadline", readonly=True)
+    new_deadline = fields.Date(string="New Deadline", required=True)
+
+    def action_confirm_extend(self):
+        self.inquiry_id.write({
+            'deadline_submission': self.new_deadline,
+            'state': 'confirm',
+        })

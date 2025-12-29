@@ -11,8 +11,8 @@ class SaleOrder(models.Model):
 
     approval_state = fields.Selection([
         ("draft", "Draft"),
-        ("to_manager", "Waiting Next Manager Approval"),
-        ("to_md", "Waiting MD Approval"),
+        ("to_manager", "Manager Approve"),
+        ("to_md", "MD Approve"),
         ("approved", "Approved"),
         ("rejected", "Rejected"),
     ], default="draft", tracking=True, copy=False)
@@ -23,6 +23,8 @@ class SaleOrder(models.Model):
         sanitize=False,
         help="Displays a summary of section subtotals and their grand total."
     )
+    inquiry_type = fields.Selection([('construction', 'Contracting'), ('trading', 'Trading')], string="Inquiry Type",
+                                    default="construction", required=True)
 
     overhead_percent = fields.Float(
         string="Over Head (%)",
@@ -188,12 +190,12 @@ class SaleOrder(models.Model):
     #         auto_orders.action_request_manager_approval()
     #     return orders
 
-    def write(self, vals):
-        res = super().write(vals)
+    def action_reset_to_draft(self):
         for order in self:
             if order.approval_state == "rejected":
+                order.locked = False
                 order.approval_state = "draft"
-        return res
+
 
     @api.model
     def default_get(self, fields_list):

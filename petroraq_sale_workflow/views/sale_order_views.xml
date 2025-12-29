@@ -24,6 +24,12 @@
                         class="btn-primary"
                         invisible="approval_state in ('to_manager','to_md','approved','rejected')"/>
 
+                <button string="Reset Draft"
+                        type="object"
+                        name="action_reset_to_draft"
+                        class="btn-secondary"
+                        invisible="approval_state in ('to_manager','to_md','approved','draft')"/>
+
                 <button string="Approve"
                         type="object"
                         name="action_manager_approve"
@@ -119,6 +125,7 @@
                        column_invisible="True"/>
             </xpath>
             <xpath expr="//group[@name='sale_total']" position="replace">
+                <field name="inquiry_type" readonly="1" invisible="1"/>
                 <group class="oe_subtotal_footer o_petroraq_totals" colspan="2" name="sale_total">
                     <div class="o_petroraq_total_row o_petroraq_total_base">
                         <span class="o_petroraq_total_label">Total Amount:</span>
@@ -127,7 +134,7 @@
                             <field name="amount_untaxed" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_overhead">
+                    <div class="o_petroraq_total_row o_petroraq_total_overhead" invisible="inquiry_type == 'trading'">
                         <span class="o_petroraq_total_label">Over Head(%)</span>
                         <div class="o_petroraq_total_input">
                             <field name="overhead_percent" class="o_petroraq_percent_input" nolabel="1" string=""
@@ -137,7 +144,7 @@
                             <field name="overhead_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_risk">
+                    <div class="o_petroraq_total_row o_petroraq_total_risk" invisible="inquiry_type == 'trading'">
                         <span class="o_petroraq_total_label">Risk(%)</span>
                         <div class="o_petroraq_total_input">
                             <field name="risk_percent" class="o_petroraq_percent_input" nolabel="1" string=""
@@ -147,7 +154,7 @@
                             <field name="risk_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_grand">
+                    <div class="o_petroraq_total_row o_petroraq_total_grand" invisible="inquiry_type == 'trading'">
                         <span class="o_petroraq_total_label">Grand Total:</span>
                         <div class="o_petroraq_total_input"></div>
                         <div class="o_petroraq_total_value">

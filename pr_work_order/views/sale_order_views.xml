@@ -20,7 +20,7 @@
                         type="object"
                         string="Create Work Order"
                         class="btn-primary"
-                        invisible="state not in ('sale','done') or work_order_id"
+                        invisible="state not in ('sale','done') or work_order_id or inquiry_type == 'trading'"
                         groups="pr_work_order.custom_group_work_order_user"/>
                 />
 
