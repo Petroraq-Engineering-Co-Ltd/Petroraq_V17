@@ -196,7 +196,6 @@ class SaleOrder(models.Model):
                 order.locked = False
                 order.approval_state = "draft"
 
-
     @api.model
     def default_get(self, fields_list):
         """Set a sensible default payment term for new quotations (module-provided).
@@ -219,13 +218,23 @@ class SaleOrder(models.Model):
         return super().action_quotation_send()
 
     def action_confirm(self):
-        order_lines = self.order_line
-        if not order_lines:
-            raise UserError(_("Please add at least one line item to the quotation."))
         for order in self:
+            if not order.order_line:
+                raise UserError(_("Please add at least one line item to the quotation."))
             if order.approval_state != "approved":
                 raise UserError(_("You cannot confirm the order before final approval."))
-        return super().action_confirm()
+
+        locked_orders = self.filtered('locked')
+        if locked_orders:
+            locked_orders.action_unlock()
+
+        try:
+            res = super().action_confirm()
+        finally:
+            if locked_orders:
+                locked_orders.action_lock()
+
+        return res
 
     @api.depends("amount_total", "amount_untaxed", "currency_id", "overhead_percent", "risk_percent")
     def _compute_buffer_amounts(self):
