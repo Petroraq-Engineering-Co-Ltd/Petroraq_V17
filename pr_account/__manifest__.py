@@ -26,6 +26,7 @@
         'security/ir.model.access.csv',
         'security/groups.xml',
         'security/hr_security.xml',
+        'data/journal_voucher.xml',
         'views/menu_items.xml',
         'views/account_account.xml',
         'views/account_analytic_plan.xml',
@@ -40,9 +41,12 @@
         'views/cash_payment.xml',
         'views/bank_receipt.xml',
         'views/bank_payment.xml',
-        'views/journal_voucher_view.xml',
+        # 'views/journal_voucher_view.xml',
         'data/ir_sequence.xml',
         'data/analytic_plan_data.xml',
+
+        'data/journal_voucher.xml',
+
     ],
     # only loaded in demonstration mode
     'demo': [
