@@ -139,7 +139,7 @@
                             <field name="amount_untaxed" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_overhead" invisible="inquiry_type == 'trading'">
+                    <div class="o_petroraq_total_row o_petroraq_total_overhead">
                         <span class="o_petroraq_total_label">Over Head(%)</span>
                         <div class="o_petroraq_total_input">
                             <field name="overhead_percent" class="o_petroraq_percent_input" nolabel="1" string=""
@@ -149,7 +149,7 @@
                             <field name="overhead_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_risk" invisible="inquiry_type == 'trading'">
+                    <div class="o_petroraq_total_row o_petroraq_total_risk" >
                         <span class="o_petroraq_total_label">Risk(%)</span>
                         <div class="o_petroraq_total_input">
                             <field name="risk_percent" class="o_petroraq_percent_input" nolabel="1" string=""
@@ -159,7 +159,7 @@
                             <field name="risk_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_grand" invisible="inquiry_type == 'trading'">
+                    <div class="o_petroraq_total_row o_petroraq_total_grand" >
                         <span class="o_petroraq_total_label">Grand Total:</span>
                         <div class="o_petroraq_total_input"></div>
                         <div class="o_petroraq_total_value">

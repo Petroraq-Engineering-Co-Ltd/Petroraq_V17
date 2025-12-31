@@ -7,7 +7,7 @@
             <form string="Extend Deadline" >
                 <group>
                     <field name="inquiry_id" readonly="1"/>
-                    <field name="current_deadline" readonly="1"/>
+                    <field name="current_deadline" invisible="1"/>
                     <field name="new_deadline"/>
                 </group>
                 <footer>
