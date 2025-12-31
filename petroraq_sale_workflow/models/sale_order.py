@@ -24,7 +24,7 @@ class SaleOrder(models.Model):
         help="Displays a summary of section subtotals and their grand total."
     )
     inquiry_type = fields.Selection([('construction', 'Contracting'), ('trading', 'Trading')], string="Inquiry Type",
-                                    default="construction", required=True)
+                                    default="trading", )
 
     overhead_percent = fields.Float(
         string="Over Head (%)",

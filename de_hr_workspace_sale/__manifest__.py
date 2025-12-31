@@ -19,6 +19,7 @@
     'data': [
         'views/menus.xml',
         'views/sale_order.xml',
+        'views/work_order.xml',
     ],
     # only loaded in demonstration mode
     # 'demo': [
