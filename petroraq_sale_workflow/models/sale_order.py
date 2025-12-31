@@ -96,21 +96,30 @@ class SaleOrder(models.Model):
             order.approval_state = "rejected"
         return res
 
-    @api.depends("order_line", "overhead_percent", "risk_percent", "profit_percent")
+    @api.depends("order_line", "overhead_percent", "risk_percent", "profit_percent", "currency_id")
     def _compute_final_totals(self):
         for order in self:
-            base = sum(line.price_unit * line.product_uom_qty for line in order.order_line if not line.display_type)
+            currency = order.currency_id or order.company_id.currency_id
+            total = 0.0
 
-            oh = base * (order.overhead_percent / 100.0)
-            risk = base * (order.risk_percent / 100.0)
-            cost_plus = base + oh + risk
+            normal_lines = order.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment)
 
-            profit = cost_plus * (order.profit_percent / 100.0)
+            for line in normal_lines:
+                base = line.price_unit or 0.0
+                oh = base * (order.overhead_percent or 0.0) / 100.0
+                risk = base * (order.risk_percent or 0.0) / 100.0
+                unit_or = base + oh + risk
+                profit = unit_or * (order.profit_percent or 0.0) / 100.0
+                final_unit = unit_or + profit
 
-            final_total = cost_plus + profit
+                final_unit_r = currency.round(final_unit)
+                line_total = currency.round(final_unit_r * (line.product_uom_qty or 0.0))
 
-            vat = final_total * 0.15
-            grand_total = final_total + vat
+                total += line_total
+
+            total = currency.round(total)
+            vat = currency.round(total * 0.15)
+            grand_total = currency.round(total + vat)
 
             order.final_grand_total = grand_total
 
@@ -377,29 +386,26 @@ class SaleOrderLine(models.Model):
         store=True
     )
 
-    @api.depends(
-        'price_unit',
-        'order_id.overhead_percent',
-        'order_id.risk_percent',
-        'order_id.profit_percent'
-    )
+    @api.depends('price_unit', 'order_id.overhead_percent', 'order_id.risk_percent', 'order_id.profit_percent')
     def _compute_final_price_unit(self):
         for line in self:
-            base = line.price_unit or 0.0
+            # skip sections/notes + down payments
+            if line.display_type or getattr(line, "is_downpayment", False):
+                line.final_price_unit = line.price_unit
+                continue
 
+            base = line.price_unit or 0.0
             overhead = base * (line.order_id.overhead_percent / 100.0)
             risk = base * (line.order_id.risk_percent / 100.0)
-
             unit_or = base + overhead + risk
             profit = unit_or * (line.order_id.profit_percent / 100.0)
-
             line.final_price_unit = unit_or + profit
 
     def _prepare_invoice_line(self, **optional_values):
         vals = super()._prepare_invoice_line(**optional_values)
 
-        # Inject final calculated price
-        vals['price_unit'] = self.final_price_unit
+        if not self.display_type and not getattr(self, "is_downpayment", False):
+            vals['price_unit'] = self.final_price_unit
 
         return vals
 
