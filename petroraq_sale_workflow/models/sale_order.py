@@ -208,6 +208,20 @@ class SaleOrder(models.Model):
 
     show_reject_button = fields.Boolean(compute="_compute_show_reject_button")
 
+    @api.model
+    def translate_sale_name(self, name):
+        if not name:
+            return ""
+        numerals_map = str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩")
+        return str(name).translate(numerals_map)
+
+    @api.model
+    def convert_phone_to_eastern_arabic_numerals(self, value):
+        if not value:
+            return ""
+        numerals_map = str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩")
+        return str(value).translate(numerals_map)
+
     @api.depends_context("uid")
     @api.depends("approval_state")
     def _compute_show_reject_button(self):

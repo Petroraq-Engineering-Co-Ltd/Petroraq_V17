@@ -16,6 +16,7 @@
         "views/sale_order_tree_inherit_petroraq.xml",
         "views/reject_wizard_views.xml",
         "views/custom_format.xml",
+        "views/pro_forma.xml",
         "views/report_saleorder_petroraq_costing.xml",
         "data/mail_template.xml",
         # "data/default_template.xml",
