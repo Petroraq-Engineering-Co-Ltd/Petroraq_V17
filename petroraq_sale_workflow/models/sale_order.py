@@ -3,6 +3,7 @@ from copy import deepcopy
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, AccessError
 from odoo.tools import format_amount, html_escape
+from odoo.tools.float_utils import float_round, float_compare
 
 
 class SaleOrder(models.Model):
@@ -16,6 +17,11 @@ class SaleOrder(models.Model):
         ("approved", "Approved"),
         ("rejected", "Rejected"),
     ], default="draft", tracking=True, copy=False)
+
+    dp_percent = fields.Float(
+        string="Down Payment %",
+        copy=False,
+    )
 
     section_subtotal_summary = fields.Html(
         string="Section Subtotals",
@@ -90,11 +96,80 @@ class SaleOrder(models.Model):
         help="Grand total including profit."
     )
 
+    def _dp_sale_line(self):
+        self.ensure_one()
+        return self.order_line.filtered(lambda l: l.is_downpayment and not l.display_type)[:1]
+
+    def _dp_deducted_qty(self):
+        """
+        How much of DP line (out of 1.0) has already been deducted in REGULAR invoices.
+        We count only negative dp quantities from posted customer invoices.
+        """
+        self.ensure_one()
+        dp_line = self._dp_sale_line()
+        if not dp_line:
+            return 0.0
+
+        deducted = 0.0
+        amls = dp_line.invoice_lines.filtered(
+            lambda l: l.move_id.state == "posted"
+                      and l.move_id.move_type == "out_invoice"
+                      and (l.price_subtotal or 0.0) < 0  # only deduction lines
+        )
+        for aml in amls:
+            deducted += abs(aml.quantity or 0.0)
+
+        return max(0.0, min(1.0, float_round(deducted, precision_digits=6)))
+
+    def _is_fully_delivered(self):
+        """Final invoice if all stockable/consu lines are fully delivered."""
+        self.ensure_one()
+        lines = self.order_line.filtered(
+            lambda l: not l.display_type and not l.is_downpayment and l.product_id
+        ).filtered(lambda l: l.product_id.type in ("product", "consu"))
+
+        if not lines:
+            return False
+
+        for l in lines:
+            if float_compare(
+                    l.qty_delivered, l.product_uom_qty,
+                    precision_rounding=l.product_uom.rounding
+            ) < 0:
+                return False
+        return True
+
     def action_cancel(self):
         res = super(SaleOrder, self).action_cancel()
         for order in self:
             order.approval_state = "rejected"
         return res
+
+    def _get_invoiceable_lines(self, final=False):
+        lines = super()._get_invoiceable_lines(final=final)
+
+        # Important: your current loop "for line in lines" loses the order context.
+        # We compute per order to do final logic properly.
+        for order in self:
+            dp = order.dp_percent or 0.0
+            if not dp:
+                continue
+
+            deducted = order._dp_deducted_qty()
+            remaining = max(0.0, 1.0 - deducted)
+
+            if remaining <= 0:
+                continue
+
+            if order._is_fully_delivered():
+                to_deduct = remaining  # last invoice => consume all remaining
+            else:
+                to_deduct = min(dp, remaining)  # partial => consume dp_percent chunk
+
+            for line in lines.filtered(lambda l: l.order_id == order and l.is_downpayment):
+                line.qty_to_invoice = -to_deduct
+
+        return lines
 
     @api.depends("order_line", "overhead_percent", "risk_percent", "profit_percent", "currency_id")
     def _compute_final_totals(self):
@@ -404,8 +479,8 @@ class SaleOrderLine(models.Model):
     def _prepare_invoice_line(self, **optional_values):
         vals = super()._prepare_invoice_line(**optional_values)
 
-        if not self.display_type and not getattr(self, "is_downpayment", False):
-            vals['price_unit'] = self.final_price_unit
+        if not self.display_type and not self.is_downpayment:
+            vals["price_unit"] = self.final_price_unit
 
         return vals
 
@@ -454,3 +529,23 @@ class SaleOrderLine(models.Model):
             f"<span class='o_section_subtotal_chip_label'>{html_escape(label)}</span>"
             f"<span class='o_section_subtotal_chip_value'>{html_escape(amount_display)}</span>"
         )
+
+
+class SaleAdvancePaymentInv(models.TransientModel):
+    _inherit = "sale.advance.payment.inv"
+
+    def create_invoices(self):
+        res = super().create_invoices()
+        orders = self.env["sale.order"].browse(self._context.get("active_ids", []))
+
+        if self.advance_payment_method == "percentage":
+            for order in orders:
+                order.dp_percent = self.amount / 100.0
+
+        elif self.advance_payment_method == "fixed":
+            # fixed dp converted to percent of order untaxed total
+            for order in orders:
+                base = order.amount_untaxed or 0.0
+                order.dp_percent = (self.amount / base) if base else 0.0
+
+        return res
