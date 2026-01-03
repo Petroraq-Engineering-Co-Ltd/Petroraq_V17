@@ -4,6 +4,7 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError, AccessError
 from odoo.tools import format_amount, html_escape
 from odoo.tools.float_utils import float_round, float_compare
+from odoo.tools import frozendict
 
 
 class SaleOrder(models.Model):
@@ -96,6 +97,37 @@ class SaleOrder(models.Model):
         help="Grand total including profit."
     )
 
+    def _dp_paid_amount(self):
+        """Total DP untaxed that was posted (positive DP invoices only)."""
+        self.ensure_one()
+        dp_line = self._dp_sale_line()
+        if not dp_line:
+            return 0.0
+
+        amls = dp_line.invoice_lines.filtered(
+            lambda l: l.move_id.state == "posted"
+                      and l.move_id.move_type == "out_invoice"
+                      and (l.price_subtotal or 0.0) > 0.0
+        )
+        return sum(amls.mapped("price_subtotal")) or 0.0
+
+    def _dp_remaining_amount(self):
+        """Remaining DP untaxed based on posted moves linked to dp SO line."""
+        self.ensure_one()
+        dp_line = self._dp_sale_line()
+        if not dp_line:
+            return 0.0
+
+        amls = dp_line.invoice_lines.filtered(
+            lambda l: l.move_id.state == "posted"
+                      and l.move_id.move_type == "out_invoice"
+        )
+
+        paid = sum(l.price_subtotal for l in amls if (l.price_subtotal or 0.0) > 0.0)
+        deducted = sum(abs(l.price_subtotal) for l in amls if (l.price_subtotal or 0.0) < 0.0)
+
+        return max(0.0, paid - deducted)
+
     def _dp_sale_line(self):
         self.ensure_one()
         return self.order_line.filtered(lambda l: l.is_downpayment and not l.display_type)[:1]
@@ -148,26 +180,55 @@ class SaleOrder(models.Model):
     def _get_invoiceable_lines(self, final=False):
         lines = super()._get_invoiceable_lines(final=final)
 
-        # Important: your current loop "for line in lines" loses the order context.
-        # We compute per order to do final logic properly.
         for order in self:
-            dp = order.dp_percent or 0.0
-            if not dp:
+            dp_percent = order.dp_percent or 0.0
+            if not dp_percent:
                 continue
 
-            deducted = order._dp_deducted_qty()
-            remaining = max(0.0, 1.0 - deducted)
+            dp_paid = order._dp_paid_amount()
+            if not dp_paid:
+                continue  # no posted DP invoice yet
 
-            if remaining <= 0:
+            deducted_qty = order._dp_deducted_qty()
+            remaining_qty = max(0.0, 1.0 - deducted_qty)
+            if remaining_qty <= 0:
                 continue
 
-            if order._is_fully_delivered():
-                to_deduct = remaining  # last invoice => consume all remaining
-            else:
-                to_deduct = min(dp, remaining)  # partial => consume dp_percent chunk
+            # Invoice base (untaxed) for THIS invoice = delivered qty_to_invoice * final_price_unit
+            base_lines = lines.filtered(
+                lambda l: l.order_id == order and not l.display_type and not l.is_downpayment
+            )
 
-            for line in lines.filtered(lambda l: l.order_id == order and l.is_downpayment):
-                line.qty_to_invoice = -to_deduct
+            invoice_base = 0.0
+            for l in base_lines:
+                qty = l.qty_to_invoice if l.qty_to_invoice is not None else 0.0
+                # Use your commercial unit price for correct base (since you override invoice line price_unit)
+                unit = l.final_price_unit or l.price_unit or 0.0
+                invoice_base += qty * unit
+
+            if invoice_base <= 0:
+                continue
+
+            remaining_dp_amount = order._dp_remaining_amount()
+
+            # target deduction amount for THIS invoice
+            vat_factor = 1.15
+            target_amount = min(remaining_dp_amount, invoice_base * vat_factor * dp_percent)
+            currency = order.currency_id or order.company_id.currency_id
+            target_amount = currency.round(target_amount)
+
+            if currency.is_zero(target_amount):
+                continue
+
+            # convert amount -> fraction of dp line (dp line qty is 1.0)
+            fraction = target_amount / dp_paid
+            fraction = min(fraction, remaining_qty)
+
+            if fraction <= 0:
+                continue
+
+            for dp_so_line in lines.filtered(lambda l: l.order_id == order and l.is_downpayment):
+                dp_so_line.qty_to_invoice = -fraction
 
         return lines
 
@@ -545,8 +606,143 @@ class SaleOrderLine(models.Model):
         )
 
 
+from odoo import models
+from odoo.tools import frozendict
+
+
 class SaleAdvancePaymentInv(models.TransientModel):
     _inherit = "sale.advance.payment.inv"
+
+    def _prepare_down_payment_lines_values(self, order):
+        self.ensure_one()
+
+        # -----------------------------
+        # 1️⃣ Decide commercial base
+        # -----------------------------
+        commercial_total = (
+            order.final_grand_total
+            if order.final_grand_total is not False
+            else order.amount_total
+        )
+
+        untaxed_total = order.amount_untaxed or 0.0
+
+        # Safety
+        if not untaxed_total:
+            return []
+
+        # -----------------------------
+        # 2️⃣ Compute scaling factor
+        # -----------------------------
+        scaling_factor = commercial_total / untaxed_total
+
+        # -----------------------------
+        # 3️⃣ Compute advance %
+        # -----------------------------
+        if self.advance_payment_method == "percentage":
+            advance_ratio = self.amount / 100.0
+        else:
+            advance_ratio = self.fixed_amount / commercial_total
+
+        # -----------------------------
+        # 4️⃣ Base lines (core logic)
+        # -----------------------------
+        order_lines = order.order_line.filtered(
+            lambda l: not l.display_type and not l.is_downpayment
+        )
+
+        base_vals = self._prepare_base_downpayment_line_values(order)
+
+        tax_base_lines = [
+            line._convert_to_tax_base_line_dict(
+                analytic_distribution=line.analytic_distribution,
+                handle_price_include=False,
+            )
+            for line in order_lines
+        ]
+
+        computed_taxes = self.env["account.tax"]._compute_taxes(tax_base_lines)
+
+        down_payment_values = []
+
+        for base_line, tax_data in computed_taxes["base_lines_to_update"]:
+            taxes = base_line["taxes"].flatten_taxes_hierarchy()
+            fixed_taxes = taxes.filtered(lambda t: t.amount_type == "fixed")
+
+            # 🔥 SCALE THE BASE HERE
+            scaled_subtotal = tax_data["price_subtotal"] * scaling_factor
+
+            down_payment_values.append([
+                taxes - fixed_taxes,
+                base_line["analytic_distribution"],
+                scaled_subtotal,
+            ])
+
+            for fixed_tax in fixed_taxes:
+                if fixed_tax.price_include:
+                    continue
+
+                if fixed_tax.include_base_amount:
+                    pct_tax = taxes[list(taxes).index(fixed_tax) + 1:] \
+                        .filtered(lambda t: t.is_base_affected and t.amount_type != "fixed")
+                else:
+                    pct_tax = self.env["account.tax"]
+
+                down_payment_values.append([
+                    pct_tax,
+                    base_line["analytic_distribution"],
+                    base_line["quantity"] * fixed_tax.amount,
+                ])
+
+        # -----------------------------
+        # 5️⃣ Group per tax (core)
+        # -----------------------------
+        line_map = {}
+        analytic_map = {}
+
+        for taxes, analytic_dist, subtotal in down_payment_values:
+            key = frozendict({"tax_id": tuple(sorted(taxes.ids))})
+
+            line_map.setdefault(key, {
+                **base_vals,
+                **key,
+                "product_uom_qty": 0.0,
+                "price_unit": 0.0,
+            })
+
+            line_map[key]["price_unit"] += subtotal
+
+            if analytic_dist:
+                analytic_map.setdefault(key, [])
+                analytic_map[key].append((subtotal, analytic_dist))
+
+        # -----------------------------
+        # 6️⃣ Final lines
+        # -----------------------------
+        lines = []
+
+        for key, vals in line_map.items():
+            if order.currency_id.is_zero(vals["price_unit"]):
+                continue
+
+            if analytic_map.get(key):
+                merged_analytic = {}
+                for subtotal, dist in analytic_map[key]:
+                    for acc, ratio in dist.items():
+                        merged_analytic.setdefault(acc, 0.0)
+                        merged_analytic[acc] += (
+                                                        subtotal / vals["price_unit"]
+                                                ) * ratio
+                vals["analytic_distribution"] = merged_analytic
+
+            # 🔥 APPLY ADVANCE %
+            vals["price_unit"] = order.currency_id.round(
+                vals["price_unit"] * advance_ratio
+            )
+
+            lines.append(vals)
+
+        return lines
 
     def create_invoices(self):
         res = super().create_invoices()
@@ -555,9 +751,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
         if self.advance_payment_method == "percentage":
             for order in orders:
                 order.dp_percent = self.amount / 100.0
-
         elif self.advance_payment_method == "fixed":
-            # fixed dp converted to percent of order untaxed total
             for order in orders:
                 base = order.amount_untaxed or 0.0
                 order.dp_percent = (self.amount / base) if base else 0.0
