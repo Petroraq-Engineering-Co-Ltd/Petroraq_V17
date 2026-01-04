@@ -25,7 +25,9 @@
             <field name="name">Account Cash Receipt Sequence</field>
             <field name="code">account.cash.receipt.seq.code</field>
             <field name="padding">5</field>
-            <field name="prefix">CRV-%(year)s-</field>
+            <field name="prefix">CRV-%(range_year)s-</field>
+            <field name="use_date_range">True</field>
+
             <field name="number_next">1</field>
             <field name="number_increment">1</field>
             <field name="company_id" eval="False"/>
@@ -35,7 +37,9 @@
             <field name="name">PR Account Cash Payment Sequence</field>
             <field name="code">pr.account.cash.payment.seq.code</field>
             <field name="padding">5</field>
-            <field name="prefix">CPV-%(year)s-</field>
+            <field name="prefix">CPV-%(range_year)s-</field>
+            <field name="use_date_range">True</field>
+
             <field name="number_next">1</field>
             <field name="number_increment">1</field>
             <field name="company_id" eval="False"/>
@@ -45,7 +49,9 @@
             <field name="name">PR Account Bank Receipt Sequence</field>
             <field name="code">pr.account.bank.receipt.seq.code</field>
             <field name="padding">5</field>
-            <field name="prefix">BRV-%(year)s-</field>
+            <field name="prefix">BRV-%(range_year)s-</field>
+            <field name="use_date_range">True</field>
+
             <field name="number_next">1</field>
             <field name="number_increment">1</field>
             <field name="company_id" eval="False"/>
@@ -54,12 +60,14 @@
         <record id="pr_account_bank_payment_seq" model="ir.sequence">
             <field name="name">PR Account Bank Payment Sequence</field>
             <field name="code">pr.account.bank.payment.seq.code</field>
+            <field name="use_date_range">True</field>
+            <field name="prefix">BPV-%(range_year)s-</field>
             <field name="padding">5</field>
-            <field name="prefix">BPV-%(year)s-</field>
             <field name="number_next">1</field>
             <field name="number_increment">1</field>
             <field name="company_id" eval="False"/>
         </record>
+
 
         <record id="pr_account_project_cost_center_seq" model="ir.sequence">
             <field name="name">Project Cost Center Sequence</field>
@@ -80,14 +88,14 @@
             <field name="company_id" eval="False"/>
         </record>
 
-<!--        <record id="seq_journal_voucher_jjv" model="ir.sequence">-->
-<!--            <field name="name">Journal Voucher Sequence</field>-->
-<!--            <field name="code">account.move.journal.jjv</field>-->
-<!--            <field name="prefix">JJVs/%(year)s/</field>-->
-<!--            <field name="padding">5</field>-->
-<!--            <field name="number_next">1</field>-->
-<!--            <field name="company_id" eval="False"/>-->
-<!--        </record>-->
+        <!--        <record id="seq_journal_voucher_jjv" model="ir.sequence">-->
+        <!--            <field name="name">Journal Voucher Sequence</field>-->
+        <!--            <field name="code">account.move.journal.jjv</field>-->
+        <!--            <field name="prefix">JJVs/%(year)s/</field>-->
+        <!--            <field name="padding">5</field>-->
+        <!--            <field name="number_next">1</field>-->
+        <!--            <field name="company_id" eval="False"/>-->
+        <!--        </record>-->
         <odoo>
             <data noupdate="1">
 

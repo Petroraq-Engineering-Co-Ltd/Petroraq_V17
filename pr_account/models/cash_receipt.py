@@ -234,14 +234,20 @@ class AccountCashReceipt(models.Model):
 
     # region [Crud]
 
-    @api.model
-    def create(self, vals):
-        '''
-        We Inherit Create Method To Pass Sequence Fo Field Name
-        '''
-        res = super().create(vals)
-        res.name = self.env['ir.sequence'].next_by_code('account.cash.receipt.seq.code') or ''
-        return res
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+
+        for rec in records:
+            if rec.name in (False, "New", _("New")):
+                seq_date = rec.accounting_date or fields.Date.context_today(rec)
+
+                rec.name = rec.env["ir.sequence"].with_company(rec.company_id.id).next_by_code(
+                    "account.cash.receipt.seq.code",
+                    sequence_date=seq_date,
+                ) or _("New")
+
+        return records
 
     def unlink(self):
         if self.state != 'draft':
@@ -297,8 +303,6 @@ class AccountCashReceiptLine(models.Model):
         string="Name",
         compute="_compute_account_name_button",
     )
-
-
 
     def _compute_account_name_button(self):
         for rec in self:
