@@ -309,50 +309,59 @@ class AccountBankPayment(models.Model):
             'company_id': self.company_id.id or self.env.company.id,
         }
 
-    # endregion [Analytic Distribution Methods]
+        # endregion [Analytic Distribution Methods]
 
-    # region [Crud]
+        # region [Crud]
 
-    @api.model
-    def create(self, vals):
-        '''
-        We Inherit Create Method To Pass Sequence Fo Field Name
-        '''
-        res = super().create(vals)
-        res.name = self.env['ir.sequence'].next_by_code('pr.account.bank.payment.seq.code') or ''
-        return res
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
 
-    def unlink(self):
-        if self.state != 'draft':
-            raise ValidationError("This Bank Payment Should Be Draft To Can Delete !!")
-        return super().unlink()
+        for rec in records:
+            if rec.name in (False, "New", _("New")):
+                seq_date = rec.accounting_date or fields.Date.context_today(rec)
 
-    def copy(self, default=None):
-        default = dict(default or {})
+                rec.name = rec.env["ir.sequence"].with_company(rec.company_id.id).next_by_code(
+                    "pr.account.bank.payment.seq.code",
+                    sequence_date=seq_date,
+                ) or _("New")
 
-        # New sequence
-        default['name'] = self.env['ir.sequence'].next_by_code(
-            'pr.account.bank.payment.seq.code'
-        )
+        return records
 
-        # Copy One2many lines using Odoo Command
-        default['bank_payment_line_ids'] = [
-            Command.create({
-                'account_id': line.account_id.id,
-                'cs_project_id': line.cs_project_id.id,
-                'partner_id': line.partner_id.id,
-                'description': line.description,
-                'reference_number': line.reference_number,
-                'amount': line.amount,
-                'tax_id': line.tax_id.id,
-                'analytic_distribution': line.analytic_distribution,
-            })
-            for line in self.bank_payment_line_ids
-        ]
 
-        return super(AccountBankPayment, self).copy(default)
+def unlink(self):
+    if self.state != 'draft':
+        raise ValidationError("This Bank Payment Should Be Draft To Can Delete !!")
+    return super().unlink()
 
-    # endregion [Crud]
+
+def copy(self, default=None):
+    default = dict(default or {})
+
+    # New sequence
+    default['name'] = self.env['ir.sequence'].next_by_code(
+        'pr.account.bank.payment.seq.code'
+    )
+
+    # Copy One2many lines using Odoo Command
+    default['bank_payment_line_ids'] = [
+        Command.create({
+            'account_id': line.account_id.id,
+            'cs_project_id': line.cs_project_id.id,
+            'partner_id': line.partner_id.id,
+            'description': line.description,
+            'reference_number': line.reference_number,
+            'amount': line.amount,
+            'tax_id': line.tax_id.id,
+            'analytic_distribution': line.analytic_distribution,
+        })
+        for line in self.bank_payment_line_ids
+    ]
+
+    return super(AccountBankPayment, self).copy(default)
+
+
+# endregion [Crud]
 
 
 class AccountBankPaymentLine(models.Model):
@@ -378,7 +387,6 @@ class AccountBankPaymentLine(models.Model):
         string="Name",
         compute="_compute_account_name_button",
     )
-
 
     def _compute_account_name_button(self):
         for rec in self:
@@ -707,6 +715,7 @@ class AccountBankPaymentLine(models.Model):
 
 from odoo import models, fields
 
+
 class BankPaymentRejectReasonWizard(models.TransientModel):
     _name = "bank.payment.reject.reason.wizard"
     _description = "Bank Payment Line Reject Reason"
@@ -725,7 +734,7 @@ class BankPaymentRejectReasonWizard(models.TransientModel):
 
         # If ALL lines rejected → reset parent to draft
         if parent.bank_payment_line_ids and \
-           all(l.state == "reject" for l in parent.bank_payment_line_ids):
+                all(l.state == "reject" for l in parent.bank_payment_line_ids):
             parent.sudo().write({
                 'state': 'draft',
                 'accounting_manager_state': 'draft'
