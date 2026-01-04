@@ -211,16 +211,14 @@ class SaleOrder(models.Model):
 
             remaining_dp_amount = order._dp_remaining_amount()
 
-            # target deduction amount for THIS invoice
             vat_factor = 1.15
             target_amount = min(remaining_dp_amount, invoice_base * vat_factor * dp_percent)
             currency = order.currency_id or order.company_id.currency_id
-            target_amount = currency.round(target_amount)
+            target_amount = target_amount
 
             if currency.is_zero(target_amount):
                 continue
 
-            # convert amount -> fraction of dp line (dp line qty is 1.0)
             fraction = target_amount / dp_paid
             fraction = min(fraction, remaining_qty)
 
@@ -248,14 +246,14 @@ class SaleOrder(models.Model):
                 profit = unit_or * (order.profit_percent or 0.0) / 100.0
                 final_unit = unit_or + profit
 
-                final_unit_r = currency.round(final_unit)
-                line_total = currency.round(final_unit_r * (line.product_uom_qty or 0.0))
+                final_unit_r = final_unit
+                line_total = final_unit_r * (line.product_uom_qty or 0.0)
 
                 total += line_total
 
-            total = currency.round(total)
-            vat = currency.round(total * 0.15)
-            grand_total = currency.round(total + vat)
+            total = total
+            vat = total * 0.15
+            grand_total = total + vat
 
             order.final_grand_total = grand_total
 
@@ -736,9 +734,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
                 vals["analytic_distribution"] = merged_analytic
 
             # 🔥 APPLY ADVANCE %
-            vals["price_unit"] = order.currency_id.round(
-                vals["price_unit"] * advance_ratio
-            )
+            vals["price_unit"] = vals["price_unit"] * advance_ratio
 
             lines.append(vals)
 
