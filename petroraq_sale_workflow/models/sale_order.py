@@ -234,11 +234,13 @@ class SaleOrder(models.Model):
     def _compute_final_totals(self):
         for order in self:
             currency = order.currency_id or order.company_id.currency_id
-            total = 0.0
 
+            total = 0.0
             normal_lines = order.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment)
 
             for line in normal_lines:
+                qty = line.product_uom_qty or 0.0
+
                 base = line.price_unit or 0.0
                 oh = base * (order.overhead_percent or 0.0) / 100.0
                 risk = base * (order.risk_percent or 0.0) / 100.0
@@ -246,16 +248,42 @@ class SaleOrder(models.Model):
                 profit = unit_or * (order.profit_percent or 0.0) / 100.0
                 final_unit = unit_or + profit
 
-                final_unit_r = final_unit
-                line_total = final_unit_r * (line.product_uom_qty or 0.0)
+                # EXACTLY like QWeb:
+                final_unit_r = currency.round(final_unit)
+                line_total_r = currency.round(final_unit_r * qty)
 
-                total += line_total
+                total += line_total_r
 
-            total = total
-            vat = total * 0.15
-            grand_total = total + vat
+            vat_amt_r = currency.round(total * 0.15)
+            order.final_grand_total = total + vat_amt_r
 
-            order.final_grand_total = grand_total
+    def _costing_final_unit(self, base):
+        """final_unit = base + oh + risk + profit(on unit_or)"""
+        self.ensure_one()
+        oh = base * (self.overhead_percent or 0.0) / 100.0
+        risk = base * (self.risk_percent or 0.0) / 100.0
+        unit_or = base + oh + risk
+        profit = unit_or * (self.profit_percent or 0.0) / 100.0
+        return unit_or + profit
+
+    def _costing_total_no_vat(self):
+        """Sum of rounded line totals: round(round(final_unit)*qty)."""
+        self.ensure_one()
+        currency = self.currency_id or self.company_id.currency_id
+
+        total = 0.0
+        lines = self.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment)
+        for l in lines:
+            base = l.price_unit or 0.0
+            qty = l.product_uom_qty or 0.0
+
+            final_unit = self._costing_final_unit(base)
+            final_unit_r = currency.round(final_unit)
+            line_total_r = currency.round(final_unit_r * qty)
+
+            total += line_total_r
+
+        return total
 
     @api.depends("amount_total", "company_id")
     def _compute_require_two_step(self):
@@ -393,28 +421,44 @@ class SaleOrder(models.Model):
 
         return res
 
-    @api.depends("amount_total", "amount_untaxed", "currency_id", "overhead_percent", "risk_percent")
+    @api.depends("order_line", "overhead_percent", "risk_percent", "profit_percent", "currency_id")
     def _compute_buffer_amounts(self):
         for order in self:
-            base_amount = order.amount_untaxed or 0.0
-            overhead_pct = order.overhead_percent or 0.0
-            risk_pct = order.risk_percent or 0.0
             currency = order.currency_id or order.company_id.currency_id
 
-            overhead_amount = base_amount * overhead_pct / 100.0
-            risk_amount = base_amount * risk_pct / 100.0
+            # (A) grand total WITHOUT VAT using same QWeb rounding
+            grand_no_vat = order._costing_total_no_vat()
 
-            if currency:
-                overhead_amount = currency.round(overhead_amount)
-                risk_amount = currency.round(risk_amount)
-                buffer_total = currency.round(base_amount + overhead_amount + risk_amount)
-            else:
-                buffer_total = base_amount + overhead_amount + risk_amount
+            # (B) compute buffer (base + OH + risk) also line-based & rounded
+            base_total = 0.0
+            oh_total = 0.0
+            risk_total = 0.0
 
-            order.overhead_amount = overhead_amount
-            order.risk_amount = risk_amount
+            lines = order.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment)
+            for l in lines:
+                base = l.price_unit or 0.0
+                qty = l.product_uom_qty or 0.0
+
+                # base line: round(unit) then round(unit*qty)
+                base_unit_r = currency.round(base)
+                base_line_r = currency.round(base_unit_r * qty)
+                base_total += base_line_r
+
+                oh_unit_r = currency.round(base * (order.overhead_percent or 0.0) / 100.0)
+                risk_unit_r = currency.round(base * (order.risk_percent or 0.0) / 100.0)
+
+                oh_total += currency.round(oh_unit_r * qty)
+                risk_total += currency.round(risk_unit_r * qty)
+
+            buffer_total = base_total + oh_total + risk_total
+
+            order.overhead_amount = oh_total
+            order.risk_amount = risk_total
             order.buffer_total_amount = buffer_total
-        self._compute_profit_amount()
+
+            # profit is the delta (rounded at currency precision)
+            order.profit_grand_total = grand_no_vat
+            order.profit_amount = currency.round(grand_no_vat - buffer_total)
 
     @api.depends(
         "buffer_total_amount",

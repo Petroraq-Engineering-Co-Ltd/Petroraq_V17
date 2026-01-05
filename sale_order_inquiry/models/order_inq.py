@@ -2,6 +2,7 @@ from odoo import api, models, fields, _
 from odoo.exceptions import ValidationError
 from datetime import timedelta
 import re
+from odoo.exceptions import UserError
 
 
 class OrderInquiry(models.Model):
@@ -38,6 +39,10 @@ class OrderInquiry(models.Model):
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
     inquiry_type = fields.Selection([('construction', 'Project'), ('trading', 'Trading')], string="Inquiry Type",
                                     default="construction", required=True)
+
+    def _inq_default_construction_sections(self):
+        """Return section titles to create on quotation for construction inquiries."""
+        return ["Material:", "Equipment/Tools", "Third Party Services", "Labor"]
 
     def copy(self, default=None):
         self.ensure_one()
@@ -151,11 +156,24 @@ class OrderInquiry(models.Model):
         sale_order = self.env['sale.order'].create({
             'partner_id': self.partner_id.id,
             'order_inquiry_id': self.id,
-            'inquiry_type': self.inquiry_type
+            'inquiry_type': self.inquiry_type,
         })
 
         self.sale_order_id = sale_order.id
         self.sale_order_ids = [(4, sale_order.id)]
+
+        if self.inquiry_type == 'construction':
+            SaleOrderLine = self.env['sale.order.line']
+            seq = 10
+            for title in self._inq_default_construction_sections():
+                SaleOrderLine.create({
+                    'order_id': sale_order.id,
+                    'display_type': 'line_section',
+                    'name': title,
+                    'sequence': seq,
+                    'is_locked_section': True
+                })
+                seq += 10
 
         return {
             'type': 'ir.actions.act_window',
@@ -196,6 +214,49 @@ class SaleOrderInherit(models.Model):
     order_inquiry_id = fields.Many2one('order.inq', string='Order Inquiry ID')
     inquiry_type = fields.Selection(related='order_inquiry_id.inquiry_type')
 
+    def _so_renumber_lines_with_gaps(self):
+        self.ensure_one()
+        seq = 10
+        for l in self.order_line.sorted("sequence"):
+            l.sequence = seq
+            seq += 10
+
+    def _so_next_line_after(self, line):
+        self.ensure_one()
+        lines = self.order_line.sorted("sequence")
+        return lines.filtered(lambda l: l.sequence > line.sequence)[:1]
+
+    def action_add_line_under_section(self, section_line_id, mode="product"):
+        """
+        mode: 'product' | 'section' | 'note'
+        """
+        self.ensure_one()
+
+        section = self.env["sale.order.line"].browse(section_line_id).exists()
+        if not section or section.order_id.id != self.id:
+            raise UserError(_("Invalid section line."))
+        if section.display_type != "line_section":
+            raise UserError(_("Target is not a section."))
+
+        next_line = self._so_next_line_after(section)
+
+        if next_line and (next_line.sequence - section.sequence) > 1:
+            new_seq = section.sequence + 1
+        else:
+            self._so_renumber_lines_with_gaps()
+            new_seq = section.sequence + 10
+
+        vals = {"order_id": self.id, "sequence": new_seq}
+
+        if mode == "section":
+            vals.update({"display_type": "line_section", "name": _("New Section")})
+        elif mode == "note":
+            vals.update({"display_type": "line_note", "name": _("New Note")})
+        # else product: keep empty -> user selects product
+
+        line = self.env["sale.order.line"].create(vals)
+        return line.id
+
 
 class RejectReasonWizard(models.TransientModel):
     _name = 'order.inq.reject.reason.wizard'
@@ -220,3 +281,22 @@ class OrderInquiryExtendDeadlineWizard(models.TransientModel):
             'deadline_submission': self.new_deadline,
             'state': 'confirm',
         })
+
+
+class SaleOrderLine(models.Model):
+    _inherit = "sale.order.line"
+
+    is_locked_section = fields.Boolean(default=False)
+
+    def unlink(self):
+        for l in self:
+            if l.display_type == "line_section" and l.is_locked_section:
+                raise UserError(_("You cannot delete default sections."))
+        return super().unlink()
+
+    def write(self):
+        for l in self:
+            if l.display_type == "line_section" and l.is_locked_section:
+                raise UserError(_("You cannot modify default sections"))
+
+        return super().write()
