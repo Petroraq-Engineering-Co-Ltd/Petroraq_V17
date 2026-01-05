@@ -297,5 +297,6 @@ class SaleOrderLine(models.Model):
     def write(self, vals):
         for l in self:
             if l.display_type == "line_section" and l.is_locked_section:
+                # Allow harmless writes that Odoo does automatically (optional, see below)
                 raise UserError(_("You cannot modify default sections"))
         return super().write(vals)

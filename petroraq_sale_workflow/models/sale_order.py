@@ -655,134 +655,134 @@ from odoo.tools import frozendict
 class SaleAdvancePaymentInv(models.TransientModel):
     _inherit = "sale.advance.payment.inv"
 
-    def _prepare_down_payment_lines_values(self, order):
-        self.ensure_one()
-
-        # -----------------------------
-        # 1️⃣ Decide commercial base
-        # -----------------------------
-        commercial_total = (
-            order.final_grand_total
-            if order.final_grand_total is not False
-            else order.amount_total
-        )
-
-        untaxed_total = order.amount_untaxed or 0.0
-
-        # Safety
-        if not untaxed_total:
-            return []
-
-        # -----------------------------
-        # 2️⃣ Compute scaling factor
-        # -----------------------------
-        scaling_factor = commercial_total / untaxed_total
-
-        # -----------------------------
-        # 3️⃣ Compute advance %
-        # -----------------------------
-        if self.advance_payment_method == "percentage":
-            advance_ratio = self.amount / 100.0
-        else:
-            advance_ratio = self.fixed_amount / commercial_total
-
-        # -----------------------------
-        # 4️⃣ Base lines (core logic)
-        # -----------------------------
-        order_lines = order.order_line.filtered(
-            lambda l: not l.display_type and not l.is_downpayment
-        )
-
-        base_vals = self._prepare_base_downpayment_line_values(order)
-
-        tax_base_lines = [
-            line._convert_to_tax_base_line_dict(
-                analytic_distribution=line.analytic_distribution,
-                handle_price_include=False,
-            )
-            for line in order_lines
-        ]
-
-        computed_taxes = self.env["account.tax"]._compute_taxes(tax_base_lines)
-
-        down_payment_values = []
-
-        for base_line, tax_data in computed_taxes["base_lines_to_update"]:
-            taxes = base_line["taxes"].flatten_taxes_hierarchy()
-            fixed_taxes = taxes.filtered(lambda t: t.amount_type == "fixed")
-
-            # 🔥 SCALE THE BASE HERE
-            scaled_subtotal = tax_data["price_subtotal"] * scaling_factor
-
-            down_payment_values.append([
-                taxes - fixed_taxes,
-                base_line["analytic_distribution"],
-                scaled_subtotal,
-            ])
-
-            for fixed_tax in fixed_taxes:
-                if fixed_tax.price_include:
-                    continue
-
-                if fixed_tax.include_base_amount:
-                    pct_tax = taxes[list(taxes).index(fixed_tax) + 1:] \
-                        .filtered(lambda t: t.is_base_affected and t.amount_type != "fixed")
-                else:
-                    pct_tax = self.env["account.tax"]
-
-                down_payment_values.append([
-                    pct_tax,
-                    base_line["analytic_distribution"],
-                    base_line["quantity"] * fixed_tax.amount,
-                ])
-
-        # -----------------------------
-        # 5️⃣ Group per tax (core)
-        # -----------------------------
-        line_map = {}
-        analytic_map = {}
-
-        for taxes, analytic_dist, subtotal in down_payment_values:
-            key = frozendict({"tax_id": tuple(sorted(taxes.ids))})
-
-            line_map.setdefault(key, {
-                **base_vals,
-                **key,
-                "product_uom_qty": 0.0,
-                "price_unit": 0.0,
-            })
-
-            line_map[key]["price_unit"] += subtotal
-
-            if analytic_dist:
-                analytic_map.setdefault(key, [])
-                analytic_map[key].append((subtotal, analytic_dist))
-
-        # -----------------------------
-        # 6️⃣ Final lines
-        # -----------------------------
-        lines = []
-
-        for key, vals in line_map.items():
-            if order.currency_id.is_zero(vals["price_unit"]):
-                continue
-
-            if analytic_map.get(key):
-                merged_analytic = {}
-                for subtotal, dist in analytic_map[key]:
-                    for acc, ratio in dist.items():
-                        merged_analytic.setdefault(acc, 0.0)
-                        merged_analytic[acc] += (
-                                                        subtotal / vals["price_unit"]
-                                                ) * ratio
-                vals["analytic_distribution"] = merged_analytic
-
-            # 🔥 APPLY ADVANCE %
-            vals["price_unit"] = vals["price_unit"] * advance_ratio
-
-            lines.append(vals)
-
-        return lines
+    # def _prepare_down_payment_lines_values(self, order):
+    #     self.ensure_one()
+    #
+    #     # -----------------------------
+    #     # 1️⃣ Decide commercial base
+    #     # -----------------------------
+    #     commercial_total = (
+    #         order.final_grand_total
+    #         if order.final_grand_total is not False
+    #         else order.amount_total
+    #     )
+    #
+    #     untaxed_total = order.amount_untaxed or 0.0
+    #
+    #     # Safety
+    #     if not untaxed_total:
+    #         return []
+    #
+    #     # -----------------------------
+    #     # 2️⃣ Compute scaling factor
+    #     # -----------------------------
+    #     scaling_factor = commercial_total / untaxed_total
+    #
+    #     # -----------------------------
+    #     # 3️⃣ Compute advance %
+    #     # -----------------------------
+    #     if self.advance_payment_method == "percentage":
+    #         advance_ratio = self.amount / 100.0
+    #     else:
+    #         advance_ratio = self.fixed_amount / commercial_total
+    #
+    #     # -----------------------------
+    #     # 4️⃣ Base lines (core logic)
+    #     # -----------------------------
+    #     order_lines = order.order_line.filtered(
+    #         lambda l: not l.display_type and not l.is_downpayment
+    #     )
+    #
+    #     base_vals = self._prepare_base_downpayment_line_values(order)
+    #
+    #     tax_base_lines = [
+    #         line._convert_to_tax_base_line_dict(
+    #             analytic_distribution=line.analytic_distribution,
+    #             handle_price_include=False,
+    #         )
+    #         for line in order_lines
+    #     ]
+    #
+    #     computed_taxes = self.env["account.tax"]._compute_taxes(tax_base_lines)
+    #
+    #     down_payment_values = []
+    #
+    #     for base_line, tax_data in computed_taxes["base_lines_to_update"]:
+    #         taxes = base_line["taxes"].flatten_taxes_hierarchy()
+    #         fixed_taxes = taxes.filtered(lambda t: t.amount_type == "fixed")
+    #
+    #         # 🔥 SCALE THE BASE HERE
+    #         scaled_subtotal = tax_data["price_subtotal"] * scaling_factor
+    #
+    #         down_payment_values.append([
+    #             taxes - fixed_taxes,
+    #             base_line["analytic_distribution"],
+    #             scaled_subtotal,
+    #         ])
+    #
+    #         for fixed_tax in fixed_taxes:
+    #             if fixed_tax.price_include:
+    #                 continue
+    #
+    #             if fixed_tax.include_base_amount:
+    #                 pct_tax = taxes[list(taxes).index(fixed_tax) + 1:] \
+    #                     .filtered(lambda t: t.is_base_affected and t.amount_type != "fixed")
+    #             else:
+    #                 pct_tax = self.env["account.tax"]
+    #
+    #             down_payment_values.append([
+    #                 pct_tax,
+    #                 base_line["analytic_distribution"],
+    #                 base_line["quantity"] * fixed_tax.amount,
+    #             ])
+    #
+    #     # -----------------------------
+    #     # 5️⃣ Group per tax (core)
+    #     # -----------------------------
+    #     line_map = {}
+    #     analytic_map = {}
+    #
+    #     for taxes, analytic_dist, subtotal in down_payment_values:
+    #         key = frozendict({"tax_id": tuple(sorted(taxes.ids))})
+    #
+    #         line_map.setdefault(key, {
+    #             **base_vals,
+    #             **key,
+    #             "product_uom_qty": 0.0,
+    #             "price_unit": 0.0,
+    #         })
+    #
+    #         line_map[key]["price_unit"] += subtotal
+    #
+    #         if analytic_dist:
+    #             analytic_map.setdefault(key, [])
+    #             analytic_map[key].append((subtotal, analytic_dist))
+    #
+    #     # -----------------------------
+    #     # 6️⃣ Final lines
+    #     # -----------------------------
+    #     lines = []
+    #
+    #     for key, vals in line_map.items():
+    #         if order.currency_id.is_zero(vals["price_unit"]):
+    #             continue
+    #
+    #         if analytic_map.get(key):
+    #             merged_analytic = {}
+    #             for subtotal, dist in analytic_map[key]:
+    #                 for acc, ratio in dist.items():
+    #                     merged_analytic.setdefault(acc, 0.0)
+    #                     merged_analytic[acc] += (
+    #                                                     subtotal / vals["price_unit"]
+    #                                             ) * ratio
+    #             vals["analytic_distribution"] = merged_analytic
+    #
+    #         # 🔥 APPLY ADVANCE %
+    #         vals["price_unit"] = vals["price_unit"] * advance_ratio
+    #
+    #         lines.append(vals)
+    #
+    #     return lines
 
     def create_invoices(self):
         res = super().create_invoices()
