@@ -1,4 +1,5 @@
 from odoo import models
+from odoo.tools import frozendict
 
 
 class SaleAdvancePaymentInv(models.TransientModel):

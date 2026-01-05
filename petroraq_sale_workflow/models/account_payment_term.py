@@ -3,7 +3,6 @@ from odoo import fields, models
 from odoo.tools.float_utils import float_round, float_compare
 
 
-
 class AccountPaymentTerm(models.Model):
     _inherit = "account.payment.term"
 
