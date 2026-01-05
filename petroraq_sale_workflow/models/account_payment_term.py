@@ -128,9 +128,8 @@ class SaleOrder(models.Model):
                 continue
 
             remaining_dp_amount = order._dp_remaining_amount()
-
-            vat_factor = 1.15
-            target_amount = min(remaining_dp_amount, invoice_base * vat_factor * dp_percent)
+            target_amount = min(remaining_dp_amount, invoice_base * dp_percent)
+            fraction = target_amount / dp_paid
             currency = order.currency_id or order.company_id.currency_id
             target_amount = target_amount
 
