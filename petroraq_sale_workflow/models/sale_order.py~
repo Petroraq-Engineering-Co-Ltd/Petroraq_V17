@@ -469,23 +469,15 @@ class SaleOrder(models.Model):
     )
     def _compute_profit_amount(self):
         for order in self:
-            currency = order.currency_id or order.company_id.currency_id
-
-            base = (
-                       order.buffer_total_amount
-                       if order.buffer_total_amount is not False and order.buffer_total_amount is not None
-                       else order.amount_untaxed
-                   ) or 0.0
-
+            base = order.buffer_total_amount if order.buffer_total_amount or order.buffer_total_amount == 0.0 else order.amount_untaxed
             profit_pct = order.profit_percent or 0.0
-
+            currency = order.currency_id or order.company_id.currency_id
             profit_amount = base * profit_pct / 100.0
-            grand_total = base + profit_amount
-
             if currency:
                 profit_amount = currency.round(profit_amount)
-                grand_total = currency.round(grand_total)
-
+                grand_total = currency.round((base or 0.0) + profit_amount)
+            else:
+                grand_total = (base or 0.0) + profit_amount
             order.profit_amount = profit_amount
             order.profit_grand_total = grand_total
 
