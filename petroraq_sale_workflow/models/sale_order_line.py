@@ -1,11 +1,5 @@
-from copy import deepcopy
-
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError, AccessError
 from odoo.tools import format_amount, html_escape
-from odoo.tools.float_utils import float_round, float_compare
-from odoo.tools import frozendict
-from odoo.fields import Command
 
 
 class SaleOrderLine(models.Model):

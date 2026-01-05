@@ -1,10 +1,8 @@
 from copy import deepcopy
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError, AccessError
+from odoo.exceptions import UserError
 from odoo.tools import format_amount, html_escape
-from odoo.tools.float_utils import float_round, float_compare
-from odoo.tools import frozendict
 
 
 class SaleOrder(models.Model):
@@ -115,7 +113,6 @@ class SaleOrder(models.Model):
                 profit = unit_or * (order.profit_percent or 0.0) / 100.0
                 final_unit = unit_or + profit
 
-                # EXACTLY like QWeb:
                 final_unit_r = currency.round(final_unit)
                 line_total_r = currency.round(final_unit_r * qty)
 
@@ -125,7 +122,6 @@ class SaleOrder(models.Model):
             order.final_grand_total = total + vat_amt_r
 
     def _costing_final_unit(self, base):
-        """final_unit = base + oh + risk + profit(on unit_or)"""
         self.ensure_one()
         oh = base * (self.overhead_percent or 0.0) / 100.0
         risk = base * (self.risk_percent or 0.0) / 100.0
@@ -134,7 +130,6 @@ class SaleOrder(models.Model):
         return unit_or + profit
 
     def _costing_total_no_vat(self):
-        """Sum of rounded line totals: round(round(final_unit)*qty)."""
         self.ensure_one()
         currency = self.currency_id or self.company_id.currency_id
 
@@ -233,15 +228,6 @@ class SaleOrder(models.Model):
             },
         }
 
-    # @api.model_create_multi
-    # def create(self, vals_list):
-    #     orders = super().create(vals_list)
-    #     auto_orders = orders.filtered(lambda o: o.approval_state == "draft")
-    #     if auto_orders:
-    #         # auto trigger approval request so process starts without manual action
-    #         auto_orders.action_request_manager_approval()
-    #     return orders
-
     def action_reset_to_draft(self):
         for order in self:
             if order.approval_state == "rejected":
@@ -250,9 +236,7 @@ class SaleOrder(models.Model):
 
     @api.model
     def default_get(self, fields_list):
-        """Set a sensible default payment term for new quotations (module-provided).
-        Falls back to the regular default if the data record is not available.
-        """
+
         defaults = super().default_get(fields_list)
         if "payment_term_id" not in defaults or not defaults.get("payment_term_id"):
             try:
@@ -292,11 +276,7 @@ class SaleOrder(models.Model):
     def _compute_buffer_amounts(self):
         for order in self:
             currency = order.currency_id or order.company_id.currency_id
-
-            # (A) grand total WITHOUT VAT using same QWeb rounding
             grand_no_vat = order._costing_total_no_vat()
-
-            # (B) compute buffer (base + OH + risk) also line-based & rounded
             base_total = 0.0
             oh_total = 0.0
             risk_total = 0.0
@@ -305,8 +285,6 @@ class SaleOrder(models.Model):
             for l in lines:
                 base = l.price_unit or 0.0
                 qty = l.product_uom_qty or 0.0
-
-                # base line: round(unit) then round(unit*qty)
                 base_unit_r = currency.round(base)
                 base_line_r = currency.round(base_unit_r * qty)
                 base_total += base_line_r
@@ -323,7 +301,6 @@ class SaleOrder(models.Model):
             order.risk_amount = risk_total
             order.buffer_total_amount = buffer_total
 
-            # profit is the delta (rounded at currency precision)
             order.profit_grand_total = grand_no_vat
             order.profit_amount = currency.round(grand_no_vat - buffer_total)
 
@@ -394,8 +371,6 @@ class SaleOrder(models.Model):
             untaxed_label = _("Untaxed Amount")
             desired_label = _("Total Amount")
             removal_labels = {_("Tax 15%"), "Tax 15%"}
-
-            # Rename the subtotal label in the widget output.
             for subtotal in tax_totals.get("subtotals", []):
                 if subtotal.get("name") == untaxed_label:
                     subtotal["name"] = desired_label

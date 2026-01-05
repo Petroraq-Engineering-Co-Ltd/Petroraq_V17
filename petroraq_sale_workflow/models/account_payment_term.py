@@ -1,12 +1,7 @@
 from odoo import fields, models
-from copy import deepcopy
 
-from odoo import api, fields, models, _
-from odoo.exceptions import UserError, AccessError
-from odoo.tools import format_amount, html_escape
 from odoo.tools.float_utils import float_round, float_compare
-from odoo.tools import frozendict
-from odoo.fields import Command
+
 
 
 class AccountPaymentTerm(models.Model):
@@ -131,7 +126,6 @@ class SaleOrder(models.Model):
             target_amount = min(remaining_dp_amount, invoice_base * dp_percent)
             fraction = target_amount / dp_paid
             currency = order.currency_id or order.company_id.currency_id
-            target_amount = target_amount
 
             if currency.is_zero(target_amount):
                 continue
