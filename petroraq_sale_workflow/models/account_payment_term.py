@@ -97,9 +97,12 @@ class SaleOrder(models.Model):
             if not dp_percent:
                 continue
 
-            dp_paid = order._dp_paid_amount()
-            if not dp_paid:
-                continue  # no posted DP invoice yet
+            currency = order.currency_id or order.company_id.currency_id
+
+            # Posted down payments (monetary) rounded in currency precision
+            dp_paid = currency.round(order._dp_paid_amount())
+            if currency.is_zero(dp_paid):
+                continue  # no effective posted DP invoice yet
 
             deducted_qty = order._dp_deducted_qty()
             remaining_qty = max(0.0, 1.0 - deducted_qty)
@@ -121,16 +124,26 @@ class SaleOrder(models.Model):
             if invoice_base <= 0:
                 continue
 
-            remaining_dp_amount = order._dp_remaining_amount()
-            target_amount = min(remaining_dp_amount, invoice_base * dp_percent)
-            fraction = target_amount / dp_paid
-            currency = order.currency_id or order.company_id.currency_id
+            # Remaining DP and invoice base rounded in currency precision to
+            # avoid tiny residuals coming from float arithmetic.
+            remaining_dp_amount = currency.round(order._dp_remaining_amount())
+            invoice_base = currency.round(invoice_base)
+
+            # Target DP to deduct on THIS invoice (monetary, rounded)
+            target_amount = min(
+                remaining_dp_amount,
+                currency.round(invoice_base * dp_percent),
+            )
 
             if currency.is_zero(target_amount):
                 continue
 
+            # Fraction of the original DP to deduct now (bounded & rounded)
             fraction = target_amount / dp_paid
-            fraction = min(fraction, remaining_qty)
+            fraction = min(
+                remaining_qty,
+                float_round(fraction, precision_digits=6),
+            )
 
             if fraction <= 0:
                 continue
