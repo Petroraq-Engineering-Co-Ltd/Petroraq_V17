@@ -39,11 +39,28 @@ class SaleOrderLine(models.Model):
             profit = unit_or * (line.order_id.profit_percent / 100.0)
             line.final_price_unit = unit_or + profit
 
+    # sale_order_line.py
+
     def _prepare_invoice_line(self, **optional_values):
         vals = super()._prepare_invoice_line(**optional_values)
 
+        # Normal product lines: keep your override
         if not self.display_type and not self.is_downpayment:
             vals["price_unit"] = self.final_price_unit
+            return vals
+
+        # Downpayment deduction line: force amount-based deduction
+        if self.is_downpayment and not self.display_type:
+            qty = vals.get("quantity") or 0.0
+            if qty < 0:  # deduction
+                amount_map = self.env.context.get("dp_deduct_amounts") or {}
+                target_amount = amount_map.get(self.order_id.id)
+
+                if target_amount:
+                    # Make subtotal = (-1) * target_amount  => -target_amount
+                    vals["quantity"] = -1.0
+                    vals["price_unit"] = target_amount
+                    vals["discount"] = 0.0
 
         return vals
 

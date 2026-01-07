@@ -30,46 +30,30 @@ class SaleOrder(models.Model):
         return sum(amls.mapped("price_subtotal")) or 0.0
 
     def _dp_remaining_amount(self):
-        """Remaining DP untaxed based on posted moves linked to dp SO line."""
+        """Remaining DP = paid - deducted (all posted, untaxed)."""
         self.ensure_one()
-        dp_line = self._dp_sale_line()
-        if not dp_line:
-            return 0.0
-
-        amls = dp_line.invoice_lines.filtered(
-            lambda l: l.move_id.state == "posted"
-                      and l.move_id.move_type == "out_invoice"
-        )
-
-        paid = sum(l.price_subtotal for l in amls if (l.price_subtotal or 0.0) > 0.0)
-        deducted = sum(abs(l.price_subtotal) for l in amls if (l.price_subtotal or 0.0) < 0.0)
-
-        return max(0.0, paid - deducted)
+        currency = self.currency_id or self.company_id.currency_id
+        paid = currency.round(self._dp_paid_amount())
+        deducted = currency.round(self._dp_deducted_amount())
+        return max(0.0, currency.round(paid - deducted))
 
     def _dp_sale_line(self):
         self.ensure_one()
         return self.order_line.filtered(lambda l: l.is_downpayment and not l.display_type)[:1]
 
-    def _dp_deducted_qty(self):
-        """
-        How much of DP line (out of 1.0) has already been deducted in REGULAR invoices.
-        We count only negative dp quantities from posted customer invoices.
-        """
+    def _dp_deducted_amount(self):
+        """Total DP deducted (untaxed) from posted regular invoices (negative dp lines)."""
         self.ensure_one()
         dp_line = self._dp_sale_line()
         if not dp_line:
             return 0.0
 
-        deducted = 0.0
         amls = dp_line.invoice_lines.filtered(
             lambda l: l.move_id.state == "posted"
                       and l.move_id.move_type == "out_invoice"
-                      and (l.price_subtotal or 0.0) < 0  # only deduction lines
+                      and (l.price_subtotal or 0.0) < 0.0
         )
-        for aml in amls:
-            deducted += abs(aml.quantity or 0.0)
-
-        return max(0.0, min(1.0, float_round(deducted, precision_digits=6)))
+        return sum(abs(l.price_subtotal) for l in amls) or 0.0
 
     def _is_fully_delivered(self):
         """Final invoice if all stockable/consu lines are fully delivered."""
@@ -92,63 +76,43 @@ class SaleOrder(models.Model):
     def _get_invoiceable_lines(self, final=False):
         lines = super()._get_invoiceable_lines(final=final)
 
+        dp_deduct_amounts = dict(self.env.context.get("dp_deduct_amounts") or {})
+
         for order in self:
             dp_percent = order.dp_percent or 0.0
             if not dp_percent:
                 continue
 
             currency = order.currency_id or order.company_id.currency_id
-
-            # Posted down payments (monetary) rounded in currency precision
-            dp_paid = currency.round(order._dp_paid_amount())
-            if currency.is_zero(dp_paid):
-                continue  # no effective posted DP invoice yet
-
-            deducted_qty = order._dp_deducted_qty()
-            remaining_qty = max(0.0, 1.0 - deducted_qty)
-            if remaining_qty <= 0:
+            remaining_dp_amount = currency.round(order._dp_remaining_amount())
+            if currency.is_zero(remaining_dp_amount):
                 continue
 
-            # Invoice base (untaxed) for THIS invoice = delivered qty_to_invoice * final_price_unit
+            # compute invoice_base from invoiceable non-dp lines (as we discussed)
             base_lines = lines.filtered(
                 lambda l: l.order_id == order and not l.display_type and not l.is_downpayment
             )
 
             invoice_base = 0.0
             for l in base_lines:
-                qty = l.qty_to_invoice if l.qty_to_invoice is not None else 0.0
-                # Use your commercial unit price for correct base (since you override invoice line price_unit)
-                unit = l.final_price_unit or l.price_unit or 0.0
-                invoice_base += qty * unit
+                qty = l.qty_to_invoice or 0.0
+                unit_r = currency.round(l.final_price_unit or l.price_unit or 0.0)
+                invoice_base += currency.round(unit_r * qty)
 
+            invoice_base = currency.round(invoice_base)
             if invoice_base <= 0:
                 continue
 
-            # Remaining DP and invoice base rounded in currency precision to
-            # avoid tiny residuals coming from float arithmetic.
-            remaining_dp_amount = currency.round(order._dp_remaining_amount())
-            invoice_base = currency.round(invoice_base)
-
-            # Target DP to deduct on THIS invoice (monetary, rounded)
-            target_amount = min(
-                remaining_dp_amount,
-                currency.round(invoice_base * dp_percent),
-            )
-
+            target_amount = min(remaining_dp_amount, currency.round(invoice_base * dp_percent))
             if currency.is_zero(target_amount):
                 continue
 
-            # Fraction of the original DP to deduct now (bounded & rounded)
-            fraction = target_amount / dp_paid
-            fraction = min(
-                remaining_qty,
-                float_round(fraction, precision_digits=6),
-            )
+            dp_deduct_amounts[order.id] = target_amount
 
-            if fraction <= 0:
-                continue
+            # ✅ Force include the DP SO line even if Odoo excluded it
+            dp_so_line = order._dp_sale_line()
+            if dp_so_line:
+                lines |= dp_so_line
+                dp_so_line.qty_to_invoice = -1.0  # keep amount in price_unit later
 
-            for dp_so_line in lines.filtered(lambda l: l.order_id == order and l.is_downpayment):
-                dp_so_line.qty_to_invoice = -fraction
-
-        return lines
+        return lines.with_context(dp_deduct_amounts=dp_deduct_amounts)
