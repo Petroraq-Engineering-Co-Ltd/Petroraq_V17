@@ -12,4 +12,18 @@
                 <![CDATA[ <p style="font-size:13px;"> <t t-set="doc_name" t-value="'quotation' if object.state in ('draft','sent') else 'order'"/> Hello,<br/><br/> Your <t t-out="doc_name"/> <strong t-out="object.name"/> <t t-if="object.origin">(Reference: <t t-out="object.origin"/>)</t> amounting to <strong t-out="format_amount(object.final_grand_total, object.currency_id)"/> is ready for review. <br/><br/> Do not hesitate to contact us. <t t-if="not is_html_empty(object.user_id.signature)"> <br/><br/> <t t-out="object.user_id.signature"/> </t> </p> ]]></field>
         </record>
     </data>
+    <data noupdate="1">
+        <record id="petroraq_custom_proforma_email" model="mail.template">
+            <field name="name">Send Pro-forma</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="email_from">${(object.user_id.email_formatted or '')}</field>
+            <field name="email_to">${(object.partner_id.email or '')}</field>
+            <field name="subject">Petroraq Pro-Forma Invoice</field>
+            <field name="auto_delete" eval="True"/>
+            <field name="report_template_ids" eval="[(4, ref('sale.action_report_pro_forma_invoice'))]"/>
+
+            <field name="body_html">
+                <![CDATA[ <p style="font-size:13px;"> <t t-set="doc_name" t-value="'Proforma Invoice' if object.state in ('draft','sent') else 'order'"/> Hello,<br/><br/> Your <t t-out="doc_name"/> <strong t-out="object.name"/> <t t-if="object.origin">(Reference: <t t-out="object.origin"/>)</t> amounting to <strong t-out="format_amount(object.profit_grand_total, object.currency_id)"/> is ready for review. <br/><br/> Do not hesitate to contact us. <t t-if="not is_html_empty(object.user_id.signature)"> <br/><br/> <t t-out="object.user_id.signature"/> </t> </p> ]]></field>
+        </record>
+    </data>
 </odoo>

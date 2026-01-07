@@ -21,6 +21,14 @@ class SaleOrder(models.Model):
         string="Down Payment %",
         copy=False,
     )
+    po_date = fields.Date(
+        string="PO Date",
+        copy=False,
+    )
+    po_number = fields.Char(
+        string="PO Number",
+        copy=False,
+    )
 
     section_subtotal_summary = fields.Html(
         string="Section Subtotals",
@@ -86,6 +94,11 @@ class SaleOrder(models.Model):
         store=True,
         help="Grand total including profit."
     )
+    proforma_dp = fields.Integer(
+        string="Down payment Percentage",
+        store=True,
+        help="The amount of Advance payment required upon the order confirmation."
+    )
 
     final_grand_total = fields.Monetary(
         string="Grand Taxed Total",
@@ -94,6 +107,7 @@ class SaleOrder(models.Model):
         store=True,
         help="Grand total including profit."
     )
+
 
     @api.depends("order_line", "overhead_percent", "risk_percent", "profit_percent", "currency_id")
     def _compute_final_totals(self):
@@ -271,10 +285,48 @@ class SaleOrder(models.Model):
         return defaults
 
     def action_quotation_send(self):
-        for order in self:
-            if order.approval_state != "approved":
-                raise UserError(_("You can only send the quotation to the customer after final approval."))
-        return super().action_quotation_send()
+        self.ensure_one()
+
+        # keep your approval rule (from the second override)
+        if self.approval_state != "approved":
+            raise UserError(_("You can only send the quotation to the customer after final approval."))
+
+        # keep standard validations
+        self.order_line._validate_analytic_distribution()
+
+        lang = self.env.context.get("lang")
+
+        # choose template based on proforma flag (your first override logic)
+        if self.env.context.get("proforma"):
+            mail_template = self.env.ref(
+                "petroraq_sale_workflow.petroraq_custom_proforma_email",
+                raise_if_not_found=False,
+            )
+        else:
+            mail_template = self._find_mail_template()
+
+        if mail_template and mail_template.lang:
+            lang = mail_template._render_lang(self.ids)[self.id]
+
+        ctx = {
+            "default_model": "sale.order",
+            "default_res_ids": self.ids,
+            "default_template_id": mail_template.id if mail_template else None,
+            "default_composition_mode": "comment",
+            "mark_so_as_sent": True,
+            "default_email_layout_xmlid": "mail.mail_notification_layout_with_responsible_signature",
+            "proforma": self.env.context.get("proforma", False),
+            "force_email": True,
+            "model_description": self.with_context(lang=lang).type_name,
+        }
+        return {
+            "type": "ir.actions.act_window",
+            "view_mode": "form",
+            "res_model": "mail.compose.message",
+            "views": [(False, "form")],
+            "target": "new",
+            "context": ctx,
+        }
 
     def _costing_final_unit(self, base):
         """Return final unit (OH + risk + profit) using SAME rounding pipeline as QWeb/invoice."""

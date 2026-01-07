@@ -137,7 +137,7 @@
 
             <tbody>
                 <tr>
-                    <td class="text-end">
+                    <td>
                         <strong>Total Price</strong>
                     </td>
                     <td class="text-end">
@@ -145,7 +145,21 @@
                               t-options="{'widget':'monetary','display_currency':currency}"/>
                     </td>
                 </tr>
-                <tr>
+                <tr t-if="is_pro_forma">
+                    <td>
+                        <strong t-out="doc.proforma_dp"/>
+                        <strong>% Advance</strong>
+
+
+                    </td>
+                    <td class="text-end">
+                        <span t-out="round((doc.profit_grand_total * (doc.proforma_dp/100)),2)"
+                              t-options="{'widget':'monetary','display_currency':currency}"/>
+
+                    </td>
+                </tr>
+
+                <tr t-if="not is_pro_forma">
                     <td class="text-end">
                         <strong>15% VAT Amount</strong>
                     </td>
@@ -154,7 +168,7 @@
                               t-options="{'widget':'monetary','display_currency':currency}"/>
                     </td>
                 </tr>
-                <tr>
+                <tr t-if="not is_pro_forma">
                     <td class="text-end">
                         <strong>Net Total:</strong>
                     </td>
