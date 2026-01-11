@@ -108,6 +108,50 @@ class SaleOrder(models.Model):
         help="Grand total including profit."
     )
 
+    payment_term_domain = fields.Char(
+        compute="_compute_payment_term_domain",
+        store=False,
+    )
+
+
+    @api.onchange("inquiry_type")
+    def _onchange_inquiry_type_payment_term(self):
+        for order in self:
+            term = order.payment_term_id
+            if not order.inquiry_type:
+                continue
+
+            # if current selection is not allowed -> reset to a valid default
+            if order.inquiry_type == "trading":
+                if term and not term.is_trading_term:
+                    order.payment_term_id = False
+                if not order.payment_term_id:
+                    order.payment_term_id = self.env.ref(
+                        "petroraq_sale_workflow.payment_term_trading_advance",
+                        raise_if_not_found=False
+                    )
+            else:
+                if term and term.is_trading_term:
+                    order.payment_term_id = False
+                if not order.payment_term_id:
+                    order.payment_term_id = self.env.ref(
+                        "petroraq_sale_workflow.payment_term_immediate",
+                        raise_if_not_found=False
+                    )
+
+    @api.depends("inquiry_type")
+    def _compute_payment_term_domain(self):
+        for order in self:
+            if order.inquiry_type == "trading":
+                order.payment_term_domain = "[('petroraq_selectable','=',True),('is_trading_term','=',True)]"
+            else:
+                order.payment_term_domain = "[('petroraq_selectable','=',True),('is_trading_term','=',False)]"
+
+    @api.constrains("proforma_dp")
+    def _check_proforma_dp(self):
+        for order in self:
+            if order.proforma_dp > 100 or order.proforma_dp < 0:
+                raise UserError(_("Down payment percentage must be between 0 and 100"))
 
     @api.depends("order_line", "overhead_percent", "risk_percent", "profit_percent", "currency_id")
     def _compute_final_totals(self):
@@ -265,6 +309,24 @@ class SaleOrder(models.Model):
             },
         }
 
+    def action_draft(self):
+        res = super().action_draft()
+
+        for order in self:
+            order.locked = False
+            order.approval_state = "draft"
+
+        return res
+
+    def action_cancel(self):
+        res = super().action_cancel()
+
+        for order in self:
+            order.locked = False
+            order.approval_state = "rejected"
+
+        return res
+
     def action_reset_to_draft(self):
         for order in self:
             if order.approval_state == "rejected":
@@ -273,15 +335,20 @@ class SaleOrder(models.Model):
 
     @api.model
     def default_get(self, fields_list):
-
         defaults = super().default_get(fields_list)
-        if "payment_term_id" not in defaults or not defaults.get("payment_term_id"):
-            try:
-                term = self.env.ref("petroraq_sale_workflow.payment_term_immediate")
-                if term and term.id:
-                    defaults["payment_term_id"] = term.id
-            except ValueError:
-                pass
+
+        inquiry = defaults.get("inquiry_type", "trading")
+
+        if "payment_term_id" in fields_list and not defaults.get("payment_term_id"):
+            if inquiry == "trading":
+                xmlid = "petroraq_sale_workflow.payment_term_trading_advance"
+            else:
+                xmlid = "petroraq_sale_workflow.payment_term_immediate"
+
+            term = self.env.ref(xmlid, raise_if_not_found=False)
+            if term:
+                defaults["payment_term_id"] = term.id
+
         return defaults
 
     def action_quotation_send(self):
@@ -303,7 +370,10 @@ class SaleOrder(models.Model):
                 raise_if_not_found=False,
             )
         else:
-            mail_template = self._find_mail_template()
+            mail_template = self.env.ref(
+                "petroraq_sale_workflow.petroraq_custom_sale_email",
+                raise_if_not_found=False,
+            ) or self._find_mail_template()
 
         if mail_template and mail_template.lang:
             lang = mail_template._render_lang(self.ids)[self.id]
@@ -370,6 +440,16 @@ class SaleOrder(models.Model):
 
         return res
 
+    @api.depends(
+        "order_line.display_type",
+        "order_line.is_downpayment",
+        "order_line.price_unit",
+        "order_line.product_uom_qty",
+        "overhead_percent",
+        "risk_percent",
+        "profit_percent",
+        "currency_id",
+    )
     def _compute_buffer_amounts(self):
         for order in self:
             currency = order.currency_id or order.company_id.currency_id
@@ -482,12 +562,21 @@ class SaleOrder(models.Model):
 
             order.tax_totals = tax_totals
 
-    @api.constrains("payment_term_id")
+    @api.constrains("payment_term_id", "inquiry_type")
     def _check_payment_term_selectable(self):
         for order in self:
             term = order.payment_term_id
             if not term:
                 raise UserError(_("Please select a payment term before saving the quotation."))
+
             if not getattr(term, "petroraq_selectable", False):
                 raise UserError(
                     _("The selected payment term is not allowed. Please choose one of the Petroraq payment terms."))
+
+            # ✅ Trading rule
+            if order.inquiry_type == "trading":
+                if not term.is_trading_term:
+                    raise UserError(_("For Trading inquiries, only Advance and Credit payment terms are allowed."))
+            else:
+                if term.is_trading_term:
+                    raise UserError(_("Advance/Credit payment terms are only allowed for Trading inquiries."))

@@ -10,6 +10,11 @@ class AccountPaymentTerm(models.Model):
         string="Selectable for Petroraq Sales",
         default=False,
     )
+    is_trading_term = fields.Boolean(
+        string="Trading Payment Term",
+        default=False,
+        help="If enabled, this payment term is ONLY allowed when inquiry type is Trading."
+    )
 
 
 class SaleOrder(models.Model):

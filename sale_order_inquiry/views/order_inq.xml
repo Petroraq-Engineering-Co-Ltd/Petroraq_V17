@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="button_confirm" type="object" string="Confirm" class="btn-primary"
+                    <button name="button_confirm" type="object" string="Submit" class="btn-primary"
                             invisible="state in ('confirm', 'cancel', 'reject', 'expire', 'accept')"/>
                     <button name="button_cancel" type="object" string="Cancel" class="btn-secondary"
                             invisible="state in ('confirm', 'cancel', 'reject', 'expire', 'accept')"/>
@@ -42,7 +42,7 @@
                             <field name="sale_count" widget="statinfo" string="Quotation"/>
                         </button>
                     </div>
-                    <widget name="web_ribbon" title="Confirmed" bg_color="bg-success" invisible="state != 'confirm'"/>
+                    <widget name="web_ribbon" title="Submitted" bg_color="bg-success" invisible="state != 'confirm'"/>
                     <widget name="web_ribbon" title="Pending" bg_color="bg-info" invisible="state != 'pending'"/>
                     <widget name="web_ribbon" title="Accepted" bg_color="bg-info" invisible="state != 'accept'"/>
                     <widget name="web_ribbon" title="Cancelled" bg_color="bg-danger" invisible="state != 'cancel'"/>
@@ -59,14 +59,17 @@
                             <field name="inquiry_type" required="1"
                                    readonly="state in ('confirm', 'cancel', 'reject', 'expire')"/>
                             <field name="description" required="1"
+
                                    readonly="state in ('confirm', 'cancel', 'reject', 'expire')"/>
                             <field name="partner_id" required="1"
                                    readonly="state in ('confirm', 'cancel', 'reject', 'expire')"/>
                             <!--                            <field name="company_id" readonly="1"/>-->
                             <field name="email" readonly="1"/>
-                            <field name="user_id" readonly="1"/>
+                            <field name="user_id"
+                                   readonly="state in ('confirm', 'cancel', 'reject', 'expire', 'accept')"/>
                             <field name="date_order" readonly="1"/>
                             <field name="state" invisible="1"/>
+
 
                         </group>
                         <group>
@@ -80,6 +83,15 @@
                                    readonly="state in ('confirm', 'cancel', 'reject', 'expire')"/>
                             <field name="deadline_submission" required="1"
                                    readonly="state in ('confirm', 'cancel', 'reject', 'expire')"/>
+                            <field name="required_file" filename="required_file_name" required="1"/>
+                            <field name="required_file_name" invisible="1"/>
+                            <separator string="Quotation Status" colspan="2" invisible="not sale_order_id"/>
+                            <field name="quotation_main_id" readonly="1" invisible="not sale_order_id"
+                                   options="{'no_create': True}"/>
+                            <field name="quotation_state" widget="badge" invisible="not sale_order_id" readonly="1"/>
+                            <field name="quotation_approval_state" widget="badge" invisible="not sale_order_id"
+                                   readonly="1"/>
+                            <field name="quotation_amount_total" invisible="not sale_order_id" readonly="1"/>
 
 
                             <field name="sale_order_id" nolable="1" invisible="1"/>
@@ -165,6 +177,13 @@
                 </footer>
             </form>
         </field>
+    </record>
+
+    <record id="order_inq_rule_hide_pending_for_wo_user" model="ir.rule">
+        <field name="name">Order Inquiry: Hide Pending for WO User</field>
+        <field name="model_id" ref="model_order_inq"/>
+        <field name="groups" eval="[(4, ref('pr_work_order.custom_group_work_order_user'))]"/>
+        <field name="domain_force">[('state', '!=', 'pending')]</field>
     </record>
 
 

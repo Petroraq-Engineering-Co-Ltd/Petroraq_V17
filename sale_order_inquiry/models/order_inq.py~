@@ -16,13 +16,14 @@ class OrderInquiry(models.Model):
     company_id = fields.Many2one('res.company', default=lambda self: self.env.user.company_id.id, string='Company')
     contact_person = fields.Char(string="Contact Person", required=True)
     designation = fields.Char(string="Designation")
-    user_id = fields.Many2one('res.users', string='Inquiry By', default=lambda self: self.env.user)
+    user_id = fields.Many2one('res.users', string='Inquiry By',
+                              domain=lambda self: self._get_salesperson_domain(), )
     partner_id = fields.Many2one('res.partner', string='Customer', required=True, domain=[('is_company', '=', 'True')])
     email = fields.Char(string="Customer Email", related='partner_id.email')
     contact_person_email = fields.Char(string="Contact Person Email", required=True)
     contact_person_phone = fields.Char(string="Contact Person Phone", required=True)
     state = fields.Selection(
-        [('pending', 'Pending'), ('confirm', 'Confirmed'), ('accept', 'Accepted'), ('cancel', 'Cancelled'),
+        [('pending', 'Pending'), ('confirm', 'Submitted'), ('accept', 'Accepted'), ('cancel', 'Cancelled'),
          ('reject', 'Rejected'),
          ('expire', 'Expired')],
         default='pending', string='State', tracking=True)
@@ -39,6 +40,55 @@ class OrderInquiry(models.Model):
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
     inquiry_type = fields.Selection([('construction', 'Project'), ('trading', 'Trading')], string="Inquiry Type",
                                     default="construction", required=True)
+    required_file = fields.Binary(string="Required Attachment", attachment=False)
+    required_file_name = fields.Char(string="Filename")
+
+    currency_id = fields.Many2one(
+        "res.currency",
+        related="company_id.currency_id",
+        store=True,
+        readonly=True,
+    )
+
+    quotation_main_id = fields.Many2one(
+        "sale.order",
+        string="Main Quotation",
+        compute="_compute_quotation_main",
+        store=True,
+        readonly=True,
+    )
+
+    quotation_state = fields.Selection(
+        related="quotation_main_id.state",
+        string="Quotation Status",
+        store=True,
+        readonly=True,
+    )
+
+    quotation_approval_state = fields.Selection(
+        related="quotation_main_id.approval_state",
+        string="Quotation Approval Status",
+        store=True,
+        readonly=True,
+    )
+
+    quotation_amount_total = fields.Monetary(
+        related="quotation_main_id.profit_grand_total",
+        string="Quotation Total",
+        currency_field="currency_id",
+        store=True,
+        readonly=True,
+    )
+
+    @api.depends("sale_order_id", "sale_order_ids")
+    def _compute_quotation_main(self):
+        for rec in self:
+            if rec.sale_order_id:
+                rec.quotation_main_id = rec.sale_order_id
+            elif rec.sale_order_ids:
+                rec.quotation_main_id = rec.sale_order_ids.sorted("id")[-1]
+            else:
+                rec.quotation_main_id = False
 
     def _inq_default_construction_sections(self):
         """Return section titles to create on quotation for construction inquiries."""
@@ -54,6 +104,14 @@ class OrderInquiry(models.Model):
             'name': 'New',
         })
         return super().copy(default)
+
+    def _get_salesperson_domain(self):
+        return [
+            ('groups_id', 'in', (
+                    self.env.ref('sales_team.group_sale_salesman').ids +
+                    self.env.ref('sales_team.group_sale_manager').ids
+            ))
+        ]
 
     @api.model
     def _cron_expire_inquiries_without_quotation(self):
@@ -126,9 +184,29 @@ class OrderInquiry(models.Model):
 
     @api.model
     def create(self, vals):
+        # sequence
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('order.inq.sequence') or "New"
-        return super(OrderInquiry, self).create(vals)
+
+        # require file at create-time
+        if not vals.get("required_file"):
+            raise UserError(_("You must upload the required attachment before creating the inquiry."))
+
+        file_content = vals.pop("required_file")
+        file_name = vals.pop("required_file_name", "Inquiry Attachment")
+
+        rec = super(OrderInquiry, self).create(vals)
+
+        self.env["ir.attachment"].create({
+            "name": file_name,
+            "datas": file_content,
+            "res_model": "order.inq",
+            "res_id": rec.id,
+            "type": "binary",
+            "mimetype": False,
+        })
+
+        return rec
 
     def button_cancel(self):
         if self.state == 'pending':
@@ -212,7 +290,11 @@ class SaleOrderInherit(models.Model):
     _inherit = 'sale.order'
 
     order_inquiry_id = fields.Many2one('order.inq', string='Order Inquiry ID')
-    inquiry_type = fields.Selection(related='order_inquiry_id.inquiry_type')
+    inquiry_type = fields.Selection(related='order_inquiry_id.inquiry_type', )
+    inquiry_contact_person = fields.Char(related='order_inquiry_id.contact_person')
+    inquiry_contact_person_phone = fields.Char(related='order_inquiry_id.contact_person_phone')
+    inquiry_contact_person_email = fields.Char(related='order_inquiry_id.contact_person_email')
+    inquiry_contact_person_designation = fields.Char(related='order_inquiry_id.contact_person_designation')
 
     def _so_renumber_lines_with_gaps(self):
         self.ensure_one()
@@ -294,9 +376,8 @@ class SaleOrderLine(models.Model):
                 raise UserError(_("You cannot delete default sections."))
         return super().unlink()
 
-    def write(self, vals):
-        for l in self:
-            if l.display_type == "line_section" and l.is_locked_section:
-                # Allow harmless writes that Odoo does automatically (optional, see below)
-                raise UserError(_("You cannot modify default sections"))
-        return super().write(vals)
+    # def write(self, vals):
+    #     for l in self:
+    #         if l.display_type == "line_section" and l.is_locked_section:
+    #             raise UserError(_("You cannot modify default sections"))
+    #     return super().write(vals)

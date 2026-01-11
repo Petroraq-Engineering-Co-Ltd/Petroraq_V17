@@ -14,8 +14,8 @@
                     <h2 class="mt-4">
                         <span t-if="env.context.get('proforma', False) or is_pro_forma">Pro-Forma Invoice</span>
                         <span t-elif="doc.state in ['draft','sent']">Quotation #</span>
-                        <!--                        <span t-else="">Order #</span>-->
-                        <!--                        <span t-field="doc.name">SO0000</span>-->
+                        <span t-else="">Order #</span>
+                        <span t-field="doc.name">SO0000</span>
                     </h2>
                 </div>
                 <table class="table table-borderless" width="100%"
@@ -53,6 +53,7 @@
                         <td style="text-align:right;">: رقم الطلب</td>
                     </tr>
 
+
                     <tr>
                         <td style="text-align:left;">Order Date:</td>
                         <td style="text-align:left;">
@@ -65,51 +66,49 @@
                     </tr>
 
                     <tr>
-                        <td style="text-align:left;">Supplier:</td>
-                        <td style="text-align:left;">Petroraq Engineering Co. Ltd</td>
-                        <td style="text-align:right;">شركة بيتروراق انجنيرنج المحدودة</td>
+                        <td style="text-align:left;">Contact Person</td>
+                        <td style="text-align:left;">
+                            <span t-esc="doc.inquiry_contact_person"/>
+                        </td>
+                        <td style="text-align:right;">
+                            <span t-esc="doc.inquiry_contact_person"/>
+                        </td>
                         <td style="text-align:right;">: المورد</td>
                     </tr>
 
                     <tr>
-                        <td style="text-align:left;">Address:</td>
+                        <td style="text-align:left;">Designation</td>
                         <td style="text-align:left;">
-                            Al-Majd, King Faisal Street (West), Al Jubail
-                            <br/>
-                            Kingdom of Saudi Arabia
+                            <span t-esc="doc.inquiry_contact_person_designation"/>
                         </td>
                         <td style="text-align:right;">
-                            المجد شارع الملك فيصل (غربي) الجبيل
-                            <br/>
-                            المملكة العربية السعودية
+                            <span t-esc="doc.inquiry_contact_person_designation"/>
                         </td>
-                        <td style="text-align:right;">: العنوان</td>
+                        <td style="text-align:right;">: المسمى الوظيفي</td>
                     </tr>
 
                     <tr>
-                        <td style="text-align:left;">Tel #:</td>
-                        <td style="text-align:left;">+966133614446</td>
-                        <td style="text-align:right;">
-                            <span t-esc="doc.convert_phone_to_eastern_arabic_numerals('+966133614446')"/>
+                        <td style="text-align:left;">Phone#</td>
+                        <td style="text-align:left;">
+                            <span t-esc="doc.inquiry_contact_person_phone"/>
                         </td>
-                        <td style="text-align:right;">: الهاتف</td>
+                        <td style="text-align:right;">
+                            <span t-esc="doc.convert_phone_to_eastern_arabic_numerals(doc.inquiry_contact_person_phone)"/>
+                        </td>
+                        <td style="text-align:right;">: رقم الهاتف</td>
                     </tr>
 
                     <tr>
-                        <td style="text-align:left;">Email:</td>
-                        <td style="text-align:left;">info@petroraq.com</td>
-                        <td style="text-align:right;">info@petroraq.com</td>
+                        <td style="text-align:left;">Email</td>
+                        <td style="text-align:left;">
+                            <span t-esc="doc.inquiry_contact_person_email"/>
+                        </td>
+                        <td style="text-align:right;">
+                            <span t-esc="doc.inquiry_contact_person_email"/>
+                        </td>
                         <td style="text-align:right;">: البريد الإلكتروني</td>
                     </tr>
 
-                    <tr>
-                        <td style="text-align:left;">Supplier VAT #:</td>
-                        <td style="text-align:left;">311428741500003</td>
-                        <td style="text-align:right;">
-                            <span t-esc="doc.convert_phone_to_eastern_arabic_numerals('311428741500003')"/>
-                        </td>
-                        <td style="text-align:right;">: الرقم الضريبي للمورد</td>
-                    </tr>
 
                 </table>
                 <hr class="mt-2 mb-2" style="border-top:1px solid #cfcfcf;"/>
