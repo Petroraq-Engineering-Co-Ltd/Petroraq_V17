@@ -317,13 +317,11 @@ class SaleOrder(models.Model):
 
         return res
 
-    def action_cancel(self):
-        res = super().action_cancel()
-
+    def _action_cancel(self):
+        res = super()._action_cancel()
         for order in self:
             order.locked = False
             order.approval_state = "rejected"
-
         return res
 
     def action_reset_to_draft(self):
@@ -589,3 +587,44 @@ class SaleOrder(models.Model):
             else:
                 if term.is_trading_term:
                     raise UserError(_("Advance/Credit payment terms are only allowed for Trading inquiries."))
+
+
+class StockPicking(models.Model):
+    _inherit = "stock.picking"
+
+    def button_validate(self):
+        for picking in self:
+            # Only for outgoing deliveries
+            if picking.picking_type_code != 'outgoing':
+                continue
+
+            sale = picking.sale_id
+            if not sale:
+                continue
+
+            if sale.payment_term_id and sale.payment_term_id.name.lower() == 'advance':
+                dp_invoices = sale.invoice_ids.filtered(
+                    lambda inv:
+                    inv.state == 'posted'
+                    and inv.move_type == 'out_invoice'
+                    and any(
+                        line.sale_line_ids.is_downpayment
+                        for line in inv.invoice_line_ids
+                    )
+                )
+
+                if not dp_invoices:
+                    raise UserError(_(
+                        "You cannot validate this delivery.\n\n"
+                        "A Down Payment invoice is required for Advance orders."
+                    ))
+
+                unpaid = dp_invoices.filtered(
+                    lambda inv: inv.payment_state != 'in_payment')
+                if unpaid:
+                    raise UserError(_(
+                        "You cannot validate this delivery.\n\n"
+                        "The Down Payment invoice must be fully paid."
+                    ))
+
+        return super().button_validate()

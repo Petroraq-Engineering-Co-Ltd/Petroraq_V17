@@ -513,88 +513,53 @@
                         <br/>
                         <br/>
                         <br/>
-                        <table class="table table-borderless"
-                               style="line-height:0.5;font-family: 'DroidArabicNaskh';font-size: 17px !important;">
 
-                            <tr>
-                                <td width="45%" style="text-align:left;">
-                                    <b>Make all cheques payable to:</b>
-                                </td>
-                                <td width="55%" style="text-align:right;">
-                                    <b>: تصدر جميع الشيكات الى الحساب الآتي
-                                    </b>
-                                </td>
-                            </tr>
-                            <table class="table table-borderless" style="margin-top:-10px;line-height:0.5">
+                        <div style="margin-top:20px; font-family:'DroidArabicNaskh'; font-size:17px;">
+                            <table class="table table-borderless" style="line-height:0.9;">
                                 <tr>
-                                    <td width="15%" style="text-align:left;">
-                                        Account Title:
-                                    </td>
-                                    <td width="25%" style="text-align:left;">
-                                        Petroraq Engineering Co. Ltd.
+                                    <td width="45%" style="text-align:left;">
+                                        <b>Make all cheques payable to:</b>
                                     </td>
                                     <td width="55%" style="text-align:right;">
-                                        شركة بيتروراق انجنيرنج المحدودة
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="15%" style="text-align:left;">
-                                        Bank :
-                                    </td>
-                                    <td width="25%" style="text-align:left;">
-                                        Alinma Bank
-                                    </td>
-                                    <td width="55%" style="text-align:right;">
-                                        بنك : البنك الانماء
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="15%" style="text-align:left;">
-                                        A/C No:
-                                    </td>
-                                    <td width="25%" style="text-align:left;">
-                                        68204260514000
-                                    </td>
-                                    <td width="55%" style="text-align:right;">
-                                        <span>رقم الحساب: ٦٨٢٠٤٢٦٠٥١٤٠٠٠</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="15%" style="text-align:left;">
-                                        IBAN No:
-                                    </td>
-                                    <td width="25%" style="text-align:left;">
-                                        SA0205000068204260514000
-                                    </td>
-                                    <td width="55%" style="text-align:right;">
-                                        <!--                                                                                                    <span>رقم الأيبان: SA<span t-esc="o.convert_phone_to_eastern_arabic_numerals('0205000068204260514000')"/> </span>-->
-                                        <!--                                                                                                    <span>SA<span t-esc="o.convert_phone_to_eastern_arabic_numerals('0205000068204260514000')"/> رقم الأيبان: </span>-->
-                                        <span>SA0205000068204260514000 :رقم الأيبان</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="15%" style="text-align:left;">
-                                        Branch:
-                                    </td>
-                                    <td width="25%" style="text-align:left;">
-                                        Al-Jubail
-                                    </td>
-                                    <td width="55%" style="text-align:right;">
-                                        فرع - الجبيل
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td width="15%" style="text-align:left;">
-                                        SWIFT Code:
-                                    </td>
-                                    <td width="25%" style="text-align:left;">
-                                        INMASARI
-                                    </td>
-                                    <td width="55%" style="text-align:right;">INMASARI :رقم السويفت
+                                        <b>تصدر جميع الشيكات الى الحساب الآتي :</b>
                                     </td>
                                 </tr>
                             </table>
-                        </table>
+
+                            <table class="table table-borderless" style="margin-top:-10px; line-height:0.9;">
+                                <tr>
+                                    <td width="15%" style="text-align:left;">Account Title:</td>
+                                    <td width="25%" style="text-align:left;">Petroraq Engineering Co. Ltd.</td>
+                                    <td width="55%" style="text-align:right;">شركة بيتروراق انجنيرنج المحدودة</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:left;">Bank:</td>
+                                    <td style="text-align:left;">Arab National Bank</td>
+                                    <td style="text-align:right;">البنك العربي الوطني</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:left;">A/C No:</td>
+                                    <td style="text-align:left;">108095635470015</td>
+                                    <td style="text-align:right;">رقم الحساب: 108095635470015</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:left;">IBAN No:</td>
+                                    <td style="text-align:left;">SA1930400108095635470015</td>
+                                    <td style="text-align:right;">رقم الآيبان: SA1930400108095635470015</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:left;">Branch:</td>
+                                    <td style="text-align:left;">Al-Jubail</td>
+                                    <td style="text-align:right;">فرع الجبيل</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:left;">SWIFT Code:</td>
+                                    <td style="text-align:left;">ARNBSARI</td>
+                                    <td style="text-align:right;">رمز السويفت: ARNBSARI</td>
+                                </tr>
+                            </table>
+                        </div>
+
 
                     </div>
                 </t>
