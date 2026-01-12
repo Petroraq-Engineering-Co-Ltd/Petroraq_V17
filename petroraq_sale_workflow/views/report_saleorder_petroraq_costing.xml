@@ -160,7 +160,7 @@
                 </tr>
 
                 <tr t-if="not is_pro_forma">
-                    <td class="text-end">
+                    <td>
                         <strong>15% VAT Amount</strong>
                     </td>
                     <td class="text-end">
@@ -169,7 +169,7 @@
                     </td>
                 </tr>
                 <tr t-if="not is_pro_forma">
-                    <td class="text-end">
+                    <td>
                         <strong>Net Total:</strong>
                     </td>
                     <td class="text-end">

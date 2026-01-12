@@ -11,7 +11,6 @@ import logging
 from datetime import datetime, timedelta
 import pandas as pd
 
-
 _logger = logging.getLogger(__name__)
 
 
@@ -34,8 +33,10 @@ class HrLeaveRequest(models.Model):
     company_id = fields.Many2one('res.company', string='Company', tracking=True, required=True)
     employee_id = fields.Many2one('hr.employee', string='Employee', tracking=True, required=True)
     employee_manager_id = fields.Many2one('hr.employee', string='Manager', tracking=True, readonly=True)
-    hr_supervisor_ids = fields.Many2many('res.users', 'leave_request_hr_supervisor_users',  'hr_supervisor_id', 'leave_request_id', string='HR Supervisors', tracking=True, readonly=True)
-    hr_manager_ids = fields.Many2many('res.users', 'leave_request_hr_manager_users',  'hr_manager_id', 'leave_request_id', string='HR Managers', tracking=True, readonly=True)
+    hr_supervisor_ids = fields.Many2many('res.users', 'leave_request_hr_supervisor_users', 'hr_supervisor_id',
+                                         'leave_request_id', string='HR Supervisors', tracking=True, readonly=True)
+    hr_manager_ids = fields.Many2many('res.users', 'leave_request_hr_manager_users', 'hr_manager_id',
+                                      'leave_request_id', string='HR Managers', tracking=True, readonly=True)
     reject_reason = fields.Text(string="Rejection Reason", readonly=True)
     note = fields.Text(string="Note")
     state = fields.Selection([
@@ -63,7 +64,8 @@ class HrLeaveRequest(models.Model):
 
     # region [Compute Methods]
 
-    @api.depends("employee_id", "employee_id.parent_id", "employee_id.parent_id.user_id", "employee_manager_id", "employee_manager_id.user_id")
+    @api.depends("employee_id", "employee_id.parent_id", "employee_id.parent_id.user_id", "employee_manager_id",
+                 "employee_manager_id.user_id")
     def _compute_employee_manager_check(self):
         for rec in self:
             employee_manager_id = rec.employee_id.parent_id
@@ -87,7 +89,6 @@ class HrLeaveRequest(models.Model):
                 rec.hr_manager_check = False
 
     # endregion [Compute Methods]
-
 
     # region [Onchange Methods]
 
@@ -114,7 +115,8 @@ class HrLeaveRequest(models.Model):
     def _send_manager_email(self):
         for rec in self:
             base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-            record_url = base_url + "/web#id=" + str(rec.id) + "&view_type=form&model=pr.hr.leave.request&view_type=form"
+            record_url = base_url + "/web#id=" + str(
+                rec.id) + "&view_type=form&model=pr.hr.leave.request&view_type=form"
 
             body_message = f"""Dear Mr/Mrs. {rec.employee_id.parent_id.name},<br/><br/>
 
@@ -163,7 +165,8 @@ class HrLeaveRequest(models.Model):
     def _send_hr_manager_email(self):
         for rec in self:
             base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-            record_url = base_url + "/web#id=" + str(rec.id) + "&view_type=form&model=pr.hr.leave.request&view_type=form"
+            record_url = base_url + "/web#id=" + str(
+                rec.id) + "&view_type=form&model=pr.hr.leave.request&view_type=form"
 
             group_ids = [self.env.ref('hr_holidays.group_hr_holidays_manager').id]
             user_ids = self.env['res.users'].sudo().search([('groups_id', 'in', group_ids)])
@@ -285,11 +288,11 @@ class HrLeaveRequest(models.Model):
                 "leave_request_id": rec.id,
             }
             leave_id = self.env["hr.leave"].with_context(
-            tracking_disable=True,
-            mail_activity_automation_skip=True,
-            leave_fast_create=True,
-            leave_skip_state_check=True
-        ).sudo().create(leave_vals)
+                tracking_disable=True,
+                mail_activity_automation_skip=True,
+                leave_fast_create=True,
+                leave_skip_state_check=True
+            ).sudo().create(leave_vals)
             if leave_id:
                 rec.leave_id = leave_id.id
                 # leave_id.sudo().action_approve()
@@ -352,6 +355,3 @@ class HrLeaveRequest(models.Model):
         return super().unlink()
 
     # endregion [Crud]
-
-
-

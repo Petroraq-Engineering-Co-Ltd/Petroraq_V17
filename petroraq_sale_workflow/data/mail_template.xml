@@ -4,8 +4,12 @@
         <record id="petroraq_custom_sale_email" model="mail.template">
             <field name="name">Petroraq Sale Quotation</field>
             <field name="model_id" ref="sale.model_sale_order"/>
-            <field name="email_from">${(object.user_id.email_formatted or '')}</field>
-            <field name="email_to">${(object.partner_id.email or '')}</field>
+            <field name="email_from">{{ (object.user_id.email_formatted or object.company_id.email_formatted or
+                user.email_formatted) }}
+            </field>
+            <field name="email_to">${(object.inquiry_contact_person_email or object.partner_id.email)}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+
             <field name="subject">Petroraq Request For Quotation</field>
             <field name="auto_delete" eval="True"/>
             <field name="report_template_ids" eval="[(4, ref('sale.action_report_saleorder'))]"/>
@@ -18,8 +22,12 @@
         <record id="petroraq_custom_proforma_email" model="mail.template">
             <field name="name">Send Pro-forma</field>
             <field name="model_id" ref="sale.model_sale_order"/>
-            <field name="email_from">${(object.user_id.email_formatted or '')}</field>
-            <field name="email_to">${(object.partner_id.email or '')}</field>
+            <field name="email_from">{{ (object.user_id.email_formatted or object.company_id.email_formatted or
+                user.email_formatted) }}
+            </field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+
+            <field name="email_to">${(object.inquiry_contact_person_email or object.partner_id.email)}</field>
             <field name="subject">Petroraq Pro-Forma Invoice</field>
             <field name="auto_delete" eval="True"/>
             <field name="report_template_ids" eval="[(4, ref('sale.action_report_pro_forma_invoice'))]"/>

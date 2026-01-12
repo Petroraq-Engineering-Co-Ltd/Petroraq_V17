@@ -88,7 +88,7 @@ class SaleOrder(models.Model):
         help="Calculated profit amount based on the grand total."
     )
     profit_grand_total = fields.Monetary(
-        string="Great Grand Total",
+        string="Net Total",
         compute="_compute_profit_amount",
         currency_field="currency_id",
         store=True,
@@ -112,7 +112,6 @@ class SaleOrder(models.Model):
         compute="_compute_payment_term_domain",
         store=False,
     )
-
 
     @api.onchange("inquiry_type")
     def _onchange_inquiry_type_payment_term(self):
@@ -354,16 +353,13 @@ class SaleOrder(models.Model):
     def action_quotation_send(self):
         self.ensure_one()
 
-        # keep your approval rule (from the second override)
         if self.approval_state != "approved":
             raise UserError(_("You can only send the quotation to the customer after final approval."))
 
-        # keep standard validations
         self.order_line._validate_analytic_distribution()
 
         lang = self.env.context.get("lang")
 
-        # choose template based on proforma flag (your first override logic)
         if self.env.context.get("proforma"):
             mail_template = self.env.ref(
                 "petroraq_sale_workflow.petroraq_custom_proforma_email",
@@ -378,6 +374,15 @@ class SaleOrder(models.Model):
         if mail_template and mail_template.lang:
             lang = mail_template._render_lang(self.ids)[self.id]
 
+        # ✅ build recipients (partners only)
+        partner_ids = []
+        if self.partner_id:
+            partner_ids.append(self.partner_id.id)
+
+        # if quotation came from inquiry, add that inquiry contact partner
+        if self.order_inquiry_id and self.order_inquiry_id.contact_partner_id:
+            partner_ids.append(self.order_inquiry_id.contact_partner_id.id)
+
         ctx = {
             "default_model": "sale.order",
             "default_res_ids": self.ids,
@@ -388,7 +393,11 @@ class SaleOrder(models.Model):
             "proforma": self.env.context.get("proforma", False),
             "force_email": True,
             "model_description": self.with_context(lang=lang).type_name,
+
+            # ✅ auto-select recipients in wizard
+            "default_partner_ids": [(6, 0, list(set(partner_ids)))],
         }
+
         return {
             "type": "ir.actions.act_window",
             "view_mode": "form",

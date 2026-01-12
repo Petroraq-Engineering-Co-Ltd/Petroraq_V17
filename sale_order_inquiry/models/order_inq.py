@@ -40,7 +40,7 @@ class OrderInquiry(models.Model):
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
     inquiry_type = fields.Selection([('construction', 'Project'), ('trading', 'Trading')], string="Inquiry Type",
                                     default="construction", required=True)
-    required_file = fields.Binary(string="Required Attachment", attachment=False)
+    required_file = fields.Binary(string="Required Attachment", attachment=True)
     required_file_name = fields.Char(string="Filename")
 
     currency_id = fields.Many2one(
@@ -79,6 +79,48 @@ class OrderInquiry(models.Model):
         store=True,
         readonly=True,
     )
+    contact_partner_id = fields.Many2one(
+        "res.partner",
+        string="Contact Partner",
+        help="Contact created/linked for this inquiry contact person."
+    )
+
+    def _get_or_create_contact_partner(self):
+        self.ensure_one()
+        if self.contact_partner_id:
+            return self.contact_partner_id
+
+        parent = self.partner_id
+        email = (self.contact_person_email or "").strip().lower()
+        phone = (self.contact_person_phone or "").strip()
+
+        # 1) Try to find existing child contact by email (best key)
+        domain = [("parent_id", "=", parent.id)]
+        if email:
+            domain += [("email", "=", email)]
+        else:
+            # fallback if no email: match by name + phone
+            domain += [("name", "=", (self.contact_person or "").strip())]
+            if phone:
+                domain += [("phone", "=", phone)]
+
+        contact = self.env["res.partner"].search(domain, limit=1)
+
+        # 2) Create if not found
+        if not contact:
+            contact = self.env["res.partner"].create({
+                "name": (self.contact_person or "").strip(),
+                "parent_id": parent.id,
+                "type": "contact",
+                "email": email or False,
+                "phone": phone or False,
+                "function": (self.designation or "").strip() or False,
+                # optional:
+                # "mobile": phone or False,
+            })
+
+        self.contact_partner_id = contact.id
+        return contact
 
     @api.depends("sale_order_id", "sale_order_ids")
     def _compute_quotation_main(self):
@@ -184,29 +226,13 @@ class OrderInquiry(models.Model):
 
     @api.model
     def create(self, vals):
-        # sequence
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('order.inq.sequence') or "New"
 
-        # require file at create-time
         if not vals.get("required_file"):
             raise UserError(_("You must upload the required attachment before creating the inquiry."))
 
-        file_content = vals.pop("required_file")
-        file_name = vals.pop("required_file_name", "Inquiry Attachment")
-
-        rec = super(OrderInquiry, self).create(vals)
-
-        self.env["ir.attachment"].create({
-            "name": file_name,
-            "datas": file_content,
-            "res_model": "order.inq",
-            "res_id": rec.id,
-            "type": "binary",
-            "mimetype": False,
-        })
-
-        return rec
+        return super().create(vals)
 
     def button_cancel(self):
         if self.state == 'pending':
@@ -230,11 +256,20 @@ class OrderInquiry(models.Model):
 
     def action_create_quotation(self):
         self.ensure_one()
+        if self.inquiry_type == "trading":
+            term = self.env.ref("petroraq_sale_workflow.payment_term_trading_advance", raise_if_not_found=False)
+        else:
+            term = self.env.ref("petroraq_sale_workflow.payment_term_immediate", raise_if_not_found=False)
+
+        contact = self._get_or_create_contact_partner()
 
         sale_order = self.env['sale.order'].create({
             'partner_id': self.partner_id.id,
             'order_inquiry_id': self.id,
             'inquiry_type': self.inquiry_type,
+            "payment_term_id": term.id if term else False,
+            "partner_invoice_id": contact.id,  # optional but nice
+            "partner_shipping_id": contact.id,
         })
 
         self.sale_order_id = sale_order.id
@@ -290,11 +325,11 @@ class SaleOrderInherit(models.Model):
     _inherit = 'sale.order'
 
     order_inquiry_id = fields.Many2one('order.inq', string='Order Inquiry ID')
-    inquiry_type = fields.Selection(related='order_inquiry_id.inquiry_type', )
-    inquiry_contact_person = fields.Char(related='order_inquiry_id.contact_person')
-    inquiry_contact_person_phone = fields.Char(related='order_inquiry_id.contact_person_phone')
-    inquiry_contact_person_email = fields.Char(related='order_inquiry_id.contact_person_email')
-    inquiry_contact_person_designation = fields.Char(related='order_inquiry_id.designation')
+    inquiry_type = fields.Selection(related='order_inquiry_id.inquiry_type')
+    inquiry_contact_person = fields.Char(related='order_inquiry_id.contact_person', store=True)
+    inquiry_contact_person_phone = fields.Char(related='order_inquiry_id.contact_person_phone', store=True)
+    inquiry_contact_person_email = fields.Char(related='order_inquiry_id.contact_person_email', store=True)
+    inquiry_contact_person_designation = fields.Char(related='order_inquiry_id.designation', store=True)
 
     def _so_renumber_lines_with_gaps(self):
         self.ensure_one()
