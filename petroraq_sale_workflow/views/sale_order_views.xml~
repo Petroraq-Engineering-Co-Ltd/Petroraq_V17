@@ -59,12 +59,12 @@
                 <attribute name="string">Reject</attribute>
                 <attribute name="invisible">state in ('draft','cancel')</attribute>
             </xpath>
-            <!--            <xpath expr="//header//button[@id='send_by_email']" position="attributes">-->
-            <!--                <attribute name="invisible">approval_state != 'approved' or state == 'sent'</attribute>-->
-            <!--            </xpath>-->
-            <!--            <xpath expr="//header//button[@id='send_proforma']" position="attributes">-->
-            <!--                <attribute name="invisible">approval_state != 'approved' or state == 'sent'</attribute>-->
-            <!--            </xpath>-->
+            <xpath expr="//header//button[@id='send_by_email']" position="attributes">
+                <attribute name="invisible">approval_state != 'approved' or state == 'sent'</attribute>
+            </xpath>
+            <xpath expr="//header//button[@id='send_proforma']" position="attributes">
+                <attribute name="invisible">approval_state != 'approved' or state == 'sent'</attribute>
+            </xpath>
             <xpath expr="//header//button[@id='create_invoice']" position="attributes">
                 <attribute name="groups">!pr_work_order.custom_group_work_order_user</attribute>
             </xpath>

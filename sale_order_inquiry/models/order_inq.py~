@@ -270,7 +270,7 @@ class OrderInquiry(models.Model):
             "payment_term_id": term.id if term else False,
             "partner_invoice_id": contact.id,  # optional but nice
             "partner_shipping_id": contact.id,
-            "user_id": self.user_id.id,
+            ""
         })
 
         self.sale_order_id = sale_order.id
