@@ -77,7 +77,7 @@
                             padding: 0 !important;
                             }
                             .page {
-                            padding: 0px 25px !important;
+                            padding: 0px 15px !important;
                             }
                         </style>
 
@@ -425,6 +425,10 @@
                             <t t-set="regular_lines" t-value="invoice_lines.filtered(lambda l: not l.is_downpayment)"/>
                             <t t-set="downpayment_lines" t-value="invoice_lines.filtered(lambda l: l.is_downpayment)"/>
                             <t t-set="downpayment_subtotal" t-value="sum(downpayment_lines.mapped('price_subtotal'))"/>
+                            <t t-set="dp_subtotal" t-value="sum(downpayment_lines.mapped('price_subtotal'))"/>
+                            <t t-set="is_dp_take" t-value="dp_subtotal &gt; 0"/>
+                            <t t-set="is_dp_deduct" t-value="dp_subtotal &lt; 0"/>
+
                             <t t-set="untaxed_before_downpayment"
                                t-value="sum(regular_lines.mapped('price_subtotal'))"/>
                             <tr t-foreach="regular_lines" t-as="l">
@@ -482,7 +486,7 @@
                                 <t t-set="excluding_vat" t-value="total_qty * total_unit_price"/>
 
                                 <td>
-                                    <span t-esc="sr_number"/>
+                                    <!--                                    <span t-esc="sr_number"/>-->
                                 </td>
                                 <td>
                                     <span t-esc="l.name"/>
@@ -509,7 +513,7 @@
                         </table>
                         <table class="table table-border"
                                style="border:1px solid #000000;margin-top:-10px;font-family: 'DroidArabicNaskh';font-size: 17px !important;">
-                            <tr t-if="downpayment_lines">
+                            <tr t-if="is_dp_deduct">
                                 <td width="35%" style="border:1px solid #000000;">
                                     Total (Excluding Vat) Without Down Payments
                                 </td>
@@ -521,7 +525,8 @@
                                     الإجمالي (باستثناء ضريبة القيمة المضافة) قبل الدفعة المقدمة
                                 </td>
                             </tr>
-                            <tr t-if="downpayment_lines">
+
+                            <tr t-if="is_dp_deduct">
                                 <td width="35%" style="border:1px solid #000000;">
                                     Down Payment Deduction
                                 </td>
@@ -533,6 +538,7 @@
                                     خصم الدفعة المقدمة
                                 </td>
                             </tr>
+
                             <tr>
                                 <td width="35%" style="border:1px solid #000000;">
                                     Total (Excluding Vat)
