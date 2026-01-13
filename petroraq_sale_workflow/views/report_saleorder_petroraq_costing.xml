@@ -7,24 +7,32 @@
         <xpath expr="//th[@name='th_taxes']" position="replace"/>
         <xpath expr="//td[@name='td_taxes']" position="replace"/>
 
+        <!-- Rename Amount column -->
+        <xpath expr="//th[@name='th_subtotal']/span" position="replace">
+            <span>Total</span>
+        </xpath>
+
+        <!-- ==========================================================
+             Helper block (inline pattern):
+             Compute costing breakdown ONCE per usage and reuse variables
+             Pipeline MUST match:
+             base_r -> oh_r -> risk_r -> unit_or_r -> profit_r -> final_unit_r
+             line_total_r = round(final_unit_r * qty)
+             ========================================================== -->
+
         <!-- ==============================
-             UNIT PRICE (Costing) - ROUNDED (accounting-style)
-             final_unit_r = round( round(unit_or_r) + round(profit_r) )
+             UNIT PRICE (Costing) - ROUNDED
              ============================== -->
         <xpath expr="//td[@name='td_priceunit']/span" position="replace">
             <t t-if="not line.display_type">
                 <t t-set="currency" t-value="doc.currency_id"/>
-
                 <t t-set="qty" t-value="line.product_uom_qty or 0.0"/>
-                <t t-set="base" t-value="line.price_unit or 0.0"/>
-                <t t-set="base_r" t-value="currency.round(base)"/>
 
+                <t t-set="base_r" t-value="currency.round(line.price_unit or 0.0)"/>
                 <t t-set="oh_r" t-value="currency.round(base_r * (doc.overhead_percent or 0.0) / 100.0)"/>
                 <t t-set="risk_r" t-value="currency.round(base_r * (doc.risk_percent or 0.0) / 100.0)"/>
-
                 <t t-set="unit_or_r" t-value="currency.round(base_r + oh_r + risk_r)"/>
                 <t t-set="profit_r" t-value="currency.round(unit_or_r * (doc.profit_percent or 0.0) / 100.0)"/>
-
                 <t t-set="final_unit_r" t-value="currency.round(unit_or_r + profit_r)"/>
 
                 <span t-out="final_unit_r"
@@ -32,30 +40,21 @@
             </t>
         </xpath>
 
-        <!-- Rename Amount column -->
-        <xpath expr="//th[@name='th_subtotal']/span" position="replace">
-            <span>Total</span>
-        </xpath>
-
         <!-- ==========================
              LINE TOTAL - ROUNDED
-             total = round( final_unit_r * qty )
              ========================== -->
         <xpath expr="//td[@name='td_subtotal']/span" position="replace">
             <t t-if="not line.display_type">
                 <t t-set="currency" t-value="doc.currency_id"/>
-
                 <t t-set="qty" t-value="line.product_uom_qty or 0.0"/>
-                <t t-set="base" t-value="line.price_unit or 0.0"/>
-                <t t-set="base_r" t-value="currency.round(base)"/>
 
+                <t t-set="base_r" t-value="currency.round(line.price_unit or 0.0)"/>
                 <t t-set="oh_r" t-value="currency.round(base_r * (doc.overhead_percent or 0.0) / 100.0)"/>
                 <t t-set="risk_r" t-value="currency.round(base_r * (doc.risk_percent or 0.0) / 100.0)"/>
-
                 <t t-set="unit_or_r" t-value="currency.round(base_r + oh_r + risk_r)"/>
                 <t t-set="profit_r" t-value="currency.round(unit_or_r * (doc.profit_percent or 0.0) / 100.0)"/>
-
                 <t t-set="final_unit_r" t-value="currency.round(unit_or_r + profit_r)"/>
+
                 <t t-set="final_total_r" t-value="currency.round(final_unit_r * qty)"/>
 
                 <span t-out="final_total_r"
@@ -64,71 +63,60 @@
         </xpath>
 
         <!-- ==================================================
-             SECTION SUBTOTAL accumulator - MUST match line total
-             current_subtotal += round(final_unit_r * qty)
+             SECTION SUBTOTAL accumulator
+             MUST match line total
              ================================================== -->
         <xpath expr="//t[@t-set='current_subtotal' and contains(@t-value, 'line.price_subtotal')]" position="replace">
             <t t-if="not line.display_type">
                 <t t-set="currency" t-value="doc.currency_id"/>
-
                 <t t-set="qty" t-value="line.product_uom_qty or 0.0"/>
-                <t t-set="base" t-value="line.price_unit or 0.0"/>
-                <t t-set="base_r" t-value="currency.round(base)"/>
 
+                <t t-set="base_r" t-value="currency.round(line.price_unit or 0.0)"/>
                 <t t-set="oh_r" t-value="currency.round(base_r * (doc.overhead_percent or 0.0) / 100.0)"/>
                 <t t-set="risk_r" t-value="currency.round(base_r * (doc.risk_percent or 0.0) / 100.0)"/>
-
                 <t t-set="unit_or_r" t-value="currency.round(base_r + oh_r + risk_r)"/>
                 <t t-set="profit_r" t-value="currency.round(unit_or_r * (doc.profit_percent or 0.0) / 100.0)"/>
-
                 <t t-set="final_unit_r" t-value="currency.round(unit_or_r + profit_r)"/>
-                <t t-set="line_total_r" t-value="currency.round(final_unit_r * qty)"/>
 
+                <t t-set="line_total_r" t-value="currency.round(final_unit_r * qty)"/>
                 <t t-set="current_subtotal" t-value="current_subtotal + line_total_r"/>
             </t>
         </xpath>
 
         <!-- ==========================
              SUMMARY TOTALS (Costing)
-             built from SAME rounded line totals
-             + VAT rounding respects company setting
+             computed in ONE loop
              ========================== -->
         <xpath expr="//t[@t-call='sale.document_tax_totals']" position="replace">
 
             <t t-set="currency" t-value="doc.currency_id"/>
             <t t-set="rounding_method" t-value="doc.company_id.tax_calculation_rounding_method"/>
 
-            <!-- ONLY normal lines (exclude sections/notes + down payments) -->
+            <!-- ONLY normal lines -->
             <t t-set="normal_lines"
                t-value="[l for l in lines_to_report if (not l.display_type) and (not l.is_downpayment)]"/>
 
-            <!-- totals from rounded line totals -->
             <t t-set="total_price" t-value="0.0"/>
             <t t-set="vat_sum" t-value="0.0"/>
 
             <t t-foreach="normal_lines" t-as="l">
                 <t t-set="qty" t-value="l.product_uom_qty or 0.0"/>
-                <t t-set="base" t-value="l.price_unit or 0.0"/>
-                <t t-set="base_r" t-value="currency.round(base)"/>
 
+                <t t-set="base_r" t-value="currency.round(l.price_unit or 0.0)"/>
                 <t t-set="oh_r" t-value="currency.round(base_r * (doc.overhead_percent or 0.0) / 100.0)"/>
                 <t t-set="risk_r" t-value="currency.round(base_r * (doc.risk_percent or 0.0) / 100.0)"/>
-
                 <t t-set="unit_or_r" t-value="currency.round(base_r + oh_r + risk_r)"/>
                 <t t-set="profit_r" t-value="currency.round(unit_or_r * (doc.profit_percent or 0.0) / 100.0)"/>
-
                 <t t-set="final_unit_r" t-value="currency.round(unit_or_r + profit_r)"/>
-                <t t-set="line_total_r" t-value="currency.round(final_unit_r * qty)"/>
 
+                <t t-set="line_total_r" t-value="currency.round(final_unit_r * qty)"/>
                 <t t-set="total_price" t-value="total_price + line_total_r"/>
 
-                <!-- VAT: if round_per_line, sum rounded VAT per line -->
                 <t t-if="rounding_method == 'round_per_line'">
                     <t t-set="vat_sum" t-value="vat_sum + currency.round(line_total_r * 0.15)"/>
                 </t>
             </t>
 
-            <!-- VAT: if round_globally, compute once on total -->
             <t t-if="rounding_method != 'round_per_line'">
                 <t t-set="vat_sum" t-value="currency.round(total_price * 0.15)"/>
             </t>
@@ -137,41 +125,35 @@
 
             <tbody>
                 <tr>
-                    <td>
-                        <strong>Total Price</strong>
-                    </td>
+                    <td><strong>Total Price</strong></td>
                     <td class="text-end">
                         <span t-out="total_price"
                               t-options="{'widget':'monetary','display_currency':currency}"/>
                     </td>
                 </tr>
+
+                <!-- Pro-forma advance: use currency.round for consistency -->
                 <tr t-if="is_pro_forma">
                     <td>
-                        <strong t-out="doc.proforma_dp"/>
-                        <strong>% Advance</strong>
-
-
+                        <strong t-out="doc.proforma_dp"/> <strong>% Advance</strong>
                     </td>
                     <td class="text-end">
-                        <span t-out="round((doc.profit_grand_total * (doc.proforma_dp/100)),2)"
+                        <t t-set="adv_amt" t-value="currency.round((total_price or 0.0) * (doc.proforma_dp or 0.0) / 100.0)"/>
+                        <span t-out="adv_amt"
                               t-options="{'widget':'monetary','display_currency':currency}"/>
-
                     </td>
                 </tr>
 
                 <tr t-if="not is_pro_forma">
-                    <td>
-                        <strong>15% VAT Amount</strong>
-                    </td>
+                    <td><strong>15% VAT Amount</strong></td>
                     <td class="text-end">
                         <span t-out="vat_sum"
                               t-options="{'widget':'monetary','display_currency':currency}"/>
                     </td>
                 </tr>
+
                 <tr t-if="not is_pro_forma">
-                    <td>
-                        <strong>Net Total:</strong>
-                    </td>
+                    <td><strong>Net Total:</strong></td>
                     <td class="text-end">
                         <span t-out="grand_total_with_vat"
                               t-options="{'widget':'monetary','display_currency':currency}"/>

@@ -9,6 +9,9 @@ class SaleOrder(models.Model):
     _inherit = "sale.order"
     _description = "Quotation"
 
+    # =========================
+    # Approval
+    # =========================
     approval_state = fields.Selection([
         ("draft", "Draft"),
         ("to_manager", "Manager Approve"),
@@ -17,95 +20,29 @@ class SaleOrder(models.Model):
         ("rejected", "Rejected"),
     ], default="draft", tracking=True, copy=False)
 
-    dp_percent = fields.Float(
-        string="Down Payment %",
-        copy=False,
-    )
-    po_date = fields.Date(
-        string="PO Date",
-        copy=False,
-    )
-    po_number = fields.Char(
-        string="PO Number",
-        copy=False,
-    )
-
-    section_subtotal_summary = fields.Html(
-        string="Section Subtotals",
-        compute="_compute_section_subtotal_summary",
-        sanitize=False,
-        help="Displays a summary of section subtotals and their grand total."
-    )
-    inquiry_type = fields.Selection([('construction', 'Contracting'), ('trading', 'Trading')], string="Inquiry Type",
-                                    default="trading", )
-
-    overhead_percent = fields.Float(
-        string="Over Head (%)",
-        default=0.0,
-        digits=(16, 2),
-        help="Percentage applied on the total amount to cover overhead costs."
-    )
-    overhead_amount = fields.Monetary(
-        string="Over Head Amount",
-        compute="_compute_buffer_amounts",
-        currency_field="currency_id",
-        store=False,
-        help="Calculated overhead amount based on the total amount."
-    )
-    risk_percent = fields.Float(
-        string="Risk (%)",
-        default=0.0,
-        digits=(16, 2),
-        help="Percentage applied on the total amount to cover risk."
-    )
-    risk_amount = fields.Monetary(
-        string="Risk Amount",
-        compute="_compute_buffer_amounts",
-        currency_field="currency_id",
-        store=False,
-        help="Calculated risk amount based on the total amount."
-    )
     approval_comment = fields.Text("Approval Comment", tracking=True)
+    show_reject_button = fields.Boolean(compute="_compute_show_reject_button")
 
-    buffer_total_amount = fields.Monetary(
-        string="Computed Total Amount",
-        compute="_compute_buffer_amounts",
-        currency_field="currency_id",
-        store=False,
-        help="Total amount including overhead and risk percentages."
-    )
-    profit_percent = fields.Float(
-        string="Profit (%)",
-        default=0.0,
-        digits=(16, 2),
-        help="Percentage applied on the grand total to compute profit."
-    )
-    profit_amount = fields.Monetary(
-        string="Profit Amount",
-        compute="_compute_profit_amount",
-        currency_field="currency_id",
-        store=True,
-        help="Calculated profit amount based on the grand total."
-    )
-    profit_grand_total = fields.Monetary(
-        string="Net Total",
-        compute="_compute_profit_amount",
-        currency_field="currency_id",
-        store=True,
-        help="Grand total including profit."
-    )
+    # =========================
+    # PO / DP
+    # =========================
+    dp_percent = fields.Float(string="Down Payment %", copy=False)
+    po_date = fields.Date(string="PO Date", copy=False)
+    po_number = fields.Char(string="PO Number", copy=False)
+
     proforma_dp = fields.Integer(
         string="Down payment Percentage",
         store=True,
         help="The amount of Advance payment required upon the order confirmation."
     )
 
-    final_grand_total = fields.Monetary(
-        string="Grand Taxed Total",
-        compute="_compute_final_totals",
-        currency_field="currency_id",
-        store=True,
-        help="Grand total including profit."
+    # =========================
+    # Inquiry / payment terms
+    # =========================
+    inquiry_type = fields.Selection(
+        [('construction', 'Contracting'), ('trading', 'Trading')],
+        string="Inquiry Type",
+        default="trading",
     )
 
     payment_term_domain = fields.Char(
@@ -113,6 +50,90 @@ class SaleOrder(models.Model):
         store=False,
     )
 
+    # =========================
+    # Costing inputs
+    # =========================
+    overhead_percent = fields.Float(
+        string="Over Head (%)",
+        default=0.0,
+        digits=(16, 2),
+        help="Percentage applied on the total amount to cover overhead costs."
+    )
+    risk_percent = fields.Float(
+        string="Risk (%)",
+        default=0.0,
+        digits=(16, 2),
+        help="Percentage applied on the total amount to cover risk."
+    )
+    profit_percent = fields.Float(
+        string="Profit (%)",
+        default=0.0,
+        digits=(16, 2),
+        help="Percentage applied on the grand total to compute profit."
+    )
+
+    # =========================
+    # Costing outputs (computed ONCE)
+    # =========================
+    overhead_amount = fields.Monetary(
+        string="Over Head Amount",
+        compute="_compute_costing_totals",
+        currency_field="currency_id",
+        store=False,
+        help="Calculated overhead amount based on the total amount."
+    )
+    risk_amount = fields.Monetary(
+        string="Risk Amount",
+        compute="_compute_costing_totals",
+        currency_field="currency_id",
+        store=False,
+        help="Calculated risk amount based on the total amount."
+    )
+
+    buffer_total_amount = fields.Monetary(
+        string="Computed Total Amount",
+        compute="_compute_costing_totals",
+        currency_field="currency_id",
+        store=False,
+        help="Total amount including overhead and risk percentages (no profit, no VAT)."
+    )
+
+    profit_amount = fields.Monetary(
+        string="Profit Amount",
+        compute="_compute_costing_totals",
+        currency_field="currency_id",
+        store=True,
+        help="Calculated profit amount (no VAT)."
+    )
+    profit_grand_total = fields.Monetary(
+        string="Net Total",
+        compute="_compute_costing_totals",
+        currency_field="currency_id",
+        store=True,
+        help="Grand total including profit (no VAT)."
+    )
+
+    final_grand_total = fields.Monetary(
+        string="Grand Taxed Total",
+        compute="_compute_costing_totals",
+        currency_field="currency_id",
+        store=True,
+        help="Grand total including profit and VAT."
+    )
+
+    # =========================
+    # Section subtotal HTML
+    # =========================
+    section_subtotal_summary = fields.Html(
+        string="Section Subtotals",
+        compute="_compute_section_subtotal_summary",
+        sanitize=False,
+        help="Displays a summary of section subtotals and their grand total."
+    )
+
+    # ------------------------------------------------------------
+    # Payment term domain + defaults
+    # ------------------------------------------------------------
     @api.onchange("inquiry_type")
     def _onchange_inquiry_type_payment_term(self):
         for order in self:
@@ -120,7 +141,6 @@ class SaleOrder(models.Model):
             if not order.inquiry_type:
                 continue
 
-            # if current selection is not allowed -> reset to a valid default
             if order.inquiry_type == "trading":
                 if term and not term.is_trading_term:
                     order.payment_term_id = False
@@ -146,116 +166,270 @@ class SaleOrder(models.Model):
             else:
                 order.payment_term_domain = "[('petroraq_selectable','=',True),('is_trading_term','=',False)]"
 
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super().default_get(fields_list)
+
+        inquiry = defaults.get("inquiry_type", "trading")
+        if "payment_term_id" in fields_list and not defaults.get("payment_term_id"):
+            xmlid = (
+                "petroraq_sale_workflow.payment_term_trading_advance"
+                if inquiry == "trading"
+                else "petroraq_sale_workflow.payment_term_immediate"
+            )
+            term = self.env.ref(xmlid, raise_if_not_found=False)
+            if term:
+                defaults["payment_term_id"] = term.id
+
+        return defaults
+
+    @api.constrains("payment_term_id", "inquiry_type")
+    def _check_payment_term_selectable(self):
+        for order in self:
+            term = order.payment_term_id
+            if not term:
+                raise UserError(_("Please select a payment term before saving the quotation."))
+
+            if not getattr(term, "petroraq_selectable", False):
+                raise UserError(
+                    _("The selected payment term is not allowed. Please choose one of the Petroraq payment terms.")
+                )
+
+            if order.inquiry_type == "trading":
+                if not term.is_trading_term:
+                    raise UserError(_("For Trading inquiries, only Advance and Credit payment terms are allowed."))
+            else:
+                if term.is_trading_term:
+                    raise UserError(_("Advance/Credit payment terms are only allowed for Trading inquiries."))
+
+    # ------------------------------------------------------------
+    # Proforma DP validation
+    # ------------------------------------------------------------
     @api.constrains("proforma_dp")
     def _check_proforma_dp(self):
         for order in self:
             if order.proforma_dp > 100 or order.proforma_dp < 0:
                 raise UserError(_("Down payment percentage must be between 0 and 100"))
 
-    @api.depends("order_line", "overhead_percent", "risk_percent", "profit_percent", "currency_id")
-    def _compute_final_totals(self):
+    # ------------------------------------------------------------
+    # ONE costing engine (single source of truth)
+    # ------------------------------------------------------------
+    def _iter_costing_lines(self):
+        """Only normal product lines (no sections/notes, no downpayment)."""
+        self.ensure_one()
+        return self.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment)
+
+    def _costing_line_breakdown(self, base_unit, qty, currency):
+        """
+        Returns a dict with unit + line totals using the SAME rounding pipeline
+        you used in QWeb/invoice:
+          base_r -> oh_r -> risk_r -> unit_or_r -> profit_r -> final_unit_r -> line_total_r
+        """
+        self.ensure_one()
+
+        base_r = currency.round(base_unit or 0.0)
+
+        oh_r = currency.round(base_r * (self.overhead_percent or 0.0) / 100.0)
+        risk_r = currency.round(base_r * (self.risk_percent or 0.0) / 100.0)
+
+        unit_or_r = currency.round(base_r + oh_r + risk_r)
+        profit_r = currency.round(unit_or_r * (self.profit_percent or 0.0) / 100.0)
+
+        final_unit_r = currency.round(unit_or_r + profit_r)
+
+        qty = qty or 0.0
+        base_line = currency.round(base_r * qty)
+        oh_line = currency.round(oh_r * qty)
+        risk_line = currency.round(risk_r * qty)
+        profit_line = currency.round(profit_r * qty)
+        total_line = currency.round(final_unit_r * qty)
+
+        return {
+            "base_u": base_r,
+            "oh_u": oh_r,
+            "risk_u": risk_r,
+            "unit_or_u": unit_or_r,
+            "profit_u": profit_r,
+            "final_u": final_unit_r,
+            "base_line": base_line,
+            "oh_line": oh_line,
+            "risk_line": risk_line,
+            "profit_line": profit_line,
+            "total_line": total_line,
+        }
+
+    def _costing_compute_totals(self):
+        """
+        Computes all totals consistently (no duplicated logic).
+        - buffer_total_no_vat = base + OH + risk (rounded pipeline), no profit, no VAT
+        - profit_total        = profit only, no VAT
+        - grand_no_vat        = buffer + profit, no VAT
+        - vat_total           = 15% VAT (respect company rounding method)
+        - final_total         = grand_no_vat + vat_total
+        """
+        self.ensure_one()
+        currency = self.currency_id or self.company_id.currency_id
+        rounding_method = self.company_id.tax_calculation_rounding_method  # 'round_globally' or 'round_per_line'
+        vat_rate = 0.15
+
+        base_total = oh_total = risk_total = profit_total = grand_no_vat = 0.0
+        vat_total = 0.0
+
+        for line in self._iter_costing_lines():
+            b = self._costing_line_breakdown(
+                base_unit=line.price_unit or 0.0,
+                qty=line.product_uom_qty or 0.0,
+                currency=currency,
+            )
+
+            base_total += b["base_line"]
+            oh_total += b["oh_line"]
+            risk_total += b["risk_line"]
+            profit_total += b["profit_line"]
+            grand_no_vat += b["total_line"]
+
+            if rounding_method == "round_per_line":
+                vat_total += currency.round(b["total_line"] * vat_rate)
+
+        if rounding_method != "round_per_line":
+            vat_total = currency.round(grand_no_vat * vat_rate)
+
+        buffer_total_no_vat = currency.round(base_total + oh_total + risk_total)
+        profit_total = currency.round(profit_total)
+        grand_no_vat = currency.round(grand_no_vat)
+        final_total = currency.round(grand_no_vat + vat_total)
+
+        return {
+            "currency": currency,
+            "base_total": base_total,
+            "oh_total": oh_total,
+            "risk_total": risk_total,
+            "buffer_total_no_vat": buffer_total_no_vat,
+            "profit_total": profit_total,
+            "grand_no_vat": grand_no_vat,
+            "vat_total": vat_total,
+            "final_total": final_total,
+        }
+
+    @api.depends(
+        "order_line.display_type",
+        "order_line.is_downpayment",
+        "order_line.price_unit",
+        "order_line.product_uom_qty",
+        "overhead_percent",
+        "risk_percent",
+        "profit_percent",
+        "currency_id",
+        "company_id.tax_calculation_rounding_method",
+    )
+    def _compute_costing_totals(self):
         for order in self:
-            currency = order.currency_id or order.company_id.currency_id
-            rounding_method = order.company_id.tax_calculation_rounding_method  # 'round_globally' or 'round_per_line'
+            vals = order._costing_compute_totals()
 
-            total = 0.0
-            vat_sum = 0.0
+            order.overhead_amount = vals["oh_total"]
+            order.risk_amount = vals["risk_total"]
 
-            normal_lines = order.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment)
+            order.buffer_total_amount = vals["buffer_total_no_vat"]
+            order.profit_amount = vals["profit_total"]
+            order.profit_grand_total = vals["grand_no_vat"]
+            order.final_grand_total = vals["final_total"]
 
-            for line in normal_lines:
-                qty = line.product_uom_qty or 0.0
-
-                base = line.price_unit or 0.0
-                base_r = currency.round(base)
-
-                oh_r = currency.round(base_r * (order.overhead_percent or 0.0) / 100.0)
-                risk_r = currency.round(base_r * (order.risk_percent or 0.0) / 100.0)
-
-                unit_or_r = currency.round(base_r + oh_r + risk_r)
-                profit_r = currency.round(unit_or_r * (order.profit_percent or 0.0) / 100.0)
-
-                final_unit_r = currency.round(unit_or_r + profit_r)
-                line_total_r = currency.round(final_unit_r * qty)
-
-                total += line_total_r
-
-                if rounding_method == "round_per_line":
-                    vat_sum += currency.round(line_total_r * 0.15)
-
-            if rounding_method != "round_per_line":
-                vat_sum = currency.round(total * 0.15)
-
-            order.final_grand_total = currency.round(total + vat_sum)
+    # Optional helper if you still call it from QWeb/python elsewhere
+    def _costing_final_unit(self, base):
+        """Final unit (OH + risk + profit) using SAME rounding pipeline."""
+        self.ensure_one()
+        currency = self.currency_id or self.company_id.currency_id
+        b = self._costing_line_breakdown(base_unit=base or 0.0, qty=1.0, currency=currency)
+        return b["final_u"]
 
     def _costing_total_no_vat_without_profit(self):
+        """Buffer total (base+OH+risk) no profit, no VAT."""
         self.ensure_one()
-        currency = self.currency_id or self.company_id.currency_id
-        total = 0.0
-        lines = self.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment)
-
-        for l in lines:
-            base = l.price_unit or 0.0
-            qty = l.product_uom_qty or 0.0
-
-            oh = base * (self.overhead_percent or 0.0) / 100.0
-            risk = base * (self.risk_percent or 0.0) / 100.0
-            unit_or = base + oh + risk
-
-            unit_or_r = currency.round(unit_or)
-            line_total_r = currency.round(unit_or_r * qty)
-
-            total += line_total_r
-
-        return total
+        return self._costing_compute_totals()["buffer_total_no_vat"]
 
     def _costing_total_no_vat(self):
+        """Grand total (buffer+profit) no VAT."""
         self.ensure_one()
-        currency = self.currency_id or self.company_id.currency_id
+        return self._costing_compute_totals()["grand_no_vat"]
 
-        total = 0.0
-        lines = self.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment)
-        for l in lines:
-            base = l.price_unit or 0.0
-            qty = l.product_uom_qty or 0.0
-
-            final_unit = self._costing_final_unit(base)
-            final_unit_r = currency.round(final_unit)
-            line_total_r = currency.round(final_unit_r * qty)
-
-            total += line_total_r
-
-        return total
-
-    @api.depends("amount_total", "company_id")
-    def _compute_require_two_step(self):
+    # ------------------------------------------------------------
+    # Section subtotal summary (kept as-is, but uses the unified totals)
+    # ------------------------------------------------------------
+    @api.depends(
+        "amount_total",
+        "currency_id",
+        "buffer_total_amount",
+        "profit_grand_total",
+        "amount_untaxed",
+    )
+    def _compute_section_subtotal_summary(self):
+        total_label = _("Total Amount")
         for order in self:
-            company = order.company_id
-            amt_mgr = company.sale_mgr_approval_min_amount or 0.0
-            amt_md = company.sale_md_approval_min_amount or 0.0
-            order.require_two_step = order.amount_total >= max(amt_mgr, amt_md)
+            currency = order.currency_id or order.company_id.currency_id
+            total_value = (
+                order.profit_grand_total
+                if order.profit_grand_total or order.profit_grand_total == 0.0
+                else order.buffer_total_amount or order.amount_untaxed
+            )
+            if currency:
+                total_display = format_amount(order.env, total_value or 0.0, currency)
+            else:
+                total_display = f"{(total_value or 0.0):.2f}"
 
-    show_reject_button = fields.Boolean(compute="_compute_show_reject_button")
+            order.section_subtotal_summary = (
+                "<div class='o_section_total_summary'>"
+                f"<span class='o_section_total_label'>{html_escape(total_label)}</span>"
+                f"<span class='o_section_total_value'>{html_escape(total_display)}</span>"
+                "</div>"
+            )
 
-    @api.model
-    def translate_sale_name(self, name):
-        if not name:
-            return ""
-        numerals_map = str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩")
-        return str(name).translate(numerals_map)
+    # ------------------------------------------------------------
+    # Tax totals label cleanup (kept)
+    # ------------------------------------------------------------
+    @api.depends_context("lang")
+    @api.depends("order_line.tax_id", "order_line.price_unit", "amount_total", "amount_untaxed", "currency_id")
+    def _compute_tax_totals(self):
+        super()._compute_tax_totals()
+        for order in self:
+            if not order.tax_totals:
+                continue
 
-    @api.model
-    def convert_phone_to_eastern_arabic_numerals(self, value):
-        if not value:
-            return ""
-        numerals_map = str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩")
-        return str(value).translate(numerals_map)
+            tax_totals = deepcopy(order.tax_totals)
+            untaxed_label = _("Untaxed Amount")
+            desired_label = _("Total Amount")
+            removal_labels = {_("Tax 15%"), "Tax 15%"}
 
+            for subtotal in tax_totals.get("subtotals", []):
+                if subtotal.get("name") == untaxed_label:
+                    subtotal["name"] = desired_label
+
+            groups_by_subtotal = tax_totals.get("groups_by_subtotal") or {}
+            for key, group_list in list(groups_by_subtotal.items()):
+                filtered_groups = [
+                    tax_group
+                    for tax_group in group_list
+                    if tax_group.get("tax_group_name") not in removal_labels
+                ]
+                groups_by_subtotal[key] = filtered_groups
+                if key == untaxed_label:
+                    groups_by_subtotal[desired_label] = filtered_groups
+
+            subtotals_order = tax_totals.get("subtotals_order")
+            if subtotals_order:
+                tax_totals["subtotals_order"] = [
+                    desired_label if name == untaxed_label else name
+                    for name in subtotals_order
+                ]
+
+            order.tax_totals = tax_totals
+
+    # ------------------------------------------------------------
+    # Approval / workflow actions (kept)
+    # ------------------------------------------------------------
     @api.depends_context("uid")
     @api.depends("approval_state")
     def _compute_show_reject_button(self):
         user = self.env.user
-
         for order in self:
             order.show_reject_button = (
                     (order.approval_state == "to_manager" and user.has_group(
@@ -269,7 +443,6 @@ class SaleOrder(models.Model):
         for order in self:
             if order.approval_state != "to_manager":
                 raise UserError(_("This quotation is not awaiting manager approval."))
-
             order.approval_state = "to_md"
             order.locked = True
 
@@ -286,7 +459,6 @@ class SaleOrder(models.Model):
             if order.approval_state != "to_md":
                 raise UserError(_("This quotation is not awaiting MD approval."))
             order.approval_state = "approved"
-
         return True
 
     def action_reject(self):
@@ -303,18 +475,14 @@ class SaleOrder(models.Model):
             "res_model": "sale.order.reject.wizard",
             "view_mode": "form",
             "target": "new",
-            "context": {
-                "default_order_id": self.id,
-            },
+            "context": {"default_order_id": self.id},
         }
 
     def action_draft(self):
         res = super().action_draft()
-
         for order in self:
             order.locked = False
             order.approval_state = "draft"
-
         return res
 
     def _action_cancel(self):
@@ -330,24 +498,28 @@ class SaleOrder(models.Model):
                 order.locked = False
                 order.approval_state = "draft"
 
-    @api.model
-    def default_get(self, fields_list):
-        defaults = super().default_get(fields_list)
+    def action_confirm(self):
+        for order in self:
+            if not order.order_line:
+                raise UserError(_("Please add at least one line item to the quotation."))
+            if order.approval_state != "approved":
+                raise UserError(_("You cannot confirm the order before final approval."))
 
-        inquiry = defaults.get("inquiry_type", "trading")
+        locked_orders = self.filtered("locked")
+        if locked_orders:
+            locked_orders.action_unlock()
 
-        if "payment_term_id" in fields_list and not defaults.get("payment_term_id"):
-            if inquiry == "trading":
-                xmlid = "petroraq_sale_workflow.payment_term_trading_advance"
-            else:
-                xmlid = "petroraq_sale_workflow.payment_term_immediate"
+        try:
+            res = super().action_confirm()
+        finally:
+            if locked_orders:
+                locked_orders.action_lock()
 
-            term = self.env.ref(xmlid, raise_if_not_found=False)
-            if term:
-                defaults["payment_term_id"] = term.id
+        return res
 
-        return defaults
-
+    # ------------------------------------------------------------
+    # Email send logic (kept)
+    # ------------------------------------------------------------
     def action_quotation_send(self):
         self.ensure_one()
 
@@ -389,7 +561,6 @@ class SaleOrder(models.Model):
             "proforma": self.env.context.get("proforma", False),
             "force_email": True,
             "model_description": self.with_context(lang=lang).type_name,
-
             "default_partner_ids": [(6, 0, list(set(partner_ids)))],
         }
 
@@ -402,188 +573,22 @@ class SaleOrder(models.Model):
             "context": ctx,
         }
 
-    def _costing_final_unit(self, base):
-        """Return final unit (OH + risk + profit) using SAME rounding pipeline as QWeb/invoice."""
-        self.ensure_one()
-        currency = self.currency_id or self.company_id.currency_id
+    # ------------------------------------------------------------
+    # Utilities (kept)
+    # ------------------------------------------------------------
+    @api.model
+    def translate_sale_name(self, name):
+        if not name:
+            return ""
+        numerals_map = str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩")
+        return str(name).translate(numerals_map)
 
-        base_r = currency.round(base or 0.0)
-
-        oh_r = currency.round(base_r * (self.overhead_percent or 0.0) / 100.0)
-        risk_r = currency.round(base_r * (self.risk_percent or 0.0) / 100.0)
-
-        unit_or_r = currency.round(base_r + oh_r + risk_r)
-        profit_r = currency.round(unit_or_r * (self.profit_percent or 0.0) / 100.0)
-
-        return currency.round(unit_or_r + profit_r)
-
-    def _costing_line_total(self):
-        self.ensure_one()
-        order = self.order_id
-        currency = order.currency_id or order.company_id.currency_id
-        unit_r = self._costing_final_unit()
-        qty = self.product_uom_qty or 0.0
-        return currency.round(unit_r * qty)
-
-    def action_confirm(self):
-        for order in self:
-            if not order.order_line:
-                raise UserError(_("Please add at least one line item to the quotation."))
-            if order.approval_state != "approved":
-                raise UserError(_("You cannot confirm the order before final approval."))
-
-        locked_orders = self.filtered('locked')
-        if locked_orders:
-            locked_orders.action_unlock()
-
-        try:
-            res = super().action_confirm()
-        finally:
-            if locked_orders:
-                locked_orders.action_lock()
-
-        return res
-
-    @api.depends(
-        "order_line.display_type",
-        "order_line.is_downpayment",
-        "order_line.price_unit",
-        "order_line.product_uom_qty",
-        "overhead_percent",
-        "risk_percent",
-        "profit_percent",
-        "currency_id",
-    )
-    def _compute_buffer_amounts(self):
-        for order in self:
-            currency = order.currency_id or order.company_id.currency_id
-
-            base_total = oh_total = risk_total = profit_total = grand_total = 0.0
-
-            lines = order.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment)
-            for l in lines:
-                qty = l.product_uom_qty or 0.0
-                base = l.price_unit or 0.0
-
-                # 1) round per unit
-                base_u = currency.round(base)
-                oh_u = currency.round(base * (order.overhead_percent or 0.0) / 100.0)
-                risk_u = currency.round(base * (order.risk_percent or 0.0) / 100.0)
-
-                unit_or = currency.round(base_u + oh_u + risk_u)
-
-                # 2) profit per unit, rounded
-                profit_u = currency.round(unit_or * (order.profit_percent or 0.0) / 100.0)
-
-                # 3) final unit rounded (matches “16.54” behavior)
-                final_u = currency.round(unit_or + profit_u)
-
-                # 4) totals per line (multiply then round)
-                base_total += currency.round(base_u * qty)
-                oh_total += currency.round(oh_u * qty)
-                risk_total += currency.round(risk_u * qty)
-                profit_total += currency.round(profit_u * qty)
-                grand_total += currency.round(final_u * qty)
-
-            order.overhead_amount = oh_total
-            order.risk_amount = risk_total
-            order.buffer_total_amount = base_total + oh_total + risk_total
-
-            order.profit_amount = profit_total
-            order.profit_grand_total = grand_total
-
-    @api.depends("order_line", "overhead_percent", "risk_percent", "profit_percent", "currency_id")
-    def _compute_profit_amount(self):
-        for order in self:
-            currency = order.currency_id or order.company_id.currency_id
-
-            buffer_total = order._costing_total_no_vat_without_profit()  # new helper (see below)
-            grand_no_vat = order._costing_total_no_vat()  # already exists (with profit)
-
-            order.buffer_total_amount = buffer_total
-            order.profit_grand_total = grand_no_vat
-            order.profit_amount = currency.round(grand_no_vat - buffer_total)
-
-    @api.depends(
-        "amount_total",
-        "currency_id",
-        "overhead_percent",
-        "risk_percent",
-        "buffer_total_amount",
-        "profit_percent",
-        "profit_grand_total",
-        "amount_untaxed",
-    )
-    def _compute_section_subtotal_summary(self):
-        total_label = _("Total Amount")
-        for order in self:
-            currency = order.currency_id or order.company_id.currency_id
-            total_value = order.profit_grand_total if order.profit_grand_total or order.profit_grand_total == 0.0 else order.buffer_total_amount or order.amount_untaxed
-            if currency:
-                total_display = format_amount(order.env, total_value or 0.0, currency)
-            else:
-                total_display = f"{(total_value or 0.0):.2f}"
-            order.section_subtotal_summary = (
-                "<div class='o_section_total_summary'>"
-                f"<span class='o_section_total_label'>{html_escape(total_label)}</span>"
-                f"<span class='o_section_total_value'>{html_escape(total_display)}</span>"
-                "</div>"
-            )
-
-    @api.depends_context("lang")
-    @api.depends("order_line.tax_id", "order_line.price_unit", "amount_total", "amount_untaxed", "currency_id")
-    def _compute_tax_totals(self):
-        super()._compute_tax_totals()
-        for order in self:
-            if not order.tax_totals:
-                continue
-
-            tax_totals = deepcopy(order.tax_totals)
-            untaxed_label = _("Untaxed Amount")
-            desired_label = _("Total Amount")
-            removal_labels = {_("Tax 15%"), "Tax 15%"}
-            for subtotal in tax_totals.get("subtotals", []):
-                if subtotal.get("name") == untaxed_label:
-                    subtotal["name"] = desired_label
-
-            groups_by_subtotal = tax_totals.get("groups_by_subtotal") or {}
-            for key, group_list in list(groups_by_subtotal.items()):
-                filtered_groups = [
-                    tax_group
-                    for tax_group in group_list
-                    if tax_group.get("tax_group_name") not in removal_labels
-                ]
-                groups_by_subtotal[key] = filtered_groups
-                if key == untaxed_label:
-                    groups_by_subtotal[desired_label] = filtered_groups
-
-            subtotals_order = tax_totals.get("subtotals_order")
-            if subtotals_order:
-                tax_totals["subtotals_order"] = [
-                    desired_label if name == untaxed_label else name
-                    for name in subtotals_order
-                ]
-
-            order.tax_totals = tax_totals
-
-    @api.constrains("payment_term_id", "inquiry_type")
-    def _check_payment_term_selectable(self):
-        for order in self:
-            term = order.payment_term_id
-            if not term:
-                raise UserError(_("Please select a payment term before saving the quotation."))
-
-            if not getattr(term, "petroraq_selectable", False):
-                raise UserError(
-                    _("The selected payment term is not allowed. Please choose one of the Petroraq payment terms."))
-
-            # ✅ Trading rule
-            if order.inquiry_type == "trading":
-                if not term.is_trading_term:
-                    raise UserError(_("For Trading inquiries, only Advance and Credit payment terms are allowed."))
-            else:
-                if term.is_trading_term:
-                    raise UserError(_("Advance/Credit payment terms are only allowed for Trading inquiries."))
+    @api.model
+    def convert_phone_to_eastern_arabic_numerals(self, value):
+        if not value:
+            return ""
+        numerals_map = str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩")
+        return str(value).translate(numerals_map)
 
 
 class StockPicking(models.Model):
