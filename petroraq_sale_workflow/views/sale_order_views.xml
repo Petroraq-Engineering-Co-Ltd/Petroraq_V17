@@ -57,7 +57,7 @@
             </xpath>
             <xpath expr="//header//button[@name='action_cancel']" position="attributes">
                 <attribute name="string">Reject</attribute>
-                <attribute name="invisible">state in ('draft','cancel')</attribute>
+                <attribute name="invisible">state in ('draft','cancel','sale')</attribute>
             </xpath>
             <!--            <xpath expr="//header//button[@id='send_by_email']" position="attributes">-->
             <!--                <attribute name="invisible">approval_state != 'approved' or state == 'sent'</attribute>-->
