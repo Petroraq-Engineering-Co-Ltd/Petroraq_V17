@@ -199,6 +199,7 @@
 
 
         <xpath expr="//div[contains(concat(' ', normalize-space(@class), ' '), ' page ')]" position="inside">
+
             <div t-if="env.context.get('proforma', False) or is_pro_forma"
                  style="margin-top:20px; font-family:'DroidArabicNaskh'; font-size:17px;">
                 <table class="table table-borderless" style="line-height:0.9;">
@@ -221,22 +222,23 @@
                     <tr>
                         <td style="text-align:left;">Bank:</td>
                         <td style="text-align:left;">Arab National Bank</td>
-                        <td style="text-align:right;">البنك العربي الوطني</td>
+                        <td style="text-align:right;">بنك : البنك العربي الوطني</td>
                     </tr>
                     <tr>
                         <td style="text-align:left;">A/C No:</td>
                         <td style="text-align:left;">108095635470015</td>
-                        <td style="text-align:right;">رقم الحساب: 108095635470015</td>
+                        <td style="text-align:right;">رقم الحساب: ١٠٨٠٩٥٦٣٥٤٧٠٠١٥
+                        </td>
                     </tr>
                     <tr>
                         <td style="text-align:left;">IBAN No:</td>
                         <td style="text-align:left;">SA1930400108095635470015</td>
-                        <td style="text-align:right;">رقم الآيبان: SA1930400108095635470015</td>
+                        <td style="text-align:right;">رقم الآيبان: SA١٩٣٠٤٠٠١٠٨٠٩٥٦٣٥٤٧٠٠١٥</td>
                     </tr>
                     <tr>
                         <td style="text-align:left;">Branch:</td>
                         <td style="text-align:left;">Al-Jubail</td>
-                        <td style="text-align:right;">فرع الجبيل</td>
+                        <td style="text-align:right;">فرع: الجبيل</td>
                     </tr>
                     <tr>
                         <td style="text-align:left;">SWIFT Code:</td>
@@ -245,6 +247,7 @@
                     </tr>
                 </table>
             </div>
+
         </xpath>
 
     </template>
