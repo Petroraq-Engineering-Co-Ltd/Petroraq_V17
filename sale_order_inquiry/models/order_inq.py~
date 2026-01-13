@@ -268,8 +268,8 @@ class OrderInquiry(models.Model):
             'order_inquiry_id': self.id,
             'inquiry_type': self.inquiry_type,
             "payment_term_id": term.id if term else False,
-            # "partner_invoice_id": contact.id,  # optional but nice
-            # "partner_shipping_id": contact.id,
+            "partner_invoice_id": contact.id,  # optional but nice
+            "partner_shipping_id": contact.id,
             "user_id": self.user_id.id,
         })
 

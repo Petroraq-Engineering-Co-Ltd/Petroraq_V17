@@ -372,12 +372,10 @@ class SaleOrder(models.Model):
         if mail_template and mail_template.lang:
             lang = mail_template._render_lang(self.ids)[self.id]
 
-        # ✅ build recipients (partners only)
         partner_ids = []
         if self.partner_id:
             partner_ids.append(self.partner_id.id)
 
-        # if quotation came from inquiry, add that inquiry contact partner
         if self.order_inquiry_id and self.order_inquiry_id.contact_partner_id:
             partner_ids.append(self.order_inquiry_id.contact_partner_id.id)
 
@@ -392,7 +390,6 @@ class SaleOrder(models.Model):
             "force_email": True,
             "model_description": self.with_context(lang=lang).type_name,
 
-            # ✅ auto-select recipients in wizard
             "default_partner_ids": [(6, 0, list(set(partner_ids)))],
         }
 

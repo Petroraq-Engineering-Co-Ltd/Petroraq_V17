@@ -299,7 +299,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td style="text-align:left;">Supplier VAT #:</td>
+                                <td style="text-align:left;">Supplier VAT:</td>
                                 <td style="text-align:left">
                                     <span t-if="o.move_type == 'out_invoice'">311428741500003</span>
                                     <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.vat"/>

@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="sale.view_quotation_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//tree/field[@name='amount_total']" position="after">
-                <field name="profit_grand_total" string="Great Grand Total"/>
+                <field name="profit_grand_total"/>
             </xpath>
         </field>
     </record>
@@ -16,7 +16,7 @@
         <field name="inherit_id" ref="sale.view_order_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//tree/field[@name='amount_total']" position="after">
-                <field name="profit_grand_total" string="Great Grand Total"/>
+                <field name="profit_grand_total"/>
             </xpath>
         </field>
     </record>
