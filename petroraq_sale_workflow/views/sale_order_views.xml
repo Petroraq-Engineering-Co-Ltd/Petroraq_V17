@@ -70,9 +70,9 @@
             </xpath>
 
 
-            <xpath expr="//button[@name='action_open_discount_wizard']" position="replace">
-                <button name="action_open_discount_wizard" invisible="1"/>
-            </xpath>
+            <!--            <xpath expr="//button[@name='action_open_discount_wizard']" position="replace">-->
+            <!--                <button name="action_open_discount_wizard" invisible="1"/>-->
+            <!--            </xpath>-->
 
         </field>
     </record>
@@ -130,7 +130,7 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='order_line']/tree//field[@name='tax_id']" position="replace"/>
-            <xpath expr="//field[@name='order_line']/tree//field[@name='discount']" position="replace"/>
+            <!--            <xpath expr="//field[@name='order_line']/tree//field[@name='discount']" position="replace"/>-->
             <xpath expr="//field[@name='order_line']/tree//field[@name='price_subtotal']" position="attributes">
                 <attribute name="string">Total Amount</attribute>
             </xpath>
@@ -170,6 +170,15 @@
                    position="attributes">
                 <attribute name="column_invisible">True</attribute>
             </xpath>
+            <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="before">
+                <field name="cost_price_unit" string="Unit Cost" optional="show"/>
+            </xpath>
+
+            <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="attributes">
+                <attribute name="string">Sale Price</attribute>
+            </xpath>
+
+
             <xpath expr="//field[@name='order_line']/tree/field[@name='name']" position="after">
                 <field name="section_subtotal_display"
                        widget="html"
@@ -181,11 +190,22 @@
             <xpath expr="//group[@name='sale_total']" position="replace">
                 <field name="inquiry_type" readonly="1" invisible="1"/>
                 <group class="oe_subtotal_footer o_petroraq_totals" colspan="2" name="sale_total">
-                    <div class="o_petroraq_total_row o_petroraq_total_base">
-                        <span class="o_petroraq_total_label">Total Amount:</span>
+                    <div class="o_petroraq_total_row o_petroraq_total_plain">
+                        <span class="o_petroraq_total_label">Total</span>
                         <div class="o_petroraq_total_input"></div>
                         <div class="o_petroraq_total_value">
-                            <field name="amount_untaxed" widget="monetary" readonly="1" nolabel="1" string=""/>
+                            <field name="base_cost_total" widget="monetary" readonly="1" nolabel="1" string=""/>
+                        </div>
+                    </div>
+
+                    <div class="o_petroraq_total_row o_petroraq_total_risk">
+                        <span class="o_petroraq_total_label">Risk(%)</span>
+                        <div class="o_petroraq_total_input">
+                            <field name="risk_percent" class="o_petroraq_percent_input" nolabel="1" string=""
+                                   readonly="locked"/>
+                        </div>
+                        <div class="o_petroraq_total_value">
+                            <field name="risk_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
                     <div class="o_petroraq_total_row o_petroraq_total_overhead">
@@ -196,16 +216,6 @@
                         </div>
                         <div class="o_petroraq_total_value">
                             <field name="overhead_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
-                        </div>
-                    </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_risk">
-                        <span class="o_petroraq_total_label">Risk(%)</span>
-                        <div class="o_petroraq_total_input">
-                            <field name="risk_percent" class="o_petroraq_percent_input" nolabel="1" string=""
-                                   readonly="locked"/>
-                        </div>
-                        <div class="o_petroraq_total_value">
-                            <field name="risk_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
                     <div class="o_petroraq_total_row o_petroraq_total_grand">
@@ -225,13 +235,39 @@
                             <field name="profit_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_great">
+
+
+                    <div class="o_petroraq_total_row o_petroraq_total_before_discount"
+                         invisible="discount_amount_total == 0">
+                        <span class="o_petroraq_total_label">Amount Without Discount:</span>
+                        <div class="o_petroraq_total_input"></div>
+                        <div class="o_petroraq_total_value">
+                            <field name="amount_before_discount" widget="monetary" readonly="1" nolabel="1" string=""/>
+                        </div>
+                    </div>
+
+
+                    <div class="o_petroraq_total_row o_petroraq_total_discount" invisible="discount_amount_total == 0">
+                        <span class="o_petroraq_total_label">Discount:</span>
+                        <div class="o_petroraq_total_input"></div>
+                        <div class="o_petroraq_total_value">
+                            <field name="discount_amount_total" widget="monetary" readonly="1" nolabel="1" string=""/>
+                        </div>
+                    </div>
+                    <div class="o_petroraq_total_row o_petroraq_total_base">
                         <span class="o_petroraq_total_label">Net Total:</span>
                         <div class="o_petroraq_total_input"></div>
                         <div class="o_petroraq_total_value">
-                            <field name="profit_grand_total" widget="monetary" readonly="1" nolabel="1" string=""/>
+                            <field name="amount_untaxed" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
+                    <!--                    <div class="o_petroraq_total_row o_petroraq_total_great">-->
+                    <!--                        <span class="o_petroraq_total_label">Net Total:</span>-->
+                    <!--                        <div class="o_petroraq_total_input"></div>-->
+                    <!--                        <div class="o_petroraq_total_value">-->
+                    <!--                            <field name="profit_grand_total" widget="monetary" readonly="1" nolabel="1" string=""/>-->
+                    <!--                        </div>-->
+                    <!--                    </div>-->
                 </group>
             </xpath>
         </field>

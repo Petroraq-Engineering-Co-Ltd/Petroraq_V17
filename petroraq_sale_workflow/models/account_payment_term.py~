@@ -100,12 +100,8 @@ class SaleOrder(models.Model):
             invoice_base = 0.0
             for l in base_lines:
                 qty = l.qty_to_invoice or 0.0
-                if not qty:
-                    continue
-                unit = l.price_unit or 0.0
-                disc = (l.discount or 0.0) / 100.0
-                net_unit = unit * (1.0 - disc)
-                invoice_base += currency.round(net_unit * qty)
+                unit_r = currency.round(l.final_price_unit or l.price_unit or 0.0)
+                invoice_base += currency.round(unit_r * qty)
 
             invoice_base = currency.round(invoice_base)
             if invoice_base <= 0:

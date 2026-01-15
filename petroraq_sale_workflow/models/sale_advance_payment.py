@@ -10,12 +10,8 @@ class SaleAdvancePaymentInv(models.TransientModel):
 
         currency = order.currency_id
 
-        # 1) Commercial base
-        commercial_total = (
-            order.profit_grand_total
-            if order.profit_grand_total is not False
-            else order.amount_total
-        )
+        commercial_total = order.amount_total
+
         untaxed_total = order.amount_untaxed or 0.0
         if not untaxed_total:
             return []

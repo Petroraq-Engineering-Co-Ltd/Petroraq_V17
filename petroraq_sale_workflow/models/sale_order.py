@@ -131,6 +131,57 @@ class SaleOrder(models.Model):
         help="Displays a summary of section subtotals and their grand total."
     )
 
+    discount_amount_total = fields.Monetary(
+        string="Discount",
+        currency_field="currency_id",
+        compute="_compute_discount_breakdown",
+        store=True,
+    )
+    amount_before_discount = fields.Monetary(
+        string="Amount Before Discount",
+        currency_field="currency_id",
+        compute="_compute_discount_breakdown",
+        store=True,
+    )
+    base_cost_total = fields.Monetary(
+        string="Base Cost Total",
+        currency_field="currency_id",
+        compute="_compute_costing_totals",
+        store=False,
+    )
+
+    @api.depends(
+        "order_line.price_unit",
+        "order_line.product_uom_qty",
+        "order_line.discount",
+        "order_line.price_subtotal",
+        "order_line.display_type",
+        "currency_id",
+    )
+    def _compute_discount_breakdown(self):
+        for order in self:
+            currency = order.currency_id or order.company_id.currency_id
+
+            disc_from_percent = 0.0
+            disc_from_negative_lines = 0.0
+
+            for line in order.order_line.filtered(lambda l: not l.display_type):
+                qty = line.product_uom_qty or 0.0
+                unit = line.price_unit or 0.0
+                disc = line.discount or 0.0
+
+                if disc:
+                    disc_from_percent += currency.round((unit * qty) * (disc / 100.0))
+
+                if (line.price_subtotal or 0.0) < 0:
+                    disc_from_negative_lines += currency.round(-(line.price_subtotal or 0.0))
+
+            discount_total = currency.round(disc_from_percent + disc_from_negative_lines)
+
+            # since amount_untaxed is already AFTER discounts, before = after + discount
+            order.discount_amount_total = discount_total
+            order.amount_before_discount = currency.round((order.amount_untaxed or 0.0) + discount_total)
+
     # ------------------------------------------------------------
     # Payment term domain + defaults
     # ------------------------------------------------------------
@@ -258,26 +309,19 @@ class SaleOrder(models.Model):
             "total_line": total_line,
         }
 
+    # add back VAT + final total into your existing engine
     def _costing_compute_totals(self):
-        """
-        Computes all totals consistently (no duplicated logic).
-        - buffer_total_no_vat = base + OH + risk (rounded pipeline), no profit, no VAT
-        - profit_total        = profit only, no VAT
-        - grand_no_vat        = buffer + profit, no VAT
-        - vat_total           = 15% VAT (respect company rounding method)
-        - final_total         = grand_no_vat + vat_total
-        """
         self.ensure_one()
         currency = self.currency_id or self.company_id.currency_id
-        rounding_method = self.company_id.tax_calculation_rounding_method  # 'round_globally' or 'round_per_line'
+        rounding_method = self.company_id.tax_calculation_rounding_method  # 'round_globally' / 'round_per_line'
         vat_rate = 0.15
 
-        base_total = oh_total = risk_total = profit_total = grand_no_vat = 0.0
+        base_total = oh_total = risk_total = profit_total = gross_sale = 0.0
         vat_total = 0.0
 
         for line in self._iter_costing_lines():
             b = self._costing_line_breakdown(
-                base_unit=line.price_unit or 0.0,
+                base_unit=line.cost_price_unit or 0.0,  # keep COST base
                 qty=line.product_uom_qty or 0.0,
                 currency=currency,
             )
@@ -286,18 +330,47 @@ class SaleOrder(models.Model):
             oh_total += b["oh_line"]
             risk_total += b["risk_line"]
             profit_total += b["profit_line"]
-            grand_no_vat += b["total_line"]
 
+            # sale BEFORE discount (computed from cost pipeline)
+            line_gross = b["total_line"]
+            gross_sale += line_gross
+
+            # VAT per line should be on NET (after discount)
             if rounding_method == "round_per_line":
-                vat_total += currency.round(b["total_line"] * vat_rate)
+                disc = (line.discount or 0.0) / 100.0
+                line_net = currency.round(line_gross * (1.0 - disc))
+                vat_total += currency.round(line_net * vat_rate)
 
-        if rounding_method != "round_per_line":
-            vat_total = currency.round(grand_no_vat * vat_rate)
-
+        # totals (no VAT)
         buffer_total_no_vat = currency.round(base_total + oh_total + risk_total)
         profit_total = currency.round(profit_total)
-        grand_no_vat = currency.round(grand_no_vat)
-        final_total = currency.round(grand_no_vat + vat_total)
+        gross_sale = currency.round(gross_sale)
+
+        # discount total = % discounts on computed gross + negative discount lines
+        discount_total = 0.0
+        for line in self._iter_costing_lines():
+            line_gross = self._costing_line_breakdown(
+                base_unit=line.cost_price_unit or 0.0,
+                qty=line.product_uom_qty or 0.0,
+                currency=currency,
+            )["total_line"]
+            disc = (line.discount or 0.0) / 100.0
+            if disc:
+                discount_total += currency.round(line_gross * disc)
+
+        for line in self.order_line.filtered(lambda l: not l.display_type and not l.is_downpayment):
+            if (line.price_subtotal or 0.0) < 0:
+                discount_total += currency.round(-(line.price_subtotal or 0.0))
+
+        discount_total = currency.round(discount_total)
+
+        net_sale = currency.round(gross_sale - discount_total)
+
+        # VAT global on NET
+        if rounding_method != "round_per_line":
+            vat_total = currency.round(net_sale * vat_rate)
+
+        final_total = currency.round(net_sale + vat_total)
 
         return {
             "currency": currency,
@@ -306,32 +379,33 @@ class SaleOrder(models.Model):
             "risk_total": risk_total,
             "buffer_total_no_vat": buffer_total_no_vat,
             "profit_total": profit_total,
-            "grand_no_vat": grand_no_vat,
-            "vat_total": vat_total,
-            "final_total": final_total,
+            "grand_no_vat": gross_sale,       # keep your meaning: sale before discount
+            "discount_total": discount_total, # NEW
+            "net_sale": net_sale,             # NEW
+            "vat_total": vat_total,           # NEW
+            "final_total": final_total,       # NEW
         }
 
     @api.depends(
         "order_line.display_type",
         "order_line.is_downpayment",
-        "order_line.price_unit",
+        "order_line.cost_price_unit",  # ✅ ADD
         "order_line.product_uom_qty",
+        "order_line.discount",  # optional if you later incorporate discount
         "overhead_percent",
         "risk_percent",
         "profit_percent",
         "currency_id",
-        "company_id.tax_calculation_rounding_method",
     )
     def _compute_costing_totals(self):
         for order in self:
             vals = order._costing_compute_totals()
-
             order.overhead_amount = vals["oh_total"]
             order.risk_amount = vals["risk_total"]
-
             order.buffer_total_amount = vals["buffer_total_no_vat"]
             order.profit_amount = vals["profit_total"]
             order.profit_grand_total = vals["grand_no_vat"]
+            order.base_cost_total = vals["base_total"]
             order.final_grand_total = vals["final_total"]
 
     # Optional helper if you still call it from QWeb/python elsewhere
@@ -422,6 +496,13 @@ class SaleOrder(models.Model):
                 ]
 
             order.tax_totals = tax_totals
+
+    @api.onchange("overhead_percent", "risk_percent", "profit_percent")
+    def _onchange_reprice_lines_from_cost(self):
+        for order in self:
+            for line in order.order_line.filtered(
+                    lambda l: not l.display_type and not l.is_downpayment and l.product_id):
+                line.price_unit = line._compute_sale_price_from_cost(line.product_id.standard_price)
 
     # ------------------------------------------------------------
     # Approval / workflow actions (kept)
@@ -591,42 +672,41 @@ class SaleOrder(models.Model):
         return str(value).translate(numerals_map)
 
 
+from odoo import models, _
+from odoo.exceptions import UserError
+
+
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
     def button_validate(self):
         for picking in self:
-            # Only for outgoing deliveries
-            if picking.picking_type_code != 'outgoing':
+            if picking.picking_type_code != "outgoing":
                 continue
 
             sale = picking.sale_id
             if not sale:
                 continue
 
-            if sale.payment_term_id and sale.payment_term_id.name.lower() == 'advance':
-                dp_invoices = sale.invoice_ids.filtered(
-                    lambda inv:
-                    inv.state == 'posted'
-                    and inv.move_type == 'out_invoice'
-                    and any(
-                        line.sale_line_ids.is_downpayment
-                        for line in inv.invoice_line_ids
-                    )
-                )
+            if sale.payment_term_id and (sale.payment_term_id.name or "").strip().lower() == "advance":
+                # Find only REAL downpayment invoices (positive DP line)
+                dp_invoices = sale.invoice_ids.filtered(lambda inv:
+                                                        inv.state == "posted"
+                                                        and inv.move_type == "out_invoice"
+                                                        and inv.payment_state in ("paid", "in_payment")
+                                                        and any(
+                                                            (aml.price_subtotal or 0.0) > 0
+                                                            and aml.sale_line_ids.filtered(
+                                                                lambda sol: getattr(sol, "is_downpayment", False))
+                                                            for aml in inv.invoice_line_ids
+                                                        )
+                                                        )
 
                 if not dp_invoices:
                     raise UserError(_(
                         "You cannot validate this delivery.\n\n"
-                        "A Down Payment invoice is required for Advance orders."
-                    ))
-
-                unpaid = dp_invoices.filtered(
-                    lambda inv: inv.payment_state != 'in_payment')
-                if unpaid:
-                    raise UserError(_(
-                        "You cannot validate this delivery.\n\n"
-                        "The Down Payment invoice must be fully paid."
+                        "A Down Payment invoice must be posted and paid (or in payment) "
+                        "before delivering an Advance order."
                     ))
 
         return super().button_validate()

@@ -56,7 +56,7 @@
                 <!-- ✅ NEW: show gross total first -->
                 <tr t-if="discount_sum">
                     <td>
-                        <strong>Total</strong>
+                        <strong>Amount Before Discount</strong>
                     </td>
                     <td class="text-end">
                         <span t-out="gross_total"

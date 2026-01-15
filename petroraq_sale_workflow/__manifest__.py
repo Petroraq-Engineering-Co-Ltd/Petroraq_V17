@@ -18,6 +18,7 @@
         "views/custom_format.xml",
         "views/pro_forma.xml",
         "views/report_saleorder_petroraq_costing.xml",
+        "views/stock_delivery_note_innherit.xml",
         "data/mail_template.xml",
         # "data/default_template.xml",
 

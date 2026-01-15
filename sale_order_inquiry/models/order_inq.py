@@ -190,9 +190,11 @@ class OrderInquiry(models.Model):
 
     @api.constrains('contact_person')
     def _check_contact_person_chars(self):
-        name_regex = r'^[A-Za-z\s]+$'
+
+        pattern = r"^[a-zA-Z .'-]+$"
+
         for rec in self:
-            if rec.contact_person and not re.match(name_regex, rec.contact_person):
+            if rec.contact_person and not re.match(pattern, rec.contact_person):
                 raise ValidationError(
                     _("Contact Person name must contain letters only (no numbers or special characters).")
                 )

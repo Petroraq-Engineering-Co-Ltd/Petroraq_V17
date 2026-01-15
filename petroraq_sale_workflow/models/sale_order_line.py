@@ -27,6 +27,54 @@ class SaleOrderLine(models.Model):
         currency_field="currency_id",
     )
 
+    cost_price_unit = fields.Float(
+        string="Unit Cost",
+        related="product_id.standard_price",
+        readonly=True,
+        digits="Product Price",
+    )
+
+    def _compute_sale_price_from_cost(self, cost):
+        self.ensure_one()
+        order = self.order_id
+        currency = self.currency_id or order.currency_id or order.company_id.currency_id
+        b = order._costing_line_breakdown(base_unit=cost or 0.0, qty=1.0, currency=currency)
+        return b["final_u"]
+
+    @api.onchange("product_id", "order_id.overhead_percent", "order_id.risk_percent", "order_id.profit_percent",
+                  "product_uom_qty")
+    def _onchange_set_sale_price_from_product_cost(self):
+        for line in self:
+            if line.display_type or getattr(line, "is_downpayment", False) or not line.order_id:
+                continue
+            if not line.product_id:
+                continue
+            line.price_unit = line._compute_sale_price_from_cost(line.product_id.standard_price)
+
+    def _sync_price_unit_from_product_cost(self):
+        for line in self:
+            if line.display_type or getattr(line, "is_downpayment", False) or not line.order_id:
+                continue
+            if not line.product_id:
+                continue
+
+            sale_price = line._compute_sale_price_from_cost(line.product_id.standard_price)
+            if not self.env.context.get("skip_sync_price_unit") and line.price_unit != sale_price:
+                line.with_context(skip_sync_price_unit=True).price_unit = sale_price
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        lines = super().create(vals_list)
+        lines._sync_price_unit_from_product_cost()
+        return lines
+
+    def write(self, vals):
+        res = super().write(vals)
+        # if product or costing inputs changed, resync
+        if set(vals).intersection({"product_id", "product_template_id"}):
+            self._sync_price_unit_from_product_cost()
+        return res
+
     @api.depends(
         "price_unit",
         "order_id.overhead_percent",
@@ -38,33 +86,15 @@ class SaleOrderLine(models.Model):
     )
     def _compute_final_price_unit(self):
         for line in self:
-            if line.display_type or getattr(line, "is_downpayment", False) or not line.order_id:
-                line.final_price_unit = line.price_unit or 0.0
-                continue
-
-            order = line.order_id
-            currency = line.currency_id or order.currency_id or order.company_id.currency_id
-
-            breakdown = order._costing_line_breakdown(
-                base_unit=line.price_unit or 0.0,
-                qty=1.0,
-                currency=currency,
-            )
-            line.final_price_unit = breakdown["final_u"]
+            line.final_price_unit = line.price_unit or 0.0
 
     def _prepare_invoice_line(self, **optional_values):
         vals = super()._prepare_invoice_line(**optional_values)
 
-        # Normal product lines: force invoice to use the same costing unit
         if not self.display_type and not getattr(self, "is_downpayment", False):
             order = self.order_id
             currency = self.currency_id or order.currency_id or order.company_id.currency_id
-            breakdown = order._costing_line_breakdown(
-                base_unit=self.price_unit or 0.0,
-                qty=1.0,
-                currency=currency,
-            )
-            vals["price_unit"] = breakdown["final_u"]
+
             return vals
 
         # Downpayment deduction line: force amount-based deduction
