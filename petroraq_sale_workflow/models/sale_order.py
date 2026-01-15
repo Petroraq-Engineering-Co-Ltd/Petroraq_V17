@@ -150,7 +150,6 @@ class SaleOrder(models.Model):
         store=False,
     )
 
-
     @api.depends(
         "order_line.price_unit",
         "order_line.product_uom_qty",
@@ -774,3 +773,20 @@ class StockMoveLine(models.Model):
                                           "ordered": ordered,
                                           "done": done,
                                       })
+
+
+class SaleOrderDiscount(models.TransientModel):
+    _inherit = "sale.order.discount"
+
+    @api.model
+    def _get_discount_type_selection(self):
+        """Keep only 'On All Order Lines'"""
+        return [
+            ('sol_discount', "On All Order Lines"),
+        ]
+
+    discount_type = fields.Selection(
+        selection=_get_discount_type_selection,
+        default='sol_discount',
+        required=True,
+    )
