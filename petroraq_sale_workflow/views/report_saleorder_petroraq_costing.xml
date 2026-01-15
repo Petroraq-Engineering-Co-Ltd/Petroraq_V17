@@ -11,6 +11,23 @@
         <xpath expr="//th[@name='th_subtotal']/span" position="replace">
             <span>Total</span>
         </xpath>
+        <xpath expr="//th[@name='th_priceunit']" position="after">
+            <th name="th_net_price_unit" class="text-end">
+                <span>Net Unit Price</span>
+            </th>
+        </xpath>
+
+        <!-- =========================
+             ROW: add Net Unit Price cell after Unit Price cell
+             ========================= -->
+        <xpath expr="//td[@name='th_discount']" position="after">
+            <td name="td_net_price_unit" class="text-end">
+                <t t-if="not line.display_type">
+                    <span t-out="line.net_unit_price"
+                    />
+                </t>
+            </td>
+        </xpath>
 
         <!-- FORCE VAT block (no Odoo taxes) -->
         <!-- FORCE VAT block (no Odoo taxes) -->
