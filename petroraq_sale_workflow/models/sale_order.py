@@ -150,6 +150,7 @@ class SaleOrder(models.Model):
         store=False,
     )
 
+
     @api.depends(
         "order_line.price_unit",
         "order_line.product_uom_qty",

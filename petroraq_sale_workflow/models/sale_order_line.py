@@ -33,6 +33,21 @@ class SaleOrderLine(models.Model):
         readonly=True,
         digits="Product Price",
     )
+    net_unit_price = fields.Monetary(
+        string="Net Unit Price",
+        currency_field="currency_id",
+        compute="_compute_net_unit_price",
+        store=True,
+        readonly=True,
+    )
+
+    @api.depends("price_unit", "discount", "currency_id")
+    def _compute_net_unit_price(self):
+        for line in self:
+            price = line.price_unit or 0.0
+            disc = line.discount or 0.0
+            net = price * (1 - disc / 100.0)
+            line.net_unit_price = line.currency_id.round(net)
 
     def _compute_sale_price_from_cost(self, cost):
         self.ensure_one()
