@@ -27,7 +27,14 @@
                             type="object"
                             class="btn-warning"
                             groups="petroraq_sale_workflow.group_sale_approval_manager"
-                            invisible="state in ('cancel', 'pending', 'cancel', 'confirm', 'accept')"/>
+                            invisible="state in ('pending', 'cancel', 'confirm', 'accept')"/>
+
+                    <button name="action_reset_to_draft"
+                            string="Reset Draft"
+                            type="object"
+                            class="btn-secondary"
+                            groups="petroraq_sale_workflow.group_sale_approval_manager"
+                            invisible="state in ('pending', 'confirm', 'accept')"/>
 
                     <field name="state" widget="statusbar"
                            statusbar_visible="pending,confirm,accept,cancel,reject,expire"/>

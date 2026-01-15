@@ -17,7 +17,7 @@ class OrderInquiry(models.Model):
     contact_person = fields.Char(string="Contact Person", required=True)
     designation = fields.Char(string="Designation")
     user_id = fields.Many2one('res.users', string='Inquiry By',
-                              domain=lambda self: self._get_salesperson_domain(), )
+                              domain=lambda self: self._get_salesperson_domain(), required=True)
     partner_id = fields.Many2one('res.partner', string='Customer', required=True, domain=[('is_company', '=', 'True')])
     email = fields.Char(string="Customer Email", related='partner_id.email')
     contact_person_email = fields.Char(string="Contact Person Email", required=True)
@@ -169,6 +169,11 @@ class OrderInquiry(models.Model):
             inquiry.write({
                 'state': 'expire',
             })
+
+    def action_reset_to_draft(self):
+        self.write({
+            'state': 'pending',
+        })
 
     @api.constrains('contact_person_email', 'contact_person_phone')
     def _check_email_and_phone(self):

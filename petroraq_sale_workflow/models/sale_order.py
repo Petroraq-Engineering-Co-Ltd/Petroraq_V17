@@ -379,11 +379,11 @@ class SaleOrder(models.Model):
             "risk_total": risk_total,
             "buffer_total_no_vat": buffer_total_no_vat,
             "profit_total": profit_total,
-            "grand_no_vat": gross_sale,       # keep your meaning: sale before discount
-            "discount_total": discount_total, # NEW
-            "net_sale": net_sale,             # NEW
-            "vat_total": vat_total,           # NEW
-            "final_total": final_total,       # NEW
+            "grand_no_vat": gross_sale,  # keep your meaning: sale before discount
+            "discount_total": discount_total,  # NEW
+            "net_sale": net_sale,  # NEW
+            "vat_total": vat_total,  # NEW
+            "final_total": final_total,  # NEW
         }
 
     @api.depends(
@@ -688,8 +688,37 @@ class StockPicking(models.Model):
             if not sale:
                 continue
 
+            # ==========================================================
+            # (1) BLOCK OVER-DELIVERY
+            # ==========================================================
+            for move in picking.move_ids_without_package:
+                if move.scrapped or not move.sale_line_id:
+                    continue
+
+                ordered = move.sale_line_id.product_uom_qty
+                done = move.quantity
+                rounding = move.product_uom.rounding or 0.0
+
+                if done > ordered + rounding:
+                    raise UserError(_(
+                        "Over-delivery is not allowed.\n\n"
+                        "Delivery: %(picking)s\n"
+                        "Sale Order: %(so)s\n"
+                        "Product: %(product)s\n"
+                        "Ordered: %(ordered)s\n"
+                        "Trying to deliver: %(done)s"
+                    ) % {
+                                        "picking": picking.name,
+                                        "so": sale.name,
+                                        "product": move.product_id.display_name,
+                                        "ordered": ordered,
+                                        "done": done,
+                                    })
+
+            # ==========================================================
+            # (2) ADVANCE requires paid DP (your rule)
+            # ==========================================================
             if sale.payment_term_id and (sale.payment_term_id.name or "").strip().lower() == "advance":
-                # Find only REAL downpayment invoices (positive DP line)
                 dp_invoices = sale.invoice_ids.filtered(lambda inv:
                                                         inv.state == "posted"
                                                         and inv.move_type == "out_invoice"
@@ -701,7 +730,6 @@ class StockPicking(models.Model):
                                                             for aml in inv.invoice_line_ids
                                                         )
                                                         )
-
                 if not dp_invoices:
                     raise UserError(_(
                         "You cannot validate this delivery.\n\n"
@@ -710,3 +738,38 @@ class StockPicking(models.Model):
                     ))
 
         return super().button_validate()
+
+
+from odoo import api, models, _
+from odoo.exceptions import ValidationError
+
+
+class StockMoveLine(models.Model):
+    _inherit = "stock.move.line"
+
+    @api.constrains("qty_done")
+    def _constrains_no_overdelivery(self):
+        for ml in self:
+            picking = ml.picking_id
+            move = ml.move_id
+
+            if not picking or picking.picking_type_code != "outgoing" or not picking.sale_id:
+                continue
+            if not move.sale_line_id or move.scrapped:
+                continue
+
+            ordered = move.sale_line_id.product_uom_qty
+            done = sum(move.move_line_ids.mapped("qty_done"))
+            rounding = move.product_uom.rounding or 0.0
+
+            if done > ordered + rounding:
+                raise ValidationError(_(
+                    "Over-delivery is not allowed.\n\n"
+                    "Product: %(product)s\n"
+                    "Ordered: %(ordered)s\n"
+                    "Trying to deliver: %(done)s"
+                ) % {
+                                          "product": move.product_id.display_name,
+                                          "ordered": ordered,
+                                          "done": done,
+                                      })
