@@ -547,6 +547,7 @@ class SaleOrder(models.Model):
             if order.approval_state not in ("to_manager", "to_md", "draft"):
                 raise UserError(_("Only waiting approvals can be rejected."))
             order.approval_state = "rejected"
+            order.state = "cancel"
         return True
 
     def action_open_reject_wizard(self):

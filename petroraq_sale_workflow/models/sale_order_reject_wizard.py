@@ -19,5 +19,6 @@ class SaleOrderRejectWizard(models.TransientModel):
         # record reason and reject
         order.approval_comment = self.reason
         order.approval_state = "rejected"
+        order.state = "cancel"
         order.message_post(body=_("Quotation has been rejected. Reason: %s") % self.reason)
         return {"type": "ir.actions.act_window_close"}
