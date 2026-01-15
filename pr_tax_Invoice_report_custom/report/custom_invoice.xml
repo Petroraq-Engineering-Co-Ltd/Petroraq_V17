@@ -490,7 +490,7 @@
                                 </td>
                             </tr>
                             <tr t-if="downpayment_lines">
-                                <td colspan="6" style="text-align:left;background-color:#f2f2f2;font-weight:bold;">
+                                <td colspan="8" style="text-align:left;background-color:#f2f2f2;font-weight:bold;">
                                     Down Payments / دفعات مقدمة
                                 </td>
                             </tr>
@@ -511,6 +511,9 @@
                                 <td>
                                     <span t-esc="l.price_unit"
                                           t-options='{"widget": "monetary", "display_currency": l.currency_id}'/>
+                                </td>
+                                <td>
+
                                 </td>
 
                                 <td>
