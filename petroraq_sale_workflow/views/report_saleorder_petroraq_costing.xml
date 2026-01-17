@@ -12,8 +12,8 @@
             <span>Total</span>
         </xpath>
         <xpath expr="//th[@name='th_discount']" position="after">
-            <th name="th_net_price_unit" class="text-end">
-                <span>Net Unit Price</span>
+            <th name="th_before_discount" class="text-end">
+                <span>Before Discount</span>
             </th>
         </xpath>
 
@@ -21,10 +21,13 @@
              ROW: add Net Unit Price cell after Unit Price cell
              ========================= -->
         <xpath expr="//td[@name='td_subtotal']" position="before">
-            <td name="td_net_price_unit" class="text-end">
+            <td name="td_before_discount" class="text-end">
                 <t t-if="not line.display_type">
-                    <span t-out="line.net_unit_price"
-                    />
+                    <t t-set="currency" t-value="doc.currency_id"/>
+                    <t t-set="qty" t-value="line.product_uom_qty or 0.0"/>
+                    <t t-set="before_disc" t-value="currency.round((line.price_unit or 0.0) * qty)"/>
+                    <span t-out="before_disc"
+                          t-options="{'widget':'monetary','display_currency':currency}"/>
                 </t>
             </td>
         </xpath>

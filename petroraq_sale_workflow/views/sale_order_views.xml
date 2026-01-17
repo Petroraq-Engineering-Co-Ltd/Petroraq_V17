@@ -176,10 +176,10 @@
 
             <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="attributes">
                 <attribute name="string">Unit Price</attribute>
-                <attribute name="readonly">1</attribute>
             </xpath>
             <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="after">
-                <field name="net_unit_price" widget="monetary" readonly="1"/>
+                <field name="net_unit_price" readonly="1" column_invisible="0"/>
+
             </xpath>
 
 
@@ -256,6 +256,20 @@
                         <div class="o_petroraq_total_input"></div>
                         <div class="o_petroraq_total_value">
                             <field name="discount_amount_total" widget="monetary" readonly="1" nolabel="1" string=""/>
+                        </div>
+                    </div>
+                    <!--                    <div class="o_petroraq_total_row o_petroraq_total_base">-->
+                    <!--                        <span class="o_petroraq_total_label">Total Before Rounding</span>-->
+                    <!--                        <div class="o_petroraq_total_input"></div>-->
+                    <!--                        <div class="o_petroraq_total_value">-->
+                    <!--                            <field name="profit_grand_total" widget="monetary" readonly="1" nolabel="1" string=""/>-->
+                    <!--                        </div>-->
+                    <!--                    </div>-->
+                    <div class="o_petroraq_total_row o_petroraq_total_base">
+                        <span class="o_petroraq_total_label">Before Rounded</span>
+                        <div class="o_petroraq_total_input"></div>
+                        <div class="o_petroraq_total_value">
+                            <field name="profit_grand_total" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
                     <div class="o_petroraq_total_row o_petroraq_total_base">

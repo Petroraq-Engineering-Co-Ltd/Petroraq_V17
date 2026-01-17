@@ -1,3 +1,5 @@
+from string import digits
+
 from odoo import api, fields, models, _
 from odoo.tools import format_amount, html_escape
 
@@ -33,12 +35,14 @@ class SaleOrderLine(models.Model):
         readonly=True,
         digits="Product Price",
     )
-    net_unit_price = fields.Monetary(
+    net_unit_price = fields.Float(
         string="Net Unit Price",
         currency_field="currency_id",
         compute="_compute_net_unit_price",
         store=True,
         readonly=True,
+        digits='Product Price',
+        precompute=True
     )
 
     @api.depends("price_unit", "discount", "currency_id")
@@ -47,7 +51,8 @@ class SaleOrderLine(models.Model):
             price = line.price_unit or 0.0
             disc = line.discount or 0.0
             net = price * (1 - disc / 100.0)
-            line.net_unit_price = line.currency_id.round(net)
+            line.net_unit_price = net
+            print(f"nnnnnnnnnnnnnnnnnnnnnn{net}")
 
     def _compute_sale_price_from_cost(self, cost):
         self.ensure_one()

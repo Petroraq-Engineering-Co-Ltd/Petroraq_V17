@@ -243,10 +243,8 @@ class SaleOrder(models.Model):
         self.ensure_one()
         qty = qty or 0.0
 
-        # Unit cost rounded only for display/reference; totals are truth
         base_u = currency.round(base_unit or 0.0)
 
-        # Cost line total (truth)
         cost_line = currency.round((base_unit or 0.0) * qty) if qty else 0.0
 
         oh_line = currency.round(cost_line * (self.overhead_percent or 0.0) / 100.0)
@@ -258,22 +256,15 @@ class SaleOrder(models.Model):
 
         sale_line = currency.round(buffer_line + profit_line)
 
-        # Derived unit sale price
-        unit_sale = currency.round(sale_line / qty) if qty else 0.0
-
-        # IMPORTANT:
-        # unit_sale * qty may not equal sale_line due to rounding.
-        # We keep sale_line as truth for totals, and unit_sale for display/price_unit.
+        unit_sale = sale_line / qty if qty else 0.0
 
         return {
-            # unit values (derived)
             "base_u": base_u,
             "oh_u": currency.round(oh_line / qty) if qty else 0.0,
             "risk_u": currency.round(risk_line / qty) if qty else 0.0,
             "profit_u": currency.round(profit_line / qty) if qty else 0.0,
             "final_u": unit_sale,
 
-            # line totals (truth)
             "base_line": cost_line,
             "oh_line": oh_line,
             "risk_line": risk_line,
@@ -377,6 +368,8 @@ class SaleOrder(models.Model):
         self.ensure_one()
         currency = self.currency_id or self.company_id.currency_id
         b = self._costing_line_breakdown(base_unit=base or 0.0, qty=1.0, currency=currency)
+        print(f"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq{b['final_u']}")
+
         return b["final_u"]
 
     def _costing_total_no_vat_without_profit(self):
@@ -451,7 +444,8 @@ class SaleOrder(models.Model):
 
             order.tax_totals = tax_totals
 
-    @api.onchange("overhead_percent", "risk_percent", "profit_percent")
+    @api.onchange("overhead_percent", "risk_percent", "profit_percent", "order_line.cost_price_unit",
+                  "order_line.product_uom_qty")
     def _onchange_reprice_lines_from_cost(self):
         for order in self:
             for line in order.order_line.filtered(
@@ -461,6 +455,7 @@ class SaleOrder(models.Model):
                     qty=line.product_uom_qty or 0.0,
                     currency=order.currency_id or order.company_id.currency_id,
                 )
+                print(f"qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq{b['final_u']}")
                 line.price_unit = b["final_u"]
 
     def write(self, vals):
