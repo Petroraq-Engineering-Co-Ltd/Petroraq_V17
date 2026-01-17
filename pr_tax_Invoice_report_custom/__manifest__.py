@@ -20,9 +20,10 @@
         # 'report/invoice_report_header.xml',
         # 'report/report_action.xml',
         # 'report/report_action_temp.xml',
-        'data/custom_mail.xml',
         'report/custom_invoice.xml',
         'report/custom_invoice_header_footer.xml',
         'views/views.xml',
+        'data/custom_mail.xml',
+
     ],
 }

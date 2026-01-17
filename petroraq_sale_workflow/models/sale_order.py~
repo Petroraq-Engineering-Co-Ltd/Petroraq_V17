@@ -468,17 +468,14 @@ class SaleOrder(models.Model):
 
         if any(k in vals for k in ("overhead_percent", "risk_percent", "profit_percent")):
             for order in self:
-                currency = order.currency_id or order.company_id.currency_id
                 lines = order.order_line.filtered(
                     lambda l: not l.display_type and not l.is_downpayment and l.product_id
                 )
                 for line in lines:
-                    b = order._costing_line_breakdown(
-                        base_unit=line.cost_price_unit or line.product_id.standard_price or 0.0,
-                        qty=line.product_uom_qty or 0.0,
-                        currency=currency,
+                    # recompute from COST (your logic)
+                    line.price_unit = line._compute_sale_price_from_cost(
+                        line.product_id.standard_price
                     )
-                    line.price_unit = b["final_u"]
         return res
 
     @api.depends_context("uid")
