@@ -59,6 +59,9 @@
                 <attribute name="string">Reject</attribute>
                 <attribute name="invisible">state in ('draft','cancel','sale')</attribute>
             </xpath>
+            <xpath expr="//header//button[@name='action_preview_sale_order']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
             <!--            <xpath expr="//header//button[@id='send_by_email']" position="attributes">-->
             <!--                <attribute name="invisible">approval_state != 'approved' or state == 'sent'</attribute>-->
             <!--            </xpath>-->
@@ -112,14 +115,24 @@
             <!--            </xpath>-->
 
 
-            <!-- ✅ the fix -->
+            <!-- Put validity_date after the last date_order -->
             <xpath expr="//group[@name='order_details']/field[@name='date_order'][last()]" position="after">
-                <xpath expr="//group[@name='order_details']/field[@name='validity_date']" position="move"/>
+                <field name="validity_date"/>
             </xpath>
-            <xpath expr="//group[@name='order_details']/field[@name='date_order'][last()]" position="attributes">
-                <attribute name="groups">base.group_user</attribute>
 
+            <!-- Remove original validity_date (so it’s not duplicated) -->
+            <xpath expr="//group[@name='order_details']/field[@name='validity_date']" position="replace"/>
+
+            <!-- Apply groups to both date_order fields -->
+            <xpath expr="//group[@name='order_details']/field[@name='date_order']" position="attributes">
+                <attribute name="groups">base.group_user</attribute>
             </xpath>
+
+            <!-- Apply groups to both labels for date_order -->
+            <xpath expr="//group[@name='order_details']/div[label[@for='date_order']]" position="attributes">
+                <attribute name="groups">base.group_user</attribute>
+            </xpath>
+
 
         </field>
     </record>
