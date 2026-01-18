@@ -2,7 +2,7 @@
     "name": "Petroraq VAT Summary Report",
     "summary": "Quarter-style VAT Summary (Sales, Vated / Non-Vated Purchases)",
     "version": "17.0.1.0.0",
-    "author": "Mudassir",
+    "author": "Petroraq Engineering",
     "license": "LGPL-3",
     "depends": ["account", "report_xlsx"],
     "data": [
