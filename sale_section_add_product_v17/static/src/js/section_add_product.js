@@ -34,6 +34,10 @@ patch(SectionAndNoteText.prototype, {
 
             onSelected: async (ids) => {
                 if (!ids?.length) return;
+                await line.model.root.save({ stayInEdition: true });
+
+                const orderId = line.model.root.resId;
+                const sectionLineId = line.resId;
 
                 await this.orm.call(
                     "sale.order",
