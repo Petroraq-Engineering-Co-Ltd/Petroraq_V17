@@ -22,9 +22,9 @@ class HrPayslipRun(models.Model):
         ('submitted', 'Submitted to HR'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
-    ], string='Approval Status', default='draft', copy=False,tracking=True)
+    ], string='Approval Status', default='draft', copy=False, tracking=True)
 
-    rejection_reason = fields.Text(string="Rejection Reason", readonly=True,tracking=True)
+    rejection_reason = fields.Text(string="Rejection Reason", readonly=True, tracking=True)
 
     @api.depends("state")
     def _compute_approval_state(self):
@@ -172,6 +172,8 @@ class HrPayslipRun(models.Model):
 
     def action_validate(self):
         res = super().action_validate()
+        journal = self.env.ref('pr_account.journal_journal_voucher')
+
         for rec in self:
             move_line_ids = []
             for slip in rec.slip_ids:
@@ -181,6 +183,8 @@ class HrPayslipRun(models.Model):
                 'ref': f"Salary For Month {rec.date_end.month} year {rec.date_end.year}",
                 'date': fields.Date.today(),
                 'move_type': 'entry',
+                'journal_id': journal.id,
+
                 'line_ids': move_line_ids,
             })
             if salary_journal_entry_id:

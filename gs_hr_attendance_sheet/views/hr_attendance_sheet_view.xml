@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="gs_hr_attendance_view_tree" model="ir.ui.view" >
+    <record id="gs_hr_attendance_view_tree" model="ir.ui.view">
         <field name="name">hr.attendance.tree.inherit.view</field>
         <field name="model">hr.attendance</field>
         <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
@@ -11,7 +11,7 @@
             </xpath>
         </field>
     </record>
-    <record id="gs_hr_attendance_view_filter" model="ir.ui.view" >
+    <record id="gs_hr_attendance_view_filter" model="ir.ui.view">
         <field name="name">hr.attendance.filter.inherit.view</field>
         <field name="model">hr.attendance</field>
         <field name="inherit_id" ref="hr_attendance.hr_attendance_view_filter"/>
@@ -22,17 +22,17 @@
         </field>
     </record>
     <record id="dev_hr_payslip_adv_payment_inherit_form001" model="ir.ui.view">
-         <field name="name">dev.hr.payslip.adv.pay.inherit.form</field>
-         <field name="model">hr.payslip</field>
-         <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
-         <field name="arch" type="xml">
+        <field name="name">dev.hr.payslip.adv.pay.inherit.form</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
+        <field name="arch" type="xml">
             <xpath expr="//field[@name='credit_note']" position="after">
                 <field name="attendance_sheet_id" invisible="1"/>
                 <field name="is_bool" invisible="1"/>
                 <field name="absence_num" invisible="1"/>
                 <field name="total_absence" invisible="1"/>
             </xpath>
-         </field>
+        </field>
     </record>
 
     <record id="attendance_sheet_form_view" model="ir.ui.view">
@@ -52,8 +52,20 @@
                             string="Approve" type="object"
                             class="oe_highlight"
                             groups="gs_hr_attendance_sheet.group_attendance_sheet_manager"/>
-                       <button name="action_draft" invisible="'state' != 'confirm'"
+                    <button name="action_draft" invisible="'state' != 'confirm'"
                             string="Set to Draft" type="object"/>
+                    <button name="action_approve_overtime"
+                            string="Approve Overtime"
+                            type="object"
+                            class="btn-success"
+                            groups="gs_hr_attendance_sheet.group_attendance_sheet_manager"
+                            invisible="overtime_approved"/>
+                    <button name="action_reset_overtime_approval"
+                            string="Reset Overtime Approval"
+                            type="object"
+                            class="btn-secondary"
+                            groups="gs_hr_attendance_sheet.group_attendance_sheet_manager"
+                            invisible="not overtime_approved"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,confirm,done"/>
                 </header>
@@ -134,7 +146,7 @@
                                            sum="Total"/>
                                     <field name="late_in_amount"
                                            sum="Total"
-                                            optional="hide"
+                                           optional="hide"
                                            decoration-danger="1"
                                     />
                                     <field name="absence_amount"
@@ -175,6 +187,7 @@
                                     <field name="tot_overtime"
                                            widget="float_time"/>
                                     <field name="tot_overtime_amount" style="color: green;"/>
+                                    <field name="overtime_approved" readonly="1"/>
                                 </group>
                                 <group string="Late In" name="late_in_group">
                                     <field name="no_late"/>
@@ -315,9 +328,9 @@
               sequence="25"
               groups="gs_hr_attendance_sheet.group_attendance_sheet_user"/>
 
-<!--    <menuitem id="menu_rm_hr_attendance_sheet" name="Attendance sheets"-->
-<!--              parent="attendance_sheet_menu"-->
-<!--              sequence="10" action="action_attendance_sheet"/>-->
+    <!--    <menuitem id="menu_rm_hr_attendance_sheet" name="Attendance sheets"-->
+    <!--              parent="attendance_sheet_menu"-->
+    <!--              sequence="10" action="action_attendance_sheet"/>-->
 
     <record model="ir.ui.menu" id="hr_attendance.menu_hr_attendance_root">
         <field name="groups_id"

@@ -1,4 +1,3 @@
-
 from odoo import models, fields, tools, api, exceptions, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import date_utils
@@ -6,8 +5,6 @@ from odoo.tools import date_utils
 
 class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
-
-
 
     def _get_workday_lines(self):
         for rec in self:
@@ -23,7 +20,9 @@ class HrPayslip(models.Model):
                 total_unpaid_leave_hours = rec.attendance_sheet_id.unpaid_leave * rec.contract_id.resource_calendar_id.hours_per_day
                 total_paid_leave_hours = rec.attendance_sheet_id.paid_leave * rec.contract_id.resource_calendar_id.hours_per_day
                 total_num_att_hours = rec.attendance_sheet_id.num_att * rec.contract_id.resource_calendar_id.hours_per_day
-                attendances = self.env['hr.attendance'].search([('employee_id', '=', rec.employee_id.id), ('check_in', '>=', rec.date_from), ('check_out', '<=', rec.date_to)])
+                attendances = self.env['hr.attendance'].search(
+                    [('employee_id', '=', rec.employee_id.id), ('check_in', '>=', rec.date_from),
+                     ('check_out', '<=', rec.date_to)])
                 leave_ids = self.env['hr.leave'].search(
                     [('employee_id', '=', rec.employee_id.id), ('request_date_from', '>=', rec.date_from),
                      ('request_date_to', '<=', rec.date_to)])
@@ -59,6 +58,8 @@ class HrPayslip(models.Model):
                     'number_of_hours': rec.attendance_sheet_id.tot_overtime,
                     'amount': rec.attendance_sheet_id.tot_overtime_amount,
                 }]
+                if not rec.attendance_sheet_id.overtime_approved:
+                    overtime = []
                 if not attendances and not leave_ids:
                     num_weekend = 0
                     weekend_amount = 0
@@ -121,6 +122,6 @@ class HrPayslip(models.Model):
                 # worked_days_lines = att + paid + unpaid + overtime + late + early_check_out + absence + difftime
                 worked_days_lines = att + paid + unpaid + overtime + late + early_check_out + absence
                 rec.worked_days_line_ids = [(0, 0, x) for x in
-                                                   worked_days_lines]
+                                            worked_days_lines]
                 rec.is_bool = True
                 rec.compute_sheet()

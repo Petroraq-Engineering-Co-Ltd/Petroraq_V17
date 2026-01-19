@@ -14,6 +14,18 @@ class HrPayslip(models.Model):
         string="Attendance Lines",
         readonly=True
     )
+    no_overtime = fields.Integer(related="attendance_sheet_id.no_overtime", readonly=True)
+    tot_overtime = fields.Float(related="attendance_sheet_id.tot_overtime", readonly=True)
+    tot_overtime_amount = fields.Float(related="attendance_sheet_id.tot_overtime_amount", readonly=True)
+    no_late = fields.Integer(related="attendance_sheet_id.no_late", readonly=True)
+    tot_late = fields.Float(related="attendance_sheet_id.tot_late", readonly=True)
+    tot_late_amount = fields.Float(related="attendance_sheet_id.tot_late_amount", readonly=True)
+    no_absence = fields.Integer(related="attendance_sheet_id.no_absence", readonly=True)
+    tot_absence = fields.Float(related="attendance_sheet_id.tot_absence", readonly=True)
+    tot_absence_amount = fields.Float(related="attendance_sheet_id.tot_absence_amount", readonly=True)
+    no_difftime = fields.Integer(related="attendance_sheet_id.no_difftime", readonly=True)
+    tot_difftime = fields.Float(related="attendance_sheet_id.tot_difftime", readonly=True)
+    tot_difftime_amount = fields.Float(related="attendance_sheet_id.tot_difftime_amount", readonly=True)
 
     def _get_payslip_lines(self):
         line_vals = super()._get_payslip_lines()
