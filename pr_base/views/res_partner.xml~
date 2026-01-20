@@ -13,7 +13,7 @@
             <xpath expr="//field[@name='vat']" position="attributes">
                 <attribute name="required">is_company</attribute>
             </xpath>
-            <xpath expr="//field[@name='company_registry']" position="attributes">
+            <xpath expr="//field[@name='company_registery']" position="attributes">
                 <attribute name="required">is_company</attribute>
             </xpath>
 
