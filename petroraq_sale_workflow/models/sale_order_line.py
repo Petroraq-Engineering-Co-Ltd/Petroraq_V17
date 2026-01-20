@@ -140,6 +140,7 @@ class SaleOrderLine(models.Model):
         "order_id.order_line.display_type",
         "order_id.order_line.sequence",
         "order_id.order_line.price_unit",
+        "order_id.order_line.cost_price_unit",
         "order_id.order_line.product_uom_qty",
         "order_id.order_line.is_downpayment",
         "order_id.overhead_percent",
@@ -176,7 +177,7 @@ class SaleOrderLine(models.Model):
 
                 # Costing subtotal (same as PDF)
                 breakdown = order._costing_line_breakdown(
-                    base_unit=line.price_unit or 0.0,
+                    base_unit=line.cost_price_unit or 0.0,  # ✅ use COST as base
                     qty=line.product_uom_qty or 0.0,
                     currency=currency,
                 )

@@ -12,7 +12,7 @@
                 <field name="total_net_amount" decoration-success="1"/>
                 <field name="state" column_invisible="1"/>
                 <field name="approval_state" string="status"
-                widget="badge"
+                       widget="badge"
                        decoration-danger="approval_state == 'draft'"
                        decoration-warning="approval_state == 'verify'"
                        decoration-info="approval_state == 'close'"
@@ -31,7 +31,7 @@
         <field name="view_ids" eval="[(5, 0, 0),
             (0, 0, {'view_mode': 'tree', 'view_id': ref('hr_payslip_run_approvals_view_tree')}),
             (0, 0, {'view_mode': 'form', 'view_id': ref('hr_payroll.hr_payslip_run_form')})]"/>
-        <field name="domain">[('approval_state', 'in', ['verify', 'close'])]</field>
+        <field name="domain">[('approval_state', 'in', ['submitted'])]</field>
         <field name="context">{'create': False,'edit': False}</field>
         <field name="search_view_id" ref="hr_payroll.hr_payslip_run_filter"/>
         <field name="help" type="html">
@@ -44,9 +44,9 @@
     <menuitem id="hr_payslip_run_approvals_view_menu"
               parent="de_hr_workspace.menu_my_employee_approvals"
               name="Payslip Batches"
-            action="hr_payslip_run_approvals_view_action"
+              action="hr_payslip_run_approvals_view_action"
               sequence="50"
-            groups="de_hr_workspace.group_hr_employee_approvals,pr_account.custom_group_accounting_manager"
+              groups="de_hr_workspace.group_hr_employee_approvals,pr_account.custom_group_accounting_manager"
     />
 
 </odoo>
