@@ -31,8 +31,17 @@
         'views/hr_payslip_run.xml',
         'views/hr_payslip.xml',
         'wizards/hr_salary_attachment_pay_wizard.xml',
+        'views/hr_payslip_hold_views.xml',
+
         'data/data.xml',
     ],
+    "assets": {
+        "web.assets_backend": [
+            "pr_hr_payroll/static/src/components/payroll_batch_xlsx_report/payroll_batch_xlsx_report.js",
+            "pr_hr_payroll/static/src/components/payroll_batch_xlsx_report/payroll_batch_xlsx_report.xml",
+            "pr_hr_payroll/static/src/components/payroll_batch_xlsx_report/payroll_batch_xlsx_report.css",
+        ],
+    },
     # only loaded in demonstration mode
     'demo': [],
 }

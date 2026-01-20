@@ -9,6 +9,29 @@ class HrPayslip(models.Model):
     other_amount = fields.Float(string="Other Amount", default=0.0)
     salary_journal_entry_id = fields.Many2one("account.move", readonly=True)
 
+    hold_salary = fields.Boolean(string="Hold Salary", tracking=True, copy=False)
+    hold_reason = fields.Char(string="Hold Reason", tracking=True, copy=False)
+    hold_date = fields.Date(string="Hold Date", tracking=True, copy=False)
+    release_date = fields.Date(string="Release Date", tracking=True, copy=False)
+
+    def action_hold_salary(self):
+        for slip in self:
+            if slip.state in ('paid', 'cancel'):
+                raise UserError(_("You cannot hold a payslip that is already Paid/Cancelled."))
+            slip.write({
+                'hold_salary': True,
+                'hold_date': fields.Date.today(),
+            })
+
+    def action_release_salary(self):
+        for slip in self:
+            if slip.state in ('paid', 'cancel'):
+                continue
+            slip.write({
+                'hold_salary': False,
+                'release_date': fields.Date.today(),
+            })
+
     attendance_sheet_line_ids = fields.One2many(
         related='attendance_sheet_id.line_ids',
         string="Attendance Lines",
