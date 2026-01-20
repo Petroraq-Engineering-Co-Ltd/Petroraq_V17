@@ -23,3 +23,5 @@ class ResPartner(models.Model):
                     raise ValidationError(_("VAT is required for company customers."))
                 if not p.company_registry:
                     raise ValidationError(_("CR No. is required for company customers."))
+    cr_no = fields.Char(string="Customer Registration", copy=False, required=True)
+
