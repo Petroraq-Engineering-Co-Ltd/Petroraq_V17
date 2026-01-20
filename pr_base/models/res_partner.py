@@ -11,9 +11,10 @@ class ResPartner(models.Model):
     arabic_name = fields.Char(string='Arabic Name', required=True)
     arabic_street = fields.Char(string='Arabic Street', required=True)
     arabic_street2 = fields.Char(string='Arabic Street', required=True)
-    cr_no = fields.Char(string="Customer Registration", copy=False, required=True)
 
-    @api.constrains("is_company", "vat", "cr_no")
+    # cr_no = fields.Char(string="Customer Registration", copy=False, required=True)
+
+    @api.constrains("is_company", "vat")
     def _check_vat_cr_required(self):
         for p in self:
             # apply only on customers/companies (adjust if you want for vendors too)
