@@ -31,6 +31,8 @@
         'views/hr_payslip_run.xml',
         'views/hr_payslip.xml',
         'wizards/hr_salary_attachment_pay_wizard.xml',
+        'views/hr_payslip_hold_views.xml',
+
         'data/data.xml',
     ],
     "assets": {

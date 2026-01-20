@@ -54,18 +54,6 @@
                             groups="gs_hr_attendance_sheet.group_attendance_sheet_manager"/>
                     <button name="action_draft" invisible="'state' != 'confirm'"
                             string="Set to Draft" type="object"/>
-                    <button name="action_approve_overtime"
-                            string="Approve Overtime"
-                            type="object"
-                            class="btn-success"
-                            groups="gs_hr_attendance_sheet.group_attendance_sheet_manager"
-                            invisible="overtime_approved"/>
-                    <button name="action_reset_overtime_approval"
-                            string="Reset Overtime Approval"
-                            type="object"
-                            class="btn-secondary"
-                            groups="gs_hr_attendance_sheet.group_attendance_sheet_manager"
-                            invisible="not overtime_approved"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,confirm,done"/>
                 </header>
@@ -187,7 +175,6 @@
                                     <field name="tot_overtime"
                                            widget="float_time"/>
                                     <field name="tot_overtime_amount" style="color: green;"/>
-                                    <field name="overtime_approved" readonly="1"/>
                                 </group>
                                 <group string="Late In" name="late_in_group">
                                     <field name="no_late"/>

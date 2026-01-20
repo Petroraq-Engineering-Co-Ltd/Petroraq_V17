@@ -156,8 +156,6 @@ class hrPayslip(models.Model):
                     'number_of_hours': rec.attendance_sheet_id.tot_overtime,
                     'amount': rec.attendance_sheet_id.tot_overtime_amount,
                 }]
-                if not rec.attendance_sheet_id.overtime_approved:
-                    overtime = []
                 if not attendances and not leave_ids:
                     num_weekend = 0
                     weekend_amount = 0
@@ -298,7 +296,6 @@ class AttendanceSheet(models.Model):
     num_att = fields.Integer()
     attendance_amount = fields.Float(compute="_compute_sheet_total",
                                      string="Total Attendance Amount", readonly=True, store=True)
-    overtime_approved = fields.Boolean(string="Overtime Approved", default=False, tracking=True)
 
     total_unpaid_leave = fields.Float(compute='_compute_total_unpaid_leave')
     total_paid_leave = fields.Float(compute='_compute_total_unpaid_leave')
@@ -384,12 +381,6 @@ class AttendanceSheet(models.Model):
     def action_approve(self):
         payslips = self.action_create_payslip()
         self.write({'state': 'done'})
-
-    def action_approve_overtime(self):
-        self.write({'overtime_approved': True})
-
-    def action_reset_overtime_approval(self):
-        self.write({'overtime_approved': False})
 
     def action_draft(self):
         self.write({'state': 'draft'})
@@ -485,11 +476,9 @@ class AttendanceSheet(models.Model):
                 else:
                     sheet.tot_overtime_amount = 0.0
 
+            # sheet.tot_overtime_amount = (((tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.wage) / 208) if sheet.employee_id.add_overtime else 0
             sheet.no_overtime = len(overtime_lines)
-            if not sheet.overtime_approved:
-                sheet.tot_overtime = 0
-                sheet.tot_overtime_amount = 0
-                sheet.no_overtime = 0
+            # Compute Total Late In
             late_lines = sheet.line_ids.filtered(lambda l: l.late_in > 0)
             sheet.tot_late = sum([l.late_in for l in late_lines])
             sheet.tot_late_amount = sum([l.late_in_amount for l in late_lines])
