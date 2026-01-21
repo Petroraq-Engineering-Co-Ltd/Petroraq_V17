@@ -41,6 +41,7 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
     # region [Account Filter Fields]
 
     main_head = fields.Selection([
+        ("all", "All"),
         ("assets", "Assets"),
         ("liabilities", "Liabilities"),
         ("equity", "Equity"),
@@ -255,10 +256,12 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
         - Output: List of rows for Excel/table
         """
         domain = [
-            ("main_head", "=", self.main_head),
             ("main_head", "!=", False),
             ("company_id", "in", [self.company_id.id, self.company_id.parent_id.id]),
         ]
+        if self.main_head and self.main_head != "all":
+            domain.append(("main_head", "=", self.main_head))
+
         if self.account_id:
             domain.append(("id", "=", self.account_id.id))
 

@@ -129,8 +129,8 @@ class CustomDynamicLedgerReport(models.AbstractModel):
 
     def generate_xlsx_report(self, workbook, data, wizard_id):
         report_data = wizard_id.generate_balance_report()
-        sheet = workbook.add_worksheet(wizard_id.main_head)
-
+        sheet_name = "Balance" if wizard_id.main_head in (False, "all") else wizard_id.main_head
+        sheet = workbook.add_worksheet(sheet_name[:31])  # Excel limit
         # Header info - big, bold
         header_info_format = workbook.add_format({
             'bold': True, 'font_size': 16, 'align': 'center', 'valign': 'vcenter'
