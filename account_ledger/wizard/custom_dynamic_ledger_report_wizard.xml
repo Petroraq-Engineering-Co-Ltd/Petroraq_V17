@@ -49,7 +49,10 @@
                     </group>
                 </group>
                 <footer>
-                    <button name="print_report" string="PRINT" type="object" class="btn-teal-custom"/>
+                    <button name="action_view_custom_dynamic_ledger_report" string="VIEW REPORT" type="object"
+                            class="btn-primary"/>
+                    <button name="get_report" string="PRINT PDF" type="object" class="btn-info"/>
+                    <button name="print_xlsx_report" string="PRINT XLSX" type="object" class="btn-teal-custom"/>
                     <button string="CANCEL" special="cancel" class="btn-danger"/>
                 </footer>
             </form>

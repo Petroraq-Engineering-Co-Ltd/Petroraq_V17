@@ -275,7 +275,6 @@ class CustomDynamicLedgerReport(models.AbstractModel):
             # write_number(3, period_balance)
             # write_number(4, ending_balance)
 
-
             # Initial Balance Data
             if row['initial_debit'] > row['initial_credit']:
                 initial_balance = row['initial_debit'] - row['initial_credit']
@@ -309,10 +308,34 @@ class CustomDynamicLedgerReport(models.AbstractModel):
                 ending_balance = row['ending_debit'] - row['ending_credit'] or 0.0
                 ending_balance_type = " - "
 
-
             # write_number(2, initial_balance)
             # write_number(3, initial_balance_type)
             # write_number(4, period_balance)
             # write_number(5, period_balance_type)
             write_number(2, ending_balance)
             write_number(3, ending_balance_type)
+
+
+class CustomDynamicLedgerPdfReport(models.AbstractModel):
+    _name = 'report.account_ledger.custom_dynamic_ledger_rep'
+
+    def _get_report_values(self, docids, data=None):
+        wizard = self.env['custom.dynamic.ledger.report.wizard'].browse(docids)
+        wizard.ensure_one()
+
+        report_rows = wizard.generate_balance_report()
+        today = datetime.today()
+
+        return {
+            'doc_ids': wizard.ids,
+            'doc_model': wizard._name,
+            'docs': report_rows,
+            'company_name': wizard.company_id.name,
+            'date_start': wizard.date_start,
+            'date_end': wizard.date_end,
+            'main_head': wizard.main_head,
+            'department_name': wizard.department_id.name if wizard.department_id else "",
+            'section_name': wizard.section_id.name if wizard.section_id else "",
+            'project_name': wizard.project_id.name if wizard.project_id else "",
+            'report_date': today.strftime("%b-%d-%Y"),
+        }

@@ -7,3 +7,4 @@ from . import account_ledger_xlsx_report
 from . import vat_ledger_xlsx_report
 from . import vat_ledger_result
 # from . import dynamic_balance_report
+from . import custom_dynamic_ledger_result
