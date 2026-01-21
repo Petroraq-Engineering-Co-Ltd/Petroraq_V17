@@ -62,7 +62,7 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
                                  domain="[('analytic_plan_type', '=', 'project')]")
 
     def _get_analytic_domain(self):
-        analytic_domain = []
+        domain = []
         analytic_ids = []
 
         if self.department_id:
@@ -72,10 +72,11 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
         if self.project_id:
             analytic_ids.append(self.project_id.id)
 
+        # AND condition: line must include ALL selected analytics
         for analytic_id in analytic_ids:
-            analytic_domain.append(('analytic_distribution', 'has_key', str(analytic_id)))
+            domain.append(('analytic_distribution', 'in', [analytic_id]))
 
-        return analytic_domain
+        return domain
 
     @api.depends("date_start", "date_end")
     def _compute_account_id_domain(self):
@@ -85,6 +86,29 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
                 rec.account_id_domain = "[]"
             else:
                 rec.account_id_domain = "[('id', '!=', 749)]"
+
+    def _get_selected_analytic_ids(self):
+        analytic_ids = []
+        if self.department_id:
+            analytic_ids.append(self.department_id.id)
+        if self.section_id:
+            analytic_ids.append(self.section_id.id)
+        if self.project_id:
+            analytic_ids.append(self.project_id.id)
+        return analytic_ids
+
+    def _filter_move_lines_by_analytic(self, move_lines):
+        analytic_ids = self._get_selected_analytic_ids()
+        if not analytic_ids:
+            return move_lines
+
+        analytic_id_strings = [str(analytic_id) for analytic_id in analytic_ids]
+
+        def _matches_analytic(line):
+            distribution = line.analytic_distribution or {}
+            return all(analytic_id in distribution for analytic_id in analytic_id_strings)
+
+        return move_lines.filtered(_matches_analytic)
 
     # def _prepare_initial_balance_domain(self):
     #     for rec in self:
@@ -406,7 +430,7 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
         # credit = float_round(result[0].get('credit', 0.0), 2) if result else 0.0
         domain += self._get_analytic_domain()
         account_move_line_result = self.env['account.move.line'].sudo().search(domain, order="date asc")
-
+        account_move_line_result = self._filter_move_lines_by_analytic(account_move_line_result)
         debit = float_round(sum(account_move_line_result.mapped("debit")), 2)
         credit = float_round(sum(account_move_line_result.mapped("credit")), 2)
 
@@ -423,10 +447,11 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
                 ('move_id.ref', '=', 'Opening Journal Entry'),
             ]
             oje_domain += self._get_analytic_domain()
-            oje_result = self.env['account.move.line'].sudo().read_group(oje_domain, ['debit', 'credit'], [])
-            if oje_result:
-                debit += float_round(oje_result[0].get('debit', 0.0), 2)
-                credit += float_round(oje_result[0].get('credit', 0.0), 2)
+            oje_lines = self.env['account.move.line'].sudo().search(oje_domain, order="date asc")
+            oje_lines = self._filter_move_lines_by_analytic(oje_lines)
+            if oje_lines:
+                debit += float_round(sum(oje_lines.mapped("debit")), 2)
+                credit += float_round(sum(oje_lines.mapped("credit")), 2)
 
         return {
             'debit': debit,

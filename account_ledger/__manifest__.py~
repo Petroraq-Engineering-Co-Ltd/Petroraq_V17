@@ -12,7 +12,7 @@
     'company': 'Arure Technologies',
     'website': 'http://www.arure.tech/',
     'category': 'Accounting',
-    'depends': ['pr_hr_account', 'eg_asset_management'],
+    'depends': ['pr_hr_account', 'eg_asset_management','account'],
     'price': '17.0',
     'license': 'OPL-1',
     'data': [
@@ -20,6 +20,7 @@
         # 'views/dynamic_report_template.xml',
         'wizard/account_ledger.xml',
         'views/account_ledger_result_views.xml',
+        'views/custom_dynamic_ledger_result_views.xml',
         'views/vat_ledger_result_views.xml',
         'wizard/vat_ledger_report_wizard.xml',
         'wizard/custom_dynamic_ledger_report_wizard.xml',
@@ -33,7 +34,6 @@
         'views/cash_payment.xml',
         'views/cash_receipt.xml',
 
-
     ],
     # 'assets': {
     #         'web.assets_backend': [
@@ -43,7 +43,7 @@
     #     },
     'qweb': [],
     'images': ['static/description/banner.jpeg'],
-    'demo': [],        
+    'demo': [],
     'installable': True,
     'application': True,
     'auto_install': False,
