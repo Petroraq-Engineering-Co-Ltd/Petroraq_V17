@@ -220,8 +220,8 @@ class HrAttendanceSheet(models.Model):
             'number_of_days': self.no_overtime,
             'number_of_hours': self.tot_overtime,
         }]
-        if not self.overtime_approved:
-            overtime = []
+        # if not self.overtime_approved:
+        #     overtime = []
 
         absence = [{
             'name': "Absence",

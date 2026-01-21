@@ -58,8 +58,8 @@ class HrPayslip(models.Model):
                     'number_of_hours': rec.attendance_sheet_id.tot_overtime,
                     'amount': rec.attendance_sheet_id.tot_overtime_amount,
                 }]
-                if not rec.attendance_sheet_id.overtime_approved:
-                    overtime = []
+                # if not rec.attendance_sheet_id.overtime_approved:
+                #     overtime = []
                 if not attendances and not leave_ids:
                     num_weekend = 0
                     weekend_amount = 0
