@@ -235,6 +235,7 @@ class AccountLedger(models.TransientModel):
     def prepare_account_ids_domain(self):
         self.ensure_one()
         account_ids_domain = []
+        default_account_domain = self._get_default_account_domain()
         ALL_FIELD_GROUPS = (
                 MAIN_HEAD +
                 MAIN_HEAD_FIELDS +
@@ -272,7 +273,13 @@ class AccountLedger(models.TransientModel):
             if self.account_id:
                 self.account_ids = self.account_id.ids
             else:
-                self.account_ids = False
+                self.account_ids = self.env["account.account"].sudo().search(default_account_domain).ids
+
+    def _get_default_account_domain(self):
+        if self.env.user.has_group('account.group_account_manager') or self.env.user.has_group(
+                'pr_account.custom_group_accounting_manager'):
+            return [('deprecated', '=', False)]
+        return [('deprecated', '=', False), ('id', 'not in', [748, 749, 1132])]
 
     def get_report(self):
         """Call when button 'Get Report' clicked.
