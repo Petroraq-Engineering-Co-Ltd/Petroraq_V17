@@ -1,13 +1,15 @@
 from copy import deepcopy
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import format_amount, html_escape
+from odoo.tools.float_utils import float_round, float_compare
 
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
     _description = "Quotation"
+
     approval_state = fields.Selection([
         ("draft", "Draft"),
         ("to_manager", "Manager Approve"),
@@ -15,6 +17,123 @@ class SaleOrder(models.Model):
         ("approved", "Approved"),
         ("rejected", "Rejected"),
     ], default="draft", tracking=True, copy=False)
+
+    can_create_remaining_delivery = fields.Boolean(
+        compute="_compute_can_create_remaining_delivery",
+    )
+
+    @api.depends(
+        "state",
+        "order_line.display_type",
+        "order_line.product_id",
+        "order_line.product_uom_qty",
+        "order_line.qty_delivered",
+        "order_line.product_uom",
+    )
+    def _compute_can_create_remaining_delivery(self):
+        Picking = self.env["stock.picking"]
+        for order in self:
+            if order.state not in ("sale", "done"):
+                order.can_create_remaining_delivery = False
+                continue
+
+            # find any open picking linked to this SO via sale_id
+            open_pick = Picking.search_count([
+                ("sale_id", "=", order.id),
+                ("state", "not in", ("done", "cancel")),
+            ]) > 0
+            if open_pick:
+                order.can_create_remaining_delivery = False
+                continue
+
+            remaining_found = False
+            for line in order.order_line:
+                if line.display_type:
+                    continue
+                if not line.product_id or line.product_id.type not in ("product", "consu"):
+                    continue
+                if float_compare(
+                        line.product_uom_qty,
+                        line.qty_delivered,
+                        precision_rounding=line.product_uom.rounding,
+                ) > 0:
+                    remaining_found = True
+                    break
+
+            order.can_create_remaining_delivery = remaining_found
+
+    def action_create_remaining_delivery(self):
+        self.ensure_one()
+
+        if self.state in ("cancel",):
+            raise UserError(_("Cancelled sale order."))
+
+        # Find remaining qty per deliverable line
+        remaining_lines = []
+        for line in self.order_line:
+            if line.display_type:
+                continue
+            if not line.product_id or line.product_id.type not in ("product", "consu"):
+                continue
+
+            remaining = line.product_uom_qty - line.qty_delivered
+            if float_compare(remaining, 0.0, precision_rounding=line.product_uom.rounding) <= 0:
+                continue
+
+            remaining_lines.append((line, remaining))
+
+        if not remaining_lines:
+            raise UserError(_("Nothing remaining to deliver."))
+
+        warehouse = self.warehouse_id
+        if not warehouse:
+            raise UserError(_("No warehouse set on this Sale Order."))
+
+        picking_type = warehouse.out_type_id
+        if not picking_type:
+            raise UserError(_("No Delivery Picking Type (outgoing) found for this warehouse."))
+
+        # Create new delivery picking linked to this sale order
+        picking = self.env["stock.picking"].create({
+            "partner_id": self.partner_shipping_id.id,
+            "picking_type_id": picking_type.id,
+            "location_id": picking_type.default_location_src_id.id,
+            "location_dest_id": self.partner_shipping_id.property_stock_customer.id,
+            "sale_id": self.id,
+            "origin": _("%s (Remaining Delivery)") % (self.name,),
+            "company_id": self.company_id.id,
+        })
+
+        # Create moves for remaining qty
+        move_vals = []
+        for line, remaining in remaining_lines:
+            move_vals.append({
+                "name": line.name or line.product_id.display_name,
+                "product_id": line.product_id.id,
+                "product_uom_qty": remaining,
+                "product_uom": line.product_uom.id,
+                "location_id": picking.location_id.id,
+                "location_dest_id": picking.location_dest_id.id,
+                "picking_id": picking.id,
+                "company_id": self.company_id.id,
+                "sale_line_id": line.id,
+                # keep procurement group consistent if you use it
+                "group_id": self.procurement_group_id.id,
+            })
+
+        self.env["stock.move"].create(move_vals)
+
+        picking.action_confirm()
+        picking.action_assign()
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Delivery"),
+            "res_model": "stock.picking",
+            "res_id": picking.id,
+            "view_mode": "form",
+            "target": "current",
+        }
 
     approval_comment = fields.Text("Approval Comment", tracking=True)
     show_reject_button = fields.Boolean(compute="_compute_show_reject_button")
@@ -53,6 +172,30 @@ class SaleOrder(models.Model):
         digits=(16, 2),
         help="Percentage applied on the grand total to compute profit."
     )
+
+    @api.onchange('overhead_percent', 'risk_percent', 'profit_percent')
+    def _onchange_percent_validation(self):
+        for field in ('overhead_percent', 'risk_percent', 'profit_percent'):
+            value = self[field]
+            if value < 0:
+                raise UserError(_("Percentage cannot be negative."))
+            if value > 100:
+                raise UserError(_("Percentage cannot exceed 100%."))
+
+    @api.constrains('overhead_percent', 'risk_percent', 'profit_percent')
+    def _check_percentages(self):
+        for rec in self:
+            for field_name in ('overhead_percent', 'risk_percent', 'profit_percent'):
+                value = rec[field_name]
+                if value < 0:
+                    raise ValidationError(
+                        _("Percentages cannot be negative.")
+                    )
+                if value > 100:
+                    raise ValidationError(
+                        _("Percentages cannot exceed 100%.")
+                    )
+
     overhead_amount = fields.Monetary(
         string="Over Head Amount",
         compute="_compute_costing_totals",

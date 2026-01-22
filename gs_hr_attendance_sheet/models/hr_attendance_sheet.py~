@@ -30,8 +30,7 @@ class HrAttendance(models.Model):
     def _onchange_check_in_gs(self):
         for rec in self:
             if rec.employee_id and rec.check_in:
-                leave_ids = self.env['hr.leave'].search(
-                    [('employee_id', '=', rec.employee_id.id), ('state', '=', 'validate'), ])
+                leave_ids = self.env['hr.leave'].search([('employee_id', '=', rec.employee_id.id)])
                 for leave_id in leave_ids:
                     if leave_id.holiday_status_id.work_entry_type_id.id == self.env.ref(
                             'hr_work_entry_contract.work_entry_type_unpaid_leave').id:
