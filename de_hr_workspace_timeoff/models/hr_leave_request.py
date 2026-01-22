@@ -1,6 +1,7 @@
 from odoo import models, fields, api, SUPERUSER_ID
 from datetime import date
 
+
 class HrLeaveRequest(models.Model):
     _inherit = 'pr.hr.leave.request'
 
@@ -17,7 +18,8 @@ class HrLeaveRequest(models.Model):
         else:
             action_id = False
         domain = domain or []
-        if user.has_group("de_hr_workspace.group_hr_employee_approvals") and (approvals_of_leave_request or (action_id and action_id == view_action_id.id)):
+        if user.has_group("de_hr_workspace.group_hr_employee_approvals") and (
+                approvals_of_leave_request or (action_id and action_id == view_action_id.id)):
             domain = []
             role_domains = []
             # Employee Manager
@@ -25,6 +27,7 @@ class HrLeaveRequest(models.Model):
                 ('employee_manager_id.user_id', '=', user.id),
                 ('state', '=', 'draft')
             ])
+            role_domains.append([('state', '=', 'cancel_request')])
 
             # HR Manager
             if user.has_group("hr_holidays.group_hr_holidays_manager"):
@@ -56,4 +59,3 @@ class HrLeaveRequest(models.Model):
             return super().search_fetch(domain, field_names, offset, limit, order)
 
     # endregion [System Methods]
-

@@ -59,7 +59,7 @@
 
             <page style="margin-top:40mm;">
                 <div class="article">
-                    <t t-if="department_name or section_name or project_name">
+                    <t t-if="department_name or section_name or project_name or employee_name or asset_name">
                         <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
                             <tr>
                                 <td style="padding:4px; border:1px solid #ddd;" t-if="department_name">
@@ -74,6 +74,17 @@
                                     <strong>Project:</strong>
                                     <span t-esc="project_name"/>
                                 </td>
+                                <tr t-if="employee_name or asset_name">
+                                    <td style="padding:4px; border:1px solid #ddd;" t-if="employee_name">
+                                        <strong>Employee:</strong>
+                                        <span t-esc="employee_name"/>
+                                    </td>
+                                    <td style="padding:4px; border:1px solid #ddd;" t-if="asset_name">
+                                        <strong>Asset:</strong>
+                                        <span t-esc="asset_name"/>
+                                    </td>
+                                    <td style="padding:4px; border:1px solid #ddd;"/>
+                                </tr>
                             </tr>
                         </table>
                     </t>

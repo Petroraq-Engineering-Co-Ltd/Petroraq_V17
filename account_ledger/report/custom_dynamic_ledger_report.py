@@ -56,6 +56,13 @@ class CustomDynamicLedgerReport(models.AbstractModel):
             sheet.merge_range(f"A{extra_row}:H{extra_row}", f"Project: {wizard.project_id.name}", header_mid)
             extra_row += 1
 
+        if wizard.employee_id:
+            sheet.merge_range(f"A{extra_row}:H{extra_row}", f"Employee: {wizard.employee_id.name}", header_mid)
+            extra_row += 1
+        if wizard.asset_id:
+            sheet.merge_range(f"A{extra_row}:H{extra_row}", f"Asset: {wizard.asset_id.name}", header_mid)
+            extra_row += 1
+
         start_row = extra_row + 1
 
         # Columns
@@ -152,5 +159,7 @@ class CustomDynamicLedgerPdfReport(models.AbstractModel):
             "department_name": wizard.department_id.name if wizard.department_id else "",
             "section_name": wizard.section_id.name if wizard.section_id else "",
             "project_name": wizard.project_id.name if wizard.project_id else "",
+            "employee_name": wizard.employee_id.name if wizard.employee_id else "",
+            "asset_name": wizard.asset_id.name if wizard.asset_id else "",
             "report_date": today.strftime("%b-%d-%Y"),
         }
