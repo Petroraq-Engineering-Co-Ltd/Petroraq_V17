@@ -9,8 +9,10 @@
                 <field name="approval_state" widget="statusbar" invisible="approval_state == 'approved'"
                        statusbar_visible="draft,confirmed,to_manager,to_md,approved,rejected"/>
 
+                <field name="can_create_remaining_delivery" invisible="1"/>
                 <field name="approval_state" invisible="1"/>
                 <field name="show_reject_button" invisible="1"/>
+                <field name="can_refund_remaining_dp" invisible="1"/>
                 <!--                <field name="manager_approver_id" modifiers="{'invisible': True}"/>-->
                 <!--                <field name="md_approver_id" modifiers="{'invisible': True}"/>-->
                 <!--                <field name="show_manager_approve_button" modifiers="{'invisible': True}"/>-->
@@ -18,11 +20,24 @@
                 <!--                <field name="manager_approved" modifiers="{'invisible': True}"/>-->
                 <!--                <field name="md_approved" modifiers="{'invisible': True}"/>-->
 
+                <button name="action_create_remaining_delivery"
+                        type="object"
+                        string="Create Delivery for Remaining"
+                        class="btn-primary"
+                        invisible="not can_create_remaining_delivery"/>
+
                 <button string="Submit"
                         type="object"
                         name="action_confirm_quotation"
                         class="btn-primary"
                         invisible="approval_state in ('to_manager','to_md','approved','rejected') or state in ('cancel')"/>
+
+                <button
+                        name="action_refund_remaining_dp"
+                        type="object"
+                        string="Refund Remaining DP"
+                        class="btn-primary"
+                        invisible="not can_refund_remaining_dp"/>
 
                 <!--                <button string="Reset Draft"-->
                 <!--                        type="object"-->
@@ -93,6 +108,10 @@
             <xpath expr="//field[@name='payment_term_id']" position="attributes">
                 <attribute name="domain">payment_term_domain</attribute>
                 <attribute name="readonly">locked</attribute>
+            </xpath>
+            <xpath expr="//sheet//group" position="inside">
+                <field name="dp_remaining_amount_ui" readonly="1"
+                       invisible="dp_remaining_amount_ui == 0"/>
             </xpath>
 
 

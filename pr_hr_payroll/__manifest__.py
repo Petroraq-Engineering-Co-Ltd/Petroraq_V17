@@ -26,6 +26,7 @@
         'views/hr_contract.xml',
         'views/hr_salary_rule.xml',
         'views/hr_salary_attachment_type.xml',
+        'views/hr_payslip_hold_views.xml',
         'views/hr_salary_attachment.xml',
         'views/bank_payment.xml',
         'views/hr_payslip_run.xml',

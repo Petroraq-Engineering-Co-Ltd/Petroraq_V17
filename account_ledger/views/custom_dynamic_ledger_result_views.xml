@@ -17,19 +17,8 @@
                     <div class="oe_title"/>
 
                     <div class="oe_full">
-                        <field name="line_ids" class="freeze-1many" nolabel="1">
-                            <tree create="false" delete="false" editable="false" class="oe_inline" limit="1000">
-                                <field name="label" string="Account"/>
-                                <field name="initial_debit"/>
-                                <field name="initial_credit"/>
-                                <field name="period_debit"/>
-                                <field name="period_credit"/>
-                                <field name="ending_debit"/>
-                                <field name="ending_credit"/>
-                                <field name="balance"/>
-                                <field name="balance_type"/>
-                            </tree>
-                        </field>
+                        <field name="line_ids" widget="ledger_hierarchy"/>
+
                     </div>
                 </sheet>
             </form>

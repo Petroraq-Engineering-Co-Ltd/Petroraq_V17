@@ -28,8 +28,16 @@ class CustomDynamicLedgerResult(models.TransientModel):
 class CustomDynamicLedgerResultLine(models.TransientModel):
     _name = "custom.dynamic.ledger.result.line"
     _description = "Custom Dynamic Ledger Result Line"
+    _order = "sequence, id"
 
-    result_id = fields.Many2one("custom.dynamic.ledger.result")
+    result_id = fields.Many2one("custom.dynamic.ledger.result", ondelete="cascade", required=True)
+
+    # ✅ hierarchy
+    parent_id = fields.Many2one("custom.dynamic.ledger.result.line", ondelete="cascade")
+    child_ids = fields.One2many("custom.dynamic.ledger.result.line", "parent_id")
+    level = fields.Integer(default=0)
+    is_heading = fields.Boolean(default=False)
+    sequence = fields.Integer(default=10)
 
     label = fields.Char("Account")
     initial_debit = fields.Float("Initial Debit")

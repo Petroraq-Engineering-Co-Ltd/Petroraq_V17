@@ -5,9 +5,9 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_quotation_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//tree/field[@name='amount_total']" position="after">
-                <field name="profit_grand_total"/>
-            </xpath>
+            <!--            <xpath expr="//tree/field[@name='amount_total']" position="after">-->
+            <!--                <field name="profit_grand_total"/>-->
+            <!--            </xpath>-->
         </field>
     </record>
     <record id="view_order_tree_inherit_petroraq_great_total" model="ir.ui.view">
@@ -15,9 +15,9 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_tree"/>
         <field name="arch" type="xml">
-            <xpath expr="//tree/field[@name='amount_total']" position="after">
-                <field name="profit_grand_total"/>
-            </xpath>
+            <!--            <xpath expr="//tree/field[@name='amount_total']" position="after">-->
+            <!--                <field name="profit_grand_total"/>-->
+            <!--            </xpath>-->
         </field>
     </record>
 </odoo>

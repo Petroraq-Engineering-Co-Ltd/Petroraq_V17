@@ -626,52 +626,16 @@
                         <br/>
 
                         <div style=" font-family:'DroidArabicNaskh'; font-size:17px;">
-                            <table class="table table-borderless" style="line-height:0.9;">
-                                <tr>
-                                    <td width="45%" style="text-align:left;">
-                                        <b>Make all cheques payable to:</b>
-                                    </td>
-                                    <td width="55%" style="text-align:right;">
-                                        <b>تصدر جميع الشيكات الى الحساب الآتي :</b>
-                                    </td>
-                                </tr>
-                            </table>
 
-                            <table class="table table-borderless" style="margin-top:-10px; line-height:0.9;">
-                                <tr>
-                                    <td width="15%" style="text-align:left;">Account Title:</td>
-                                    <td width="25%" style="text-align:left;">Petroraq Engineering Co. Ltd.</td>
-                                    <td width="55%" style="text-align:right;">عنوان الحساب : شركة بيتروراق انجنيرنج
-                                        المحدودة
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:left;">Bank:</td>
-                                    <td style="text-align:left;">Arab National Bank</td>
-                                    <td style="text-align:right;">بنك : البنك العربي الوطني</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:left;">A/C No:</td>
-                                    <td style="text-align:left;">108095635470015</td>
-                                    <td style="text-align:right;">رقم الحساب: ١٠٨٠٩٥٦٣٥٤٧٠٠١٥
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:left;">IBAN No:</td>
-                                    <td style="text-align:left;">SA1930400108095635470015</td>
-                                    <td style="text-align:right;">رقم الآيبان: SA١٩٣٠٤٠٠١٠٨٠٩٥٦٣٥٤٧٠٠١٥</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:left;">Branch:</td>
-                                    <td style="text-align:left;">Al-Jubail</td>
-                                    <td style="text-align:right;">فرع: الجبيل</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:left;">SWIFT Code:</td>
-                                    <td style="text-align:left;">ARNBSARI</td>
-                                    <td style="text-align:right;">رمز السويفت: ARNBSARI</td>
-                                </tr>
-                            </table>
+                            <div class="text-muted mb-3"
+                                 t-attf-style="#{'text-align:justify;text-justify:inter-word;' if o.company_id.terms_type != 'html' else ''}"
+                                 t-if="not is_html_empty(o.narration)" name="comment">
+
+                                <span t-field="o.narration"/>
+
+                            </div>
+
+
                         </div>
 
 
