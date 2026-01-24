@@ -118,9 +118,9 @@ class SaleOrder(models.Model):
         amls = dp_line.invoice_lines.filtered(
             lambda l: l.move_id.state == "posted"
                       and l.move_id.move_type == "out_invoice"
-                      and (l.price_subtotal or 0.0) > 0.0
+                      and (getattr(l, "price_subtotal_signed", l.price_subtotal) or 0.0) > 0.0
         )
-        return sum(amls.mapped("price_subtotal")) or 0.0
+        return sum(abs(getattr(l, "price_subtotal_signed", l.price_subtotal) or 0.0) for l in amls) or 0.0
 
     def _dp_remaining_amount(self):
         """Remaining DP = paid - deducted - refunded (all posted, untaxed)."""
@@ -147,9 +147,9 @@ class SaleOrder(models.Model):
         amls = dp_line.invoice_lines.filtered(
             lambda l: l.move_id.state == "posted"
                       and l.move_id.move_type == "out_invoice"
-                      and (l.price_subtotal or 0.0) < 0.0
+                      and (getattr(l, "price_subtotal_signed", l.price_subtotal) or 0.0) < 0.0
         )
-        return sum(abs(l.price_subtotal) for l in amls) or 0.0
+        return sum(abs(getattr(l, "price_subtotal_signed", l.price_subtotal) or 0.0) for l in amls) or 0.0
 
     def _is_fully_delivered(self):
         """Final invoice if all stockable/consu lines are fully delivered."""
@@ -175,11 +175,27 @@ class SaleOrder(models.Model):
         dp_deduct_amounts = dict(self.env.context.get("dp_deduct_amounts") or {})
 
         for order in self:
+            currency = order.currency_id or order.company_id.currency_id
+            dp_so_line = order._dp_sale_line()
+
+            # ------------------------------------------------------------
+            # (A) CRITICAL: If a DP was already taken (posted DP invoice exists),
+            # never allow the DP line to be invoiceable again as a positive line.
+            # We will only re-add it when we explicitly deduct.
+            # ------------------------------------------------------------
+            if dp_so_line:
+                paid_dp = currency.round(order._dp_paid_amount())
+                if not currency.is_zero(paid_dp):
+                    lines = lines.filtered(lambda l: l.id != dp_so_line.id)
+
+            # ------------------------------------------------------------
+            # (B) Your deduction logic (keep it), but now it's the ONLY way
+            # the DP line can appear on future invoices.
+            # ------------------------------------------------------------
             dp_percent = order.dp_percent or 0.0
             if not dp_percent:
                 continue
 
-            currency = order.currency_id or order.company_id.currency_id
             remaining_dp_amount = currency.round(order._dp_remaining_amount())
             if currency.is_zero(remaining_dp_amount):
                 continue
@@ -208,7 +224,6 @@ class SaleOrder(models.Model):
 
             dp_deduct_amounts[order.id] = target_amount
 
-            dp_so_line = order._dp_sale_line()
             if dp_so_line:
                 lines |= dp_so_line
                 dp_so_line.qty_to_invoice = -1.0
@@ -216,15 +231,14 @@ class SaleOrder(models.Model):
         return lines.with_context(dp_deduct_amounts=dp_deduct_amounts)
 
     def _dp_refunded_amount(self):
+        """Total DP refunded (untaxed) via posted credit notes linked to DP line."""
         self.ensure_one()
         dp_line = self._dp_sale_line()
         if not dp_line:
             return 0.0
 
-        # Credit note lines linked to dp sale line
         amls = dp_line.invoice_lines.filtered(
             lambda l: l.move_id.state == "posted"
                       and l.move_id.move_type == "out_refund"
-                      and (l.price_subtotal or 0.0) > 0.0
         )
-        return sum(amls.mapped("price_subtotal")) or 0.0
+        return sum(abs(getattr(l, "price_subtotal_signed", l.price_subtotal) or 0.0) for l in amls) or 0.0
