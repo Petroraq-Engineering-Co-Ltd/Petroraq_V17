@@ -1,0 +1,6 @@
+from . import work_order
+from . import sale_order_inherit
+from . import project_inherit
+from . import stock_inherit
+from . import account_inherit
+from . import purchase_inherit

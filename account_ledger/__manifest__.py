@@ -20,6 +20,7 @@
         # 'views/dynamic_report_template.xml',
         'wizard/account_ledger.xml',
         'views/account_ledger_result_views.xml',
+        'views/custom_dynamic_ledger_result_views.xml',
         'views/vat_ledger_result_views.xml',
         'wizard/vat_ledger_report_wizard.xml',
         'wizard/custom_dynamic_ledger_report_wizard.xml',
@@ -33,17 +34,16 @@
         'views/cash_payment.xml',
         'views/cash_receipt.xml',
 
-
     ],
-    # 'assets': {
-    #         'web.assets_backend': [
-    #             'account_ledger/static/src/js/dynamic_balance_report.js',
-    #             'account_ledger/static/src/xml/dynamic_balance_report.xml',
-    #         ],
-    #     },
+    'assets': {
+            'web.assets_backend': [
+                'account_ledger/static/src/js/ledger_hierarchy_field.js',
+                'account_ledger/static/src/xml/ledger_hierarchy_field.xml',
+            ],
+        },
     'qweb': [],
     'images': ['static/description/banner.jpeg'],
-    'demo': [],        
+    'demo': [],
     'installable': True,
     'application': True,
     'auto_install': False,

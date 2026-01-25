@@ -9,7 +9,7 @@ class PayrollReport(models.AbstractModel):
     def generate_xlsx_report(self, workbook, data, lines):
 
         # ======================
-        # Formats (PDF-like)
+        # Formats (styling only - NO logic changes)
         # ======================
         blue_title = workbook.add_format({
             'bold': True, 'font_size': 14,
@@ -32,26 +32,41 @@ class PayrollReport(models.AbstractModel):
         cell_txt = workbook.add_format({
             'font_size': 10,
             'align': 'center', 'valign': 'vcenter',
-            'border': 1
+            'border': 1,
+            'text_wrap': True,
+        })
+        cell_txt_left = workbook.add_format({
+            'font_size': 10,
+            'align': 'left', 'valign': 'vcenter',
+            'border': 1,
+            'text_wrap': True,
         })
         cell_money = workbook.add_format({
             'font_size': 10,
             'align': 'center', 'valign': 'vcenter',
             'border': 1,
-            'num_format': '#,##0.00'
+            # show negatives in red with parentheses (styling only)
+            'num_format': '#,##0.00;[Red]#,##0.00'
         })
         cell_money_alt = workbook.add_format({
             'font_size': 10,
             'align': 'center', 'valign': 'vcenter',
             'border': 1,
             'bg_color': '#F3F6FA',
-            'num_format': '#,##0.00'
+            'num_format': '#,##0.00;[Red]#,##0.00'
         })
         cell_txt_alt = workbook.add_format({
             'font_size': 10,
             'align': 'center', 'valign': 'vcenter',
             'border': 1,
             'bg_color': '#F3F6FA'
+        })
+        cell_txt_left_alt = workbook.add_format({
+            'font_size': 10,
+            'align': 'left', 'valign': 'vcenter',
+            'border': 1,
+            'bg_color': '#F3F6FA',
+            'text_wrap': True,
         })
         total_blue_txt = workbook.add_format({
             'bold': True, 'font_size': 10,
@@ -93,8 +108,21 @@ class PayrollReport(models.AbstractModel):
         for used_struct in used_structures:
             sheet = workbook.add_worksheet(str(struct_count) + ' - ' + str(used_struct[1]))
 
+            # Print & view options (styling only)
+            sheet.set_landscape()
+            sheet.set_paper(9)  # A4
+            sheet.fit_to_pages(1, 0)
+            sheet.hide_gridlines(2)
+
+            # Page setup / print styling
+            sheet.set_landscape()
+            sheet.fit_to_pages(1, 0)
+            sheet.set_print_scale(100)
+            sheet.set_margins(left=0.3, right=0.3, top=0.4, bottom=0.4)
+            sheet.hide_gridlines(2)
+
             # Freeze panes below header row (title rows + header row)
-            sheet.freeze_panes(6, 2)  # row 6, col 2 (adjusted after styling)
+            sheet.freeze_panes(6, 0)
 
             cols = list(string.ascii_uppercase) + [
                 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL',
@@ -106,29 +134,30 @@ class PayrollReport(models.AbstractModel):
 
             # Salary rules (KEEP your logic)
             salary_rule_ids = lines.slip_ids.line_ids.mapped("salary_rule_id")
-            order = ['Basic Salary',
-                     'Food',
-                     'Accommodation',
-                     'Transportation',
-                     'Other Payments',
-                     'Other Allowances',
-                     'Car Allowances',
-                     'Fixed Overtime',
-                     'Overtime',
-                     'Gross',
-                     'Late In',
-                     'Early Checkout',
-                     'Annual Time Off',
-                     'Absence',
-                     'HRA',
-                     'Advance Allowances',
-                     'GOSI',
-                     # 'Annual Time Off',
-                     'Sick Time Off',
-                     'Unpaid Leave',
-                     'Annual Time Off DED',
-                     'Sick Time Off DED',
-                     'Net Salary']
+            order = ["Basic Salary",
+                     "Accommodation",
+                     "Transportation",
+                     "Food",
+                     "Other Payments",
+                     # "Other Allowances",
+                     "Car Allowance",
+                     # "Car Allowances",
+                     "Fixed Overtime",
+                     "Overtime",
+                     "HRA",
+                     "Advance Allowances",
+                     "Sick Time Off",
+                     "Annual Time Off",
+
+                     "Gross",
+                     "Late In",
+                     "Early Checkout",
+                     "Absence",
+                     # //            "GOSI",
+                     "Unpaid Leave",
+                     "Annual Time Off DED",
+                     "Sick Time Off DED",
+                     "Net Salary", ]
 
             salary_rule_ids = salary_rule_ids.filtered(lambda s: s.name in order)
 
@@ -144,6 +173,24 @@ class PayrollReport(models.AbstractModel):
                 row[3] = col_title
                 row[4] = 12 if len(rule.name) < 8 else (len(rule.name) + 2)
                 rules.append(row)
+                col_no += 1
+
+            # --- Add Saudi GOSI virtual columns (display only) ---
+            # to hide comment the below code including loop these will than not be included
+            extra_cols = [
+                ("GOSI_COMP_ADD", "GOSI Company Contribution"),
+                ("GOSI_EMP", "GOSI Employee Deduction"),
+                ("GOSI_COMP_DED", "GOSI Company Deduction"),
+            ]
+            for code, name in extra_cols:
+                rowx = [None, None, None, None, None]
+                rowx[0] = col_no
+                rowx[1] = code
+                rowx[2] = name
+                col_title = f"{cols[col_no]}:{cols[col_no]}"
+                rowx[3] = col_title
+                rowx[4] = 22
+                rules.append(rowx)
                 col_no += 1
 
             # Report details (KEEP your logic)
@@ -186,12 +233,33 @@ class PayrollReport(models.AbstractModel):
             for rule in rules:
                 sheet.write(header_row, rule[0], rule[2], header_blue)
 
+            # Autofilter on header row (styling / usability)
+            sheet.autofilter(header_row, 0, header_row, last_col)
+
             # Column widths
             sheet.set_column('A:A', 12)
             sheet.set_column('B:B', 28)
             sheet.set_column('C:C', 18)
             for rule in rules:
                 sheet.set_column(rule[3], rule[4])
+
+            # ======================
+            # Hide GOSI columns (display only, totals unaffected)
+            # ======================
+            HIDE_CODES = {"GOSI", "GOSI_COMP_ADD", "GOSI_EMP", "GOSI_COMP_DED"}
+            HIDE_TITLES = {
+                "GOSI",
+                "GOSI Company Contribution",
+                "GOSI Employee Deduction",
+                "GOSI Company Deduction",
+            }
+
+            for r in rules:
+                code = r[1]
+                title = r[2]
+                if code in HIDE_CODES or title in HIDE_TITLES:
+                    col_idx = r[0]
+                    sheet.set_column(col_idx, col_idx, 0.1, None, {'hidden': True})
 
             # ======================
             # Data rows (same logic, just styled)
@@ -208,16 +276,24 @@ class PayrollReport(models.AbstractModel):
                 is_alt = ((row - first_data_row) % 2 == 1)
 
                 txt_fmt = cell_txt_alt if is_alt else cell_txt
+                txt_left_fmt = cell_txt_left_alt if is_alt else cell_txt_left
                 money_pos_fmt = cell_money_alt if is_alt else cell_money
                 money_neg_fmt = cell_money_alt if is_alt else cell_money  # keep same format; Excel shows minus
 
                 sheet.write(row, 0, slip.employee_id.code or '', txt_fmt)
-                sheet.write(row, 1, slip.employee_id.name or '', txt_fmt)
-                sheet.write(row, 2, slip.employee_id.department_id.name or '', txt_fmt)
+                sheet.write(row, 1, slip.employee_id.name or '', txt_left_fmt)
+                sheet.write(row, 2, slip.employee_id.department_id.name or '', txt_left_fmt)
 
                 # Fill all rule columns (by code)
                 # (Small perf improvement: build dict {code: amount} once per slip)
                 slip_amount_by_code = {l.code: l.amount for l in slip.line_ids}
+
+                DEDUCTION_CODES = {
+                    "ABS", "LATE", "ECO", "LEAVE90", "DIFFT", "UNPAID", "PAID87",
+                    "SICKTO89", "BTD",
+                    # add your own deduction rule codes here if needed
+                    "GOSI", "GOSI_EMP", "GOSI_COMP_DED",
+                }
 
                 for rule in rules:
                     val = slip_amount_by_code.get(rule[1], 0.0)
@@ -226,9 +302,6 @@ class PayrollReport(models.AbstractModel):
 
                 row += 1
 
-            # ======================
-            # Total row (blue bar like PDF)
-            # ======================
             if has_payslips:
                 total_row = row
                 sheet.write(total_row, 0, 'Total', total_blue_txt)

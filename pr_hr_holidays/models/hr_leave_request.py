@@ -11,7 +11,6 @@ import logging
 from datetime import datetime, timedelta
 import pandas as pd
 
-
 _logger = logging.getLogger(__name__)
 
 
@@ -34,8 +33,10 @@ class HrLeaveRequest(models.Model):
     company_id = fields.Many2one('res.company', string='Company', tracking=True, required=True)
     employee_id = fields.Many2one('hr.employee', string='Employee', tracking=True, required=True)
     employee_manager_id = fields.Many2one('hr.employee', string='Manager', tracking=True, readonly=True)
-    hr_supervisor_ids = fields.Many2many('res.users', 'leave_request_hr_supervisor_users',  'hr_supervisor_id', 'leave_request_id', string='HR Supervisors', tracking=True, readonly=True)
-    hr_manager_ids = fields.Many2many('res.users', 'leave_request_hr_manager_users',  'hr_manager_id', 'leave_request_id', string='HR Managers', tracking=True, readonly=True)
+    hr_supervisor_ids = fields.Many2many('res.users', 'leave_request_hr_supervisor_users', 'hr_supervisor_id',
+                                         'leave_request_id', string='HR Supervisors', tracking=True, readonly=True)
+    hr_manager_ids = fields.Many2many('res.users', 'leave_request_hr_manager_users', 'hr_manager_id',
+                                      'leave_request_id', string='HR Managers', tracking=True, readonly=True)
     reject_reason = fields.Text(string="Rejection Reason", readonly=True)
     note = fields.Text(string="Note")
     state = fields.Selection([
@@ -44,6 +45,8 @@ class HrLeaveRequest(models.Model):
         ('hr_supervisor', 'HR Supervisor Approved'),
         ('hr_approve', 'HR Manager Approved'),
         ('reject', 'Rejected'),
+        ('cancel_request', 'Cancellation Requested'),
+        ('cancelled', 'Cancelled'),
     ], default='draft', track_visibility='always',
         string='Status', required=True, index=True)
     approval_state = fields.Selection([
@@ -52,9 +55,12 @@ class HrLeaveRequest(models.Model):
         ('hr_supervisor', 'Pending Approval'),
         ('hr_approve', 'Approved'),
         ('reject', 'Rejected'),
+        ('cancel_request', 'Pending Cancellation Approval'),
+        ('cancelled', 'Cancelled'),
     ], default='draft', track_visibility='always',
         string='Approval Status')
     employee_manager_check = fields.Boolean(compute="_compute_employee_manager_check")
+    employee_user_check = fields.Boolean(compute="_compute_employee_user_check")
     hr_supervisor_check = fields.Boolean(compute="_compute_hr_supervisor_check")
     hr_manager_check = fields.Boolean(compute="_compute_hr_manager_check")
     leave_id = fields.Many2one("hr.leave", string="Leave", readonly=True)
@@ -63,7 +69,8 @@ class HrLeaveRequest(models.Model):
 
     # region [Compute Methods]
 
-    @api.depends("employee_id", "employee_id.parent_id", "employee_id.parent_id.user_id", "employee_manager_id", "employee_manager_id.user_id")
+    @api.depends("employee_id", "employee_id.parent_id", "employee_id.parent_id.user_id", "employee_manager_id",
+                 "employee_manager_id.user_id")
     def _compute_employee_manager_check(self):
         for rec in self:
             employee_manager_id = rec.employee_id.parent_id
@@ -71,6 +78,14 @@ class HrLeaveRequest(models.Model):
                 rec.employee_manager_check = True
             else:
                 rec.employee_manager_check = False
+
+    @api.depends("employee_id", "employee_id.user_id")
+    def _compute_employee_user_check(self):
+        for rec in self:
+            if rec.employee_id.user_id and rec.employee_id.user_id.id == self.env.user.id:
+                rec.employee_user_check = True
+            else:
+                rec.employee_user_check = False
 
     def _compute_hr_supervisor_check(self):
         for rec in self:
@@ -88,7 +103,6 @@ class HrLeaveRequest(models.Model):
 
     # endregion [Compute Methods]
 
-
     # region [Onchange Methods]
 
     @api.onchange("employee_id")
@@ -96,6 +110,34 @@ class HrLeaveRequest(models.Model):
         self.ensure_one()
         if self.employee_id.company_id:
             self.company_id = self.employee_id.company_id.id
+
+    def _send_hr_manager_cancellation_email(self):
+        for rec in self:
+            base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+            record_url = base_url + "/web#id=" + str(
+                rec.id) + "&view_type=form&model=pr.hr.leave.request&view_type=form"
+
+            group_ids = [self.env.ref('hr_holidays.group_hr_holidays_manager').id]
+            user_ids = self.env['res.users'].sudo().search([('groups_id', 'in', group_ids)])
+            if user_ids:
+                for user in user_ids:
+                    employee_id = self.env["hr.employee"].sudo().search([("user_id", "=", user.id)], limit=1)
+                    if employee_id and employee_id.work_email:
+                        body_message = f"""Dear Mr/Mrs. {employee_id.name},<br/><br/>
+
+                            We wish to inform you that employee {rec.employee_id.name} has requested a <strong>Cancellation for Leave Request {rec.name}</strong>.<br/><br/>
+                            You can check the request to take a decision by clicking this button <a class="btn btn-primary" href="{record_url}" role="button">Leave Request</a><br/><br/><br/>
+                            Thank you for your attention to this matter.<br/><br/>
+                            Best regards,<br/>
+                            <strong>HR Department</strong><br/>
+                            Petroraq Engineering
+                            """
+                        receiver = employee_id.work_email
+                        mail = self.env["mail.mail"]
+                        mail_id = mail.sudo().create(
+                            rec._prepare_email_vals(body_message=body_message, receiver=receiver))
+                        if mail_id:
+                            mail_id.sudo().send()
 
     # endregion [Onchange Methods]
 
@@ -114,7 +156,8 @@ class HrLeaveRequest(models.Model):
     def _send_manager_email(self):
         for rec in self:
             base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-            record_url = base_url + "/web#id=" + str(rec.id) + "&view_type=form&model=pr.hr.leave.request&view_type=form"
+            record_url = base_url + "/web#id=" + str(
+                rec.id) + "&view_type=form&model=pr.hr.leave.request&view_type=form"
 
             body_message = f"""Dear Mr/Mrs. {rec.employee_id.parent_id.name},<br/><br/>
 
@@ -163,7 +206,8 @@ class HrLeaveRequest(models.Model):
     def _send_hr_manager_email(self):
         for rec in self:
             base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
-            record_url = base_url + "/web#id=" + str(rec.id) + "&view_type=form&model=pr.hr.leave.request&view_type=form"
+            record_url = base_url + "/web#id=" + str(
+                rec.id) + "&view_type=form&model=pr.hr.leave.request&view_type=form"
 
             group_ids = [self.env.ref('hr_holidays.group_hr_holidays_manager').id]
             user_ids = self.env['res.users'].sudo().search([('groups_id', 'in', group_ids)])
@@ -213,6 +257,22 @@ class HrLeaveRequest(models.Model):
             rec.state = "manager_approve"
             rec.approval_state = "manager_approve"
             rec._send_hr_supervisor_email()
+
+    def action_employee_cancel_request(self):
+        for rec in self:
+            rec = rec.sudo()
+            rec.state = "cancel_request"
+            rec.approval_state = "cancel_request"
+            rec._send_hr_manager_cancellation_email()
+
+    def action_hr_manager_cancel_approve(self):
+        for rec in self:
+            rec = rec.sudo()
+            rec.state = "cancelled"
+            rec.approval_state = "cancelled"
+            if rec.leave_id:
+                rec.leave_id.sudo().state = "refuse"
+            rec._send_result_to_employee(result="Cancelled")
 
     def action_manager_reject(self):
         for rec in self:
@@ -285,11 +345,11 @@ class HrLeaveRequest(models.Model):
                 "leave_request_id": rec.id,
             }
             leave_id = self.env["hr.leave"].with_context(
-            tracking_disable=True,
-            mail_activity_automation_skip=True,
-            leave_fast_create=True,
-            leave_skip_state_check=True
-        ).sudo().create(leave_vals)
+                tracking_disable=True,
+                mail_activity_automation_skip=True,
+                leave_fast_create=True,
+                leave_skip_state_check=True
+            ).sudo().create(leave_vals)
             if leave_id:
                 rec.leave_id = leave_id.id
                 # leave_id.sudo().action_approve()
@@ -352,6 +412,3 @@ class HrLeaveRequest(models.Model):
         return super().unlink()
 
     # endregion [Crud]
-
-
-

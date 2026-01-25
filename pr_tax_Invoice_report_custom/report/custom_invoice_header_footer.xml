@@ -4,8 +4,8 @@
     <!--Bridge template-->
     <template id="custom_invoice_bridge_layout">
         .header, .footer {
-            margin: 0 !important;
-            padding: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         }
         <!-- Multicompany -->
         <t t-if="not o and doc">
@@ -29,20 +29,29 @@
     <!--Template header-->
     <template id="custom_invoice_header_layout">
         <div class="header">
-            <div class="text-center">
-                <img src='/pr_tax_Invoice_report_custom/static/src/img/white_header.jpg' style="width:100%;"/>
+            <div>
+                <img src='/pr_tax_Invoice_report_custom/static/src/img/header_custom.png' style="width:101%;"/>
             </div>
         </div>
     </template>
 
     <!--Template footer-->
     <template id="custom_invoice_footer_layout">
+
         <div class="footer" style="border-top:1px solid #305081">
+
+
             <div style="border-top:1px solid #305081 !important;">
-                <img src='/pr_tax_Invoice_report_custom/static/src/img/blue_footer.jpeg' style="width:100%;display:inline-block;"/>
                 <div name="pager" class="list-inline no-margin text-center" style="color:rgba(18,49,96,0.91);">
-                    Page: <span class="page"/> / <span class="topage"/>
+                    Page:
+                    <span class="page"/>
+                    /
+                    <span class="topage"/>
                 </div>
+
+                <img src='/pr_tax_Invoice_report_custom/static/src/img/footer.png'
+                     style="width:101%;display:inline-block;"/>
+
             </div>
         </div>
     </template>

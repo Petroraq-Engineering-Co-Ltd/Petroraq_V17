@@ -10,6 +10,13 @@
             <xpath expr="//span[@name='address_name']" position="before">
                 <field name="partner_code"/>
             </xpath>
+            <xpath expr="//field[@name='vat']" position="attributes">
+                <attribute name="required">is_company</attribute>
+            </xpath>
+            <xpath expr="//field[@name='company_registry']" position="attributes">
+                <attribute name="required">is_company</attribute>
+            </xpath>
+
 
             <xpath expr="//span[@name='address_name']" position="before">
                 <field name="arabic_name"/>

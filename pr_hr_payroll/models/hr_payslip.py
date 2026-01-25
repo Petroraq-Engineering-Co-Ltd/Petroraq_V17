@@ -9,11 +9,46 @@ class HrPayslip(models.Model):
     other_amount = fields.Float(string="Other Amount", default=0.0)
     salary_journal_entry_id = fields.Many2one("account.move", readonly=True)
 
+    hold_salary = fields.Boolean(string="Hold Salary", tracking=True, copy=False)
+    hold_reason = fields.Char(string="Hold Reason", tracking=True, copy=False)
+    hold_date = fields.Date(string="Hold Date", tracking=True, copy=False)
+    release_date = fields.Date(string="Release Date", tracking=True, copy=False)
+
+    def action_hold_salary(self):
+        for slip in self:
+            if slip.state in ('paid', 'cancel'):
+                raise UserError(_("You cannot hold a payslip that is already Paid/Cancelled."))
+            slip.write({
+                'hold_salary': True,
+                'hold_date': fields.Date.today(),
+            })
+
+    def action_release_salary(self):
+        for slip in self:
+            if slip.state in ('paid', 'cancel'):
+                continue
+            slip.write({
+                'hold_salary': False,
+                'release_date': fields.Date.today(),
+            })
+
     attendance_sheet_line_ids = fields.One2many(
         related='attendance_sheet_id.line_ids',
         string="Attendance Lines",
         readonly=True
     )
+    no_overtime = fields.Integer(related="attendance_sheet_id.no_overtime", readonly=True)
+    tot_overtime = fields.Float(related="attendance_sheet_id.tot_overtime", readonly=True)
+    tot_overtime_amount = fields.Float(related="attendance_sheet_id.tot_overtime_amount", readonly=True)
+    no_late = fields.Integer(related="attendance_sheet_id.no_late", readonly=True)
+    tot_late = fields.Float(related="attendance_sheet_id.tot_late", readonly=True)
+    tot_late_amount = fields.Float(related="attendance_sheet_id.tot_late_amount", readonly=True)
+    no_absence = fields.Integer(related="attendance_sheet_id.no_absence", readonly=True)
+    tot_absence = fields.Float(related="attendance_sheet_id.tot_absence", readonly=True)
+    tot_absence_amount = fields.Float(related="attendance_sheet_id.tot_absence_amount", readonly=True)
+    no_difftime = fields.Integer(related="attendance_sheet_id.no_difftime", readonly=True)
+    tot_difftime = fields.Float(related="attendance_sheet_id.tot_difftime", readonly=True)
+    tot_difftime_amount = fields.Float(related="attendance_sheet_id.tot_difftime_amount", readonly=True)
 
     def _get_payslip_lines(self):
         line_vals = super()._get_payslip_lines()

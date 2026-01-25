@@ -103,8 +103,35 @@
                     </field>
 
                 </page>
+                <page string="Attendance Data">
+                    <group>
+                        <group string="Over Time">
+                            <field name="no_overtime"/>
+                            <field name="tot_overtime" widget="float_time"/>
+                            <field name="tot_overtime_amount" style="color: green;"/>
+                        </group>
+                        <group string="Late In" name="late_in_group">
+                            <field name="no_late"/>
+                            <field name="tot_late" widget="float_time"/>
+                            <field name="tot_late_amount" style="color: red;"/>
+                        </group>
+                        <group string="Absence">
+                            <field name="no_absence"/>
+                            <field name="tot_absence" widget="float_time"/>
+                            <field name="tot_absence_amount" style="color: red;"/>
+                        </group>
+                        <group string="Diffrenece Time" invisible="1">
+                            <field name="no_difftime"/>
+                            <field name="tot_difftime" widget="float_time"/>
+                            <field name="tot_difftime_amount" style="color: red;"/>
+                        </group>
+
+                    </group>
+                </page>
 
             </xpath>
+
+
 
         </field>
     </record>

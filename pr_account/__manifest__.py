@@ -41,6 +41,8 @@
         'views/cash_payment.xml',
         'views/bank_receipt.xml',
         'views/bank_payment.xml',
+        "views/account_payment_register_view.xml",
+
         # 'views/journal_voucher_view.xml',
         'data/ir_sequence.xml',
         'data/analytic_plan_data.xml',
