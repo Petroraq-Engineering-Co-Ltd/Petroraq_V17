@@ -20,13 +20,15 @@
     'version': '17.0.0.0.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'contacts'],
+    'depends': ['base', 'contacts', 'product'],
 
     # always loaded
     'data': [
         'security/ir.model.access.csv',
         'views/menus.xml',
         'views/res_partner.xml',
+        'views/product_template.xml',
+        'data/product_sequence.xml',
         'wizards/pr_reject_record.xml',
     ],
     # only loaded in demonstration mode

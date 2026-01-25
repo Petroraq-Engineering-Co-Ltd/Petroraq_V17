@@ -41,23 +41,25 @@ class PayrollBatchXlsxReport extends Component {
     get RULE_NAME_ORDER() {
         return [
             "Basic Salary",
-            "Food",
             "Accommodation",
             "Transportation",
+            "Food",
 //            "Other Payments",
             "Other Allowances",
             "Car Allowances",
             "Fixed Overtime",
             "Overtime",
+            "HRA",
+            "Advance Allowances",
+            "Sick Time Off",
+            "Annual Time Off",
+
+
             "Gross",
             "Late In",
             "Early Checkout",
-            "Annual Time Off",
             "Absence",
-            "HRA",
-            "Advance Allowances",
 //            "GOSI",
-            "Sick Time Off",
             "Unpaid Leave",
             "Annual Time Off DED",
             "Sick Time Off DED",
@@ -89,13 +91,36 @@ class PayrollBatchXlsxReport extends Component {
         return "";
     }
 
-    get dateStart() {
-        return this.batch.date_start || "";
-    }
+    formatDateLong(dateStr) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+    });
+}
 
-    get dateEnd() {
-        return this.batch.date_end || "";
-    }
+formatMonthYear(dateStr) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-GB", {
+        month: "long",
+        year: "numeric",
+    });
+}
+
+    get dateStart() {
+    return this.formatDateLong(this.batch.date_start);
+}
+
+get dateEnd() {
+    return this.formatDateLong(this.batch.date_end);
+}
+get payrollMonth() {
+    return this.formatMonthYear(this.batch.date_end);
+}
+
 
     // ===== Loader =====
     async _load() {

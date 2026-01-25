@@ -27,10 +27,12 @@
                     <t t-esc="companyName"/>
                 </div>
                 <div class="pr_xlsx_subtitle">
-                    Payroll Month <t t-esc="dateEnd"/>
-                </div>
+    Payroll Month <t t-esc="payrollMonth"/>
+</div>
                 <div class="pr_xlsx_subtitle">
-                    For the Period <t t-esc="dateStart"/> To <t t-esc="dateEnd"/>
+                    For the Period <t t-esc="dateStart"/>
+                    To
+                    <t t-esc="dateEnd"/>
                 </div>
 
                 <!-- Table -->

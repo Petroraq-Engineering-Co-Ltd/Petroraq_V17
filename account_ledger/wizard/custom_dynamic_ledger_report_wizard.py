@@ -4,6 +4,7 @@ from datetime import date
 from collections import defaultdict
 from odoo.tools import float_round
 
+MAIN_HEAD = ["main_head"]
 MAIN_HEAD_FIELDS = ["assets_main_head", "liability_main_head"]
 CATEGORY_FIELDS = [
     "current_assets_category", "fixed_assets_category", "other_assets_category",
@@ -20,11 +21,13 @@ FIXED_ASSET_FIELDS = [
     "machinery_equipment_subcategory", "land_buildings_subcategory",
 ]
 OTHER_ASSET_FIELDS = ["investment_subcategory", "vat_receivable_subcategory", "suspense_account_subcategory"]
-CURRENT_LIABILITY_FIELDS = ["accounts_payable_subcategory", "short_term_loans_subcategory", "other_liabilities_subcategory"]
+CURRENT_LIABILITY_FIELDS = ["accounts_payable_subcategory", "short_term_loans_subcategory",
+                            "other_liabilities_subcategory"]
 NON_CURRENT_LIABILITY_FIELDS = ["long_term_loans_subcategory", "lease_obligations_subcategory"]
 EQUITY_FIELDS = ["capital_subcategory"]
 REVENUE_FIELDS = ["operating_revenue_subcategory"]
-EXPENSE_FIELDS = ["cogs_subcategory", "operating_expenses_subcategory", "financial_expenses_subcategory", "other_expenses_subcategory"]
+EXPENSE_FIELDS = ["cogs_subcategory", "operating_expenses_subcategory", "financial_expenses_subcategory",
+                  "other_expenses_subcategory"]
 
 
 class CustomDynamicLedgerReportWizard(models.TransientModel):
@@ -40,8 +43,144 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
         ("equity", "Equity"),
         ("revenue", "Revenue"),
         ("expense", "Expense"),
-    ], string="Report Type", required=True, tracking=True)
+    ], string="Main Head", required=True, tracking=True)
 
+    assets_main_head = fields.Selection([
+        ("asset_current", "Current Assets"),
+        ("asset_fixed", "Fixed Assets"),
+        ("asset_non_current", "Other Assets"),
+    ], string="Assets Main Head", tracking=True)
+    liability_main_head = fields.Selection([
+        ("liability_current", "Current Liabilities"),
+        ("liability_non_current", "Long-Term Liabilities"),
+    ], string="Liabilities Main Head", tracking=True)
+
+    current_assets_category = fields.Selection([
+        ("cash_equivalents", "Cash & Equivalents"),
+        ("banks", "Banks"),
+        ("account_receivable", "Account Receivable"),
+        ("inventory", "Inventory"),
+        ("prepaid_expenses", "Prepaid Expenses"),
+    ], string="Current Assets Category", tracking=True)
+    fixed_assets_category = fields.Selection([
+        ("vehicles", "Vehicles"),
+        ("furniture_fixture", "Furniture & Fixture"),
+        ("computer_printers", "Computer & Printers"),
+        ("machinery_equipment", "Machinery & Equipment"),
+        ("land_buildings", "Land & Buildings"),
+    ], string="Fixed Assets Category", tracking=True)
+    other_assets_category = fields.Selection([
+        ("investment", "Investment"),
+        ("vat_receivable", "VAT Receivable"),
+        ("suspense_account", "Suspense Account"),
+    ], string="Other Assets Category", tracking=True)
+    current_liability_category = fields.Selection([
+        ("accounts_payable", "Accounts Payable"),
+        ("short_term_loans", "Short-Term Loans"),
+        ("other_liabilities", "Other Liabilities"),
+    ], string="Current Liabilities Category", tracking=True)
+    liability_non_current_category = fields.Selection([
+        ("long_term_loans", "Long-Term Loans"),
+        ("lease_obligations", "Lease Obligations"),
+    ], string="Non Current Liabilities Category", tracking=True)
+    equity_category = fields.Selection([
+        ("capital", "Capital"),
+    ], string="Equity Category", tracking=True)
+    revenue_category = fields.Selection([
+        ("operating_revenue", "Operating Revenue"),
+    ], string="Revenue Category", tracking=True)
+    expense_category = fields.Selection([
+        ("cogs", "Cost of Goods Sold - COGS"),
+        ("operating_expenses", "Operating Expenses"),
+        ("financial_expenses", "Financial Expenses"),
+        ("other_expenses", "Other Expenses"),
+    ], string="Expense Category", tracking=True)
+
+    cash_equivalents_subcategory = fields.Selection([
+        ("petty_cash", "Petty Cash"),
+    ], string="Cash & Equivalents Sub-Category", tracking=True)
+    banks_subcategory = fields.Selection([
+        ("banks", "Banks"),
+    ], string="Banks Sub-Category", tracking=True)
+    accounts_receivable_subcategory = fields.Selection([
+        ("employee_advances", "Employee Advances"),
+        ("customers", "Customers"),
+        ("retention_receivable", "Retention-Receivable"),
+    ], string="Accounts Receivable Sub-Category", tracking=True)
+    inventory_subcategory = fields.Selection([
+        ("raw_materials", "Raw Materials"),
+        ("work_in_progress_wip", "Work in Progress-WIP"),
+        ("finished_goods", "Finished Goods"),
+    ], string="Inventory Sub-Category", tracking=True)
+    prepaid_expenses_subcategory = fields.Selection([
+        ("prepaid_rent", "Prepaid Rent"),
+        ("insurance", "Insurance"),
+        ("subscriptions", "Subscriptions"),
+    ], string="Prepaid Expenses Sub-Category", tracking=True)
+    vehicles_subcategory = fields.Selection([
+        ("cars", "Cars"),
+    ], string="Vehicles Sub-Category", tracking=True)
+    furniture_fixture_subcategory = fields.Selection([
+        ("furniture", "Furniture"),
+    ], string="Furniture & Fixture Sub-Category", tracking=True)
+    computer_printers_subcategory = fields.Selection([
+        ("it_products", "IT Products"),
+    ], string="Computer & Printers Sub-Category", tracking=True)
+    machinery_equipment_subcategory = fields.Selection([
+        ("machinery", "Machinery"),
+    ], string="Machinery & Equipment Sub-Category", tracking=True)
+    land_buildings_subcategory = fields.Selection([
+        ("buildings", "Buildings"),
+    ], string="Land & Buildings Sub-Category", tracking=True)
+    investment_subcategory = fields.Selection([
+        ("short_terms", "Short Terms"),
+        ("long_terms", "Long Terms"),
+    ], string="Investment Sub-Category", tracking=True)
+    vat_receivable_subcategory = fields.Selection([
+        ("vat_receivable", "VAT Receivable"),
+    ], string="VAT Receivable Sub-Category", tracking=True)
+    suspense_account_subcategory = fields.Selection([
+        ("suspense_account", "Suspense Account"),
+    ], string="Suspense Account Sub-Category", tracking=True)
+    accounts_payable_subcategory = fields.Selection([
+        ("suppliers", "Suppliers"),
+        ("accrued_expenses", "Accrued Expenses"),
+    ], string="Accounts Payable Sub-Category", tracking=True)
+    short_term_loans_subcategory = fields.Selection([
+        ("bank_finance", "Bank Finance"),
+    ], string="Short Term Loans Sub-Category", tracking=True)
+    other_liabilities_subcategory = fields.Selection([
+        ("vat_payable", "VAT Payable"),
+    ], string="Other Liabilities Sub-Category", tracking=True)
+    long_term_loans_subcategory = fields.Selection([
+        ("loans", "Loans"),
+    ], string="Long Term Loans Sub-Category", tracking=True)
+    lease_obligations_subcategory = fields.Selection([
+        ("lease", "Lease"),
+    ], string="Lease Obligations Sub-Category", tracking=True)
+    capital_subcategory = fields.Selection([
+        ("petroraq", "Petroraq"),
+    ], string="Capital Sub-Category", tracking=True)
+    operating_revenue_subcategory = fields.Selection([
+        ("product_sales", "Product Sales"),
+        ("service_revenue", "Service Revenue"),
+        ("other_revenue", "Other Revenue"),
+    ], string="Operating Revenue Sub-Category", tracking=True)
+    cogs_subcategory = fields.Selection([
+        ("direct_raw_materials", "Direct Raw Materials"),
+        ("direct_labor", "Direct Labor (Production Staff)"),
+    ], string="COGS Sub-Category", tracking=True)
+    operating_expenses_subcategory = fields.Selection([
+        ("salaries_wages", "Salaries & Wages"),
+        ("rent_utilities", "Rent & Utilities"),
+        ("marketing", "Marketing"),
+    ], string="Operating Expenses Sub-Category", tracking=True)
+    financial_expenses_subcategory = fields.Selection([
+        ("interest_expense", "Interest Expense"),
+    ], string="Financial Expenses Sub-Category", tracking=True)
+    other_expenses_subcategory = fields.Selection([
+        ("general_administrative_expenses", "General Administrative Expenses"),
+    ], string="Other Expenses Sub-Category", tracking=True)
     # domain handled via account_id_domain compute (and used in XML)
     account_id = fields.Many2one("account.account", string="Account")
     account_id_domain = fields.Char(compute="_compute_account_id_domain")
@@ -55,6 +194,10 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
                                  domain="[('analytic_plan_type', '=', 'section')]")
     project_id = fields.Many2one("account.analytic.account", string="Project",
                                  domain="[('analytic_plan_type', '=', 'project')]")
+    employee_id = fields.Many2one("account.analytic.account", string="Employee",
+                                  domain="[('analytic_plan_type', '=', 'employee')]")
+    asset_id = fields.Many2one("account.analytic.account", string="Asset",
+                               domain="[('analytic_plan_type', '=', 'asset')]")
 
     # ----------------------------
     # UI buttons
@@ -77,6 +220,8 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
                 "department": self.department_id.id if self.department_id else False,
                 "section": self.section_id.id if self.section_id else False,
                 "project": self.project_id.id if self.project_id else False,
+                "employee": self.employee_id.id if self.employee_id else False,
+                "asset": self.asset_id.id if self.asset_id else False,
             },
         }
         return self.env.ref("account_ledger.custom_dynamic_ledger_report_pdf").report_action(self, data=data)
@@ -105,10 +250,13 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
 
             # If you want parent company accounts too, keep it; otherwise remove.
             if rec.company_id:
-                dom.append(("company_id", "in", [rec.company_id.id, rec.company_id.parent_id.id] if rec.company_id.parent_id else [rec.company_id.id]))
+                dom.append(("company_id", "in",
+                            [rec.company_id.id, rec.company_id.parent_id.id] if rec.company_id.parent_id else [
+                                rec.company_id.id]))
 
             # restriction only for non managers
-            is_manager = rec.env.user.has_group("account.group_account_manager") or rec.env.user.has_group("pr_account.custom_group_accounting_manager")
+            is_manager = rec.env.user.has_group("account.group_account_manager") or rec.env.user.has_group(
+                "pr_account.custom_group_accounting_manager")
             if restricted_ids and not is_manager:
                 dom.append(("id", "not in", restricted_ids))
 
@@ -122,6 +270,12 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
             ids.append(self.section_id.id)
         if self.project_id:
             ids.append(self.project_id.id)
+
+        if self.employee_id:
+            ids.append(self.employee_id.id)
+        if self.asset_id:
+            ids.append(self.asset_id.id)
+
         return ids
 
     def _filter_move_lines_by_analytic(self, move_lines):
@@ -195,10 +349,27 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
 
         account_domain = [
             ("main_head", "!=", False),
-            ("company_id", "in", [self.company_id.id, self.company_id.parent_id.id] if self.company_id.parent_id else [self.company_id.id]),
+            ("company_id", "in",
+             [self.company_id.id, self.company_id.parent_id.id] if self.company_id.parent_id else [self.company_id.id]),
         ]
         if self.main_head and self.main_head != "all":
             account_domain.append(("main_head", "=", self.main_head))
+        filter_fields = (
+                MAIN_HEAD_FIELDS +
+                CATEGORY_FIELDS +
+                CURRENT_ASSET_FIELDS +
+                FIXED_ASSET_FIELDS +
+                OTHER_ASSET_FIELDS +
+                CURRENT_LIABILITY_FIELDS +
+                NON_CURRENT_LIABILITY_FIELDS +
+                EQUITY_FIELDS +
+                REVENUE_FIELDS +
+                EXPENSE_FIELDS
+        )
+        for field_name in filter_fields:
+            value = getattr(self, field_name, False)
+            if value:
+                account_domain.append((field_name, "=", value))
         if self.account_id:
             account_domain.append(("id", "=", self.account_id.id))
 
@@ -228,14 +399,16 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
 
         base_domain = [
             ("move_id.state", "=", "posted"),
-            ("company_id", "in", [self.company_id.id, self.company_id.parent_id.id] if self.company_id.parent_id else [self.company_id.id]),
+            ("company_id", "in",
+             [self.company_id.id, self.company_id.parent_id.id] if self.company_id.parent_id else [self.company_id.id]),
             ("account_id", "in", accounts.ids),
         ]
 
         if not analytic_ids:
             # FAST path (SQL group-by)
             initial_map = _map_from_read_group(base_domain + [("date", "<", self.date_start)])
-            period_map = _map_from_read_group(base_domain + [("date", ">=", self.date_start), ("date", "<=", self.date_end)])
+            period_map = _map_from_read_group(
+                base_domain + [("date", ">=", self.date_start), ("date", "<=", self.date_end)])
         else:
             # Analytics selected: fetch once per range, then filter & aggregate in python
             init_lines = aml.search(base_domain + [("date", "<", self.date_start)])
@@ -351,9 +524,11 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
 
     def get_category(self, account):
         if account.main_head == "assets":
-            return getattr(account, "current_assets_category") or getattr(account, "fixed_assets_category") or getattr(account, "other_assets_category") or "Unclassified"
+            return getattr(account, "current_assets_category") or getattr(account, "fixed_assets_category") or getattr(
+                account, "other_assets_category") or "Unclassified"
         if account.main_head == "liabilities":
-            return getattr(account, "current_liability_category") or getattr(account, "liability_non_current_category") or "Unclassified"
+            return getattr(account, "current_liability_category") or getattr(account,
+                                                                             "liability_non_current_category") or "Unclassified"
         if account.main_head == "equity":
             return getattr(account, "equity_category") or "Unclassified"
         if account.main_head == "revenue":
@@ -368,9 +543,9 @@ class CustomDynamicLedgerReportWizard(models.TransientModel):
             return "Unclassified"
 
         subcategory_fields = (
-            CURRENT_ASSET_FIELDS + FIXED_ASSET_FIELDS + OTHER_ASSET_FIELDS +
-            CURRENT_LIABILITY_FIELDS + NON_CURRENT_LIABILITY_FIELDS +
-            EQUITY_FIELDS + REVENUE_FIELDS + EXPENSE_FIELDS
+                CURRENT_ASSET_FIELDS + FIXED_ASSET_FIELDS + OTHER_ASSET_FIELDS +
+                CURRENT_LIABILITY_FIELDS + NON_CURRENT_LIABILITY_FIELDS +
+                EQUITY_FIELDS + REVENUE_FIELDS + EXPENSE_FIELDS
         )
         for f in subcategory_fields:
             if getattr(account, f, False):
