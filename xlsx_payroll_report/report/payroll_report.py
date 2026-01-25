@@ -134,30 +134,30 @@ class PayrollReport(models.AbstractModel):
 
             # Salary rules (KEEP your logic)
             salary_rule_ids = lines.slip_ids.line_ids.mapped("salary_rule_id")
-            order = ['Basic Salary',
-                     'Food',
-                     'Accommodation',
-                     'Transportation',
-                     'Other Payments',
-                     'Other Allowances',
-                     'Car Allowances',
-                     'Fixed Overtime',
-                     'Overtime',
-                     'Gross',
-                     'Late In',
-                     'Early Checkout',
-                     'Annual Time Off',
-                     'Absence',
-                     'HRA',
-                     'Advance Allowances',
-                     'GOSI',
+            order = ["Basic Salary",
+                     "Accommodation",
+                     "Transportation",
+                     "Food",
+                     "Other Payments",
+                     # "Other Allowances",
+                     "Car Allowance",
+                     # "Car Allowances",
+                     "Fixed Overtime",
+                     "Overtime",
+                     "HRA",
+                     "Advance Allowances",
+                     "Sick Time Off",
+                     "Annual Time Off",
 
-                     # 'Annual Time Off',
-                     'Sick Time Off',
-                     'Unpaid Leave',
-                     'Annual Time Off DED',
-                     'Sick Time Off DED',
-                     'Net Salary']
+                     "Gross",
+                     "Late In",
+                     "Early Checkout",
+                     "Absence",
+                     # //            "GOSI",
+                     "Unpaid Leave",
+                     "Annual Time Off DED",
+                     "Sick Time Off DED",
+                     "Net Salary", ]
 
             salary_rule_ids = salary_rule_ids.filtered(lambda s: s.name in order)
 
