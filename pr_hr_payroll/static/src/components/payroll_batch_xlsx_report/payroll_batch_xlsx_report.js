@@ -48,17 +48,20 @@ class PayrollBatchXlsxReport extends Component {
                      "Fixed Overtime",
                      "Overtime",
 
-                     "HRA",
-                     "Advance Allowances",
+
                      "Sick Time Off",
                      "Annual Time Off",
-
-                     "Gross",
                      "Late In",
                      "Early Checkout",
                      "Absence",
                       //            "GOSI",
                      "Unpaid Leave",
+
+
+                     "Gross",
+                      "HRA",
+                     "Advance Allowances",
+
                      "Annual Time Off DED",
                      "Sick Time Off DED",
                      "Net Salary",
