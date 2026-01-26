@@ -144,19 +144,21 @@ class PayrollReport(models.AbstractModel):
                      # "Car Allowances",
                      "Fixed Overtime",
                      "Overtime",
-                     "HRA",
-                     "Advance Allowances",
-                     "Sick Time Off",
-                     "Annual Time Off",
 
-                     "Gross",
+                     # "Sick Time Off",
+                     # "Annual Time Off",
                      "Late In",
                      "Early Checkout",
                      "Absence",
                      # //            "GOSI",
                      "Unpaid Leave",
-                     "Annual Time Off DED",
-                     "Sick Time Off DED",
+
+                     "Gross",
+                     "HRA",
+                     "Advance Allowances",
+                     #
+                     # "Annual Time Off DED",
+                     # "Sick Time Off DED",
                      "Net Salary", ]
 
             salary_rule_ids = salary_rule_ids.filtered(lambda s: s.name in order)
@@ -175,23 +177,23 @@ class PayrollReport(models.AbstractModel):
                 rules.append(row)
                 col_no += 1
 
-            # --- Add Saudi GOSI virtual columns (display only) ---
-            # to hide comment the below code including loop these will than not be included
-            extra_cols = [
-                ("GOSI_COMP_ADD", "GOSI Company Contribution"),
-                ("GOSI_EMP", "GOSI Employee Deduction"),
-                ("GOSI_COMP_DED", "GOSI Company Deduction"),
-            ]
-            for code, name in extra_cols:
-                rowx = [None, None, None, None, None]
-                rowx[0] = col_no
-                rowx[1] = code
-                rowx[2] = name
-                col_title = f"{cols[col_no]}:{cols[col_no]}"
-                rowx[3] = col_title
-                rowx[4] = 22
-                rules.append(rowx)
-                col_no += 1
+            # # --- Add Saudi GOSI virtual columns (display only) ---
+            # # to hide comment the below code including loop these will than not be included
+            # extra_cols = [
+            #     ("GOSI_COMP_ADD", "GOSI Company Contribution"),
+            #     ("GOSI_EMP", "GOSI Employee Deduction"),
+            #     ("GOSI_COMP_DED", "GOSI Company Deduction"),
+            # ]
+            # for code, name in extra_cols:
+            #     rowx = [None, None, None, None, None]
+            #     rowx[0] = col_no
+            #     rowx[1] = code
+            #     rowx[2] = name
+            #     col_title = f"{cols[col_no]}:{cols[col_no]}"
+            #     rowx[3] = col_title
+            #     rowx[4] = 22
+            #     rules.append(rowx)
+            #     col_no += 1
 
             # Report details (KEEP your logic)
             batch_period = ""
@@ -252,6 +254,10 @@ class PayrollReport(models.AbstractModel):
                 "GOSI Company Contribution",
                 "GOSI Employee Deduction",
                 "GOSI Company Deduction",
+                "Annual Time Off DED",
+                "Sick Time Off DED",
+                "Sick Time Off",
+                "Annual Time Off",
             }
 
             for r in rules:

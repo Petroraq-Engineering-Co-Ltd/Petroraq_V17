@@ -11,7 +11,7 @@
         "security/security.xml",
         "security/ir.model.access.csv",
         "data/payment_terms.xml",
-        "data/sequence.xml",
+        # "data/sequence.xml",
         "views/sale_order_views.xml",
         # "views/sale_order_tree_inherit_petroraq.xml",
         "views/reject_wizard_views.xml",

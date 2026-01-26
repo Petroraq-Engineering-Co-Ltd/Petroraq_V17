@@ -4,7 +4,7 @@
         <function model="ir.sequence" name="write">
             <value eval="[ref('sale.seq_sale_order')]"/>
             <value eval="{
-                'prefix': 'PEC-%(year)s-SQ-',
+                'prefix': 'PEC-%(year)s-SO-',
                 'padding': 4
             }"/>
         </function>
