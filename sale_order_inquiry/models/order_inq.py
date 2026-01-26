@@ -39,7 +39,7 @@ class OrderInquiry(models.Model):
 
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
     inquiry_type = fields.Selection([('construction', 'Project'), ('trading', 'Trading')], string="Inquiry Type",
-                                    default="construction", required=True)
+                                    default="trading", required=True)
     required_file = fields.Binary(string="Required Attachment", attachment=True)
     required_file_name = fields.Char(string="Filename")
 

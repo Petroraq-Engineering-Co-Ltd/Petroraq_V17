@@ -3,7 +3,7 @@
     <record id="seq_product_internal_reference" model="ir.sequence">
         <field name="name">Product Internal Reference</field>
         <field name="code">product.internal.reference</field>
-        <field name="prefix"></field>
+        <field name="prefix">%(year)s</field>
         <field name="padding">4</field>
         <field name="number_next">1</field>
         <field name="number_increment">1</field>

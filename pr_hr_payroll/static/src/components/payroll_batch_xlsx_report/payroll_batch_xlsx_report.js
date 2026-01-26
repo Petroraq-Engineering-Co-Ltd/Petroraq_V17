@@ -41,29 +41,27 @@ class PayrollBatchXlsxReport extends Component {
     get RULE_NAME_ORDER() {
         return [
             "Basic Salary",
-            "Accommodation",
-            "Transportation",
-            "Food",
-//            "Other Payments",
-            "Other Allowances",
-            "Car Allowances",
-            "Fixed Overtime",
-            "Overtime",
-            "HRA",
-            "Advance Allowances",
-            "Sick Time Off",
-            "Annual Time Off",
+                     "Accommodation",
+                     "Transportation",
+                     "Food",
+                     "Car Allowance",
+                     "Fixed Overtime",
+                     "Overtime",
 
+                     "HRA",
+                     "Advance Allowances",
+                     "Sick Time Off",
+                     "Annual Time Off",
 
-            "Gross",
-            "Late In",
-            "Early Checkout",
-            "Absence",
-//            "GOSI",
-            "Unpaid Leave",
-            "Annual Time Off DED",
-            "Sick Time Off DED",
-            "Net Salary",
+                     "Gross",
+                     "Late In",
+                     "Early Checkout",
+                     "Absence",
+                      //            "GOSI",
+                     "Unpaid Leave",
+                     "Annual Time Off DED",
+                     "Sick Time Off DED",
+                     "Net Salary",
         ];
     }
 
@@ -161,7 +159,7 @@ get payrollMonth() {
         }
 
         // 3) Build columns (same rule ordering as XLSX)
-        const columns = this._buildColumns(slips, linesBySlipId);
+        const columns = await this._buildColumns(slips);
 
         // 4) Build rows (matrix)
         const rows = [];
@@ -229,40 +227,36 @@ get payrollMonth() {
         this.state.totals = totals;
     }
 
-    _buildColumns(slips, linesBySlipId) {
-        // Build mapping from rule name -> representative code from the batch lines
-        const nameToCode = new Map();
-        for (const slip of slips) {
-            const slipLines = linesBySlipId.get(slip.id) || [];
-            for (const ln of slipLines) {
-                if (!ln.name || !ln.code) continue;
-                // First code wins for that name
-                if (!nameToCode.has(ln.name)) nameToCode.set(ln.name, ln.code);
-            }
-        }
+async _buildColumns(slips) {
+    // Get salary rule codes by NAME (stable)
+    const rules = await this.orm.searchRead(
+        "hr.salary.rule",
+        [["name", "in", this.RULE_NAME_ORDER]],
+        ["name", "code"]
+    );
+    const nameToCode = new Map(rules.map(r => [r.name, r.code]));
 
-        // Ordered columns from RULE_NAME_ORDER (by NAME like XLSX)
-        const cols = [];
-        for (const ruleName of this.RULE_NAME_ORDER) {
-            const code = nameToCode.get(ruleName) || ruleName; // fallback code if not found
-            cols.push({
-                code,
-                name: ruleName,
-                hidden: this.HIDE_CODES.has(code),
-            });
-        }
-
-        // Extra virtual cols (added, hidden)
-        for (const ex of this.EXTRA_COLS) {
-            cols.push({
-                code: ex.code,
-                name: ex.name,
-                hidden: this.HIDE_CODES.has(ex.code),
-            });
-        }
-
-        return cols;
+    const cols = [];
+    for (const ruleName of this.RULE_NAME_ORDER) {
+        const code = nameToCode.get(ruleName);
+        // if not found, keep a safe fallback but mark it obvious for debugging
+        cols.push({
+            code: code || `__MISSING__${ruleName}`,
+            name: ruleName,
+            hidden: this.HIDE_CODES.has(code),
+        });
     }
+
+    for (const ex of this.EXTRA_COLS) {
+        cols.push({
+            code: ex.code,
+            name: ex.name,
+            hidden: this.HIDE_CODES.has(ex.code),
+        });
+    }
+
+    return cols;
+}
 
     money(v) {
         const n = Number(v || 0);
