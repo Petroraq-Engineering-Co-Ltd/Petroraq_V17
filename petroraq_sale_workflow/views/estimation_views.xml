@@ -94,6 +94,9 @@
                                     <field name="name"/>
                                     <field name="quantity"/>
                                     <field name="uom_id"/>
+                                    <field name="qty_available" optional="show"/>
+                                    <field name="virtual_available" optional="show"/>
+                                    <field name="free_qty" optional="show"/>
                                     <field name="unit_cost"/>
                                     <field name="subtotal" readonly="1"/>
                                 </tree>
@@ -110,6 +113,9 @@
                                     <field name="hours_per_day" readonly="1"/>
                                     <field name="quantity_hours" readonly="1"/>
                                     <field name="uom_id"/>
+                                    <field name="qty_available" optional="show"/>
+                                    <field name="virtual_available" optional="show"/>
+                                    <field name="free_qty" optional="show"/>
                                     <field name="unit_cost"/>
                                     <field name="subtotal" readonly="1"/>
                                 </tree>
@@ -127,6 +133,9 @@
                                     <field name="quantity_hours" readonly="1"/>
                                     <field name="uom_id"/>
                                     <field name="unit_cost"/>
+                                    <field name="qty_available" optional="show"/>
+                                    <field name="virtual_available" optional="show"/>
+                                    <field name="free_qty" optional="show"/>
                                     <field name="subtotal" readonly="1"/>
                                 </tree>
                             </field>
