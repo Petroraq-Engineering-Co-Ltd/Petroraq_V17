@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': "Petroraq Tax Invoice Report Custom",
-    'author': "Mahmoud Salah",
+    'author': "Petroraq",
     'website': "http://www.petroraq.com",
     'category': 'Uncategorized',
     'version': '0.1',
@@ -23,5 +23,7 @@
         'report/custom_invoice.xml',
         'report/custom_invoice_header_footer.xml',
         'views/views.xml',
+        'data/custom_mail.xml',
+
     ],
 }

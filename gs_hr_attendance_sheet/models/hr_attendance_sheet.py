@@ -30,7 +30,8 @@ class HrAttendance(models.Model):
     def _onchange_check_in_gs(self):
         for rec in self:
             if rec.employee_id and rec.check_in:
-                leave_ids = self.env['hr.leave'].search([('employee_id', '=', rec.employee_id.id)])
+                leave_ids = self.env['hr.leave'].search(
+                    [('employee_id', '=', rec.employee_id.id), ('state', '=', 'validate'), ])
                 for leave_id in leave_ids:
                     if leave_id.holiday_status_id.work_entry_type_id.id == self.env.ref(
                             'hr_work_entry_contract.work_entry_type_unpaid_leave').id:
@@ -111,13 +112,13 @@ class hrPayslip(models.Model):
                 difftime_work_entry = work_entry_obj.search([('code', '=', 'ATTSHDT')])
                 # total_unpaid_leave_hours = rec.attendance_sheet_id.unpaid_leave * rec.contract_id.resource_calendar_id.hours_per_day
                 total_unpaid_leave_hours = rec.attendance_sheet_id.unpaid_leave * (
-                            rec.contract_id.resource_calendar_id.hours_per_day + 1)
+                        rec.contract_id.resource_calendar_id.hours_per_day + 1)
                 # total_paid_leave_hours = rec.attendance_sheet_id.paid_leave * rec.contract_id.resource_calendar_id.hours_per_day
                 total_paid_leave_hours = rec.attendance_sheet_id.paid_leave * (
-                            rec.contract_id.resource_calendar_id.hours_per_day + 1)
+                        rec.contract_id.resource_calendar_id.hours_per_day + 1)
                 # total_num_att_hours = rec.attendance_sheet_id.num_att * rec.contract_id.resource_calendar_id.hours_per_day
                 total_num_att_hours = rec.attendance_sheet_id.num_att * (
-                            rec.contract_id.resource_calendar_id.hours_per_day + 1)
+                        rec.contract_id.resource_calendar_id.hours_per_day + 1)
                 attendances = self.env['hr.attendance'].search(
                     [('employee_id', '=', rec.employee_id.id), ('check_in', '>=', rec.date_from),
                      ('check_out', '<=', rec.date_to)])
@@ -450,22 +451,32 @@ class AttendanceSheet(models.Model):
                 sheet.tot_overtime = tot_overtime_hours_from_calc_def
                 if sheet.employee_id.add_overtime:
                     basic_salary = sheet.employee_id.contract_id.wage or 0
-                    hourly_rate = (basic_salary / 26 / 8) * 1.5  # requested formula
+                    hourly_rate = (basic_salary / 30 / 8) * 1.5
                     sheet.tot_overtime_amount = sheet.tot_overtime * hourly_rate
                 else:
                     sheet.tot_overtime_amount = 0
             else:
                 worked_hours = sum(sheet.line_ids.filtered(lambda l: l.worked_hours > 0).mapped("worked_hours"))
                 overtime_lines = sheet.line_ids.filtered(
-                    lambda l: l.worked_hours > 9 or (l.pl_sign_in == 0 and l.ac_sign_in > 0))
+                    lambda l: l.worked_hours > 9 or (l.pl_sign_in == 0 and l.ac_sign_in > 0)
+                )
+
                 monthly_working_hours = 260 if sheet.employee_id.resource_calendar_id.id == 6 else 208
                 if worked_hours >= monthly_working_hours:
                     tot_overtime_custom = worked_hours - monthly_working_hours
                 else:
-                    tot_overtime_custom = 0
-                sheet.tot_overtime = tot_overtime_custom if sheet.employee_id.add_overtime else 0
-                sheet.tot_overtime_amount = (((
-                                                          tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.wage) / monthly_working_hours) if sheet.employee_id.add_overtime else 0
+                    tot_overtime_custom = 0.0
+
+                sheet.tot_overtime = tot_overtime_custom if sheet.employee_id.add_overtime else 0.0
+
+                if sheet.employee_id.add_overtime and sheet.tot_overtime:
+                    wage = sheet.employee_id.contract_id.wage or 0.0
+                    hours_per_day = sheet.employee_id.contract_id.resource_calendar_id.hours_per_day or 8.0
+                    hourly_rate = (wage / 30.0) / hours_per_day
+                    sheet.tot_overtime_amount = sheet.tot_overtime * hourly_rate * 1.5
+                else:
+                    sheet.tot_overtime_amount = 0.0
+
             # sheet.tot_overtime_amount = (((tot_overtime_custom * 1.5) * sheet.employee_id.contract_id.wage) / 208) if sheet.employee_id.add_overtime else 0
             sheet.no_overtime = len(overtime_lines)
             # Compute Total Late In
@@ -1264,6 +1275,9 @@ class AttendanceSheetLine(models.Model):
                               required=False, readonly=True)
     note = fields.Text("Note", readonly=True)
 
+    def _get_month_days_divisor(self, the_date):
+        return 30
+
     @api.depends("employee_id",
                  "date",
                  "pl_sign_in",
@@ -1276,7 +1290,7 @@ class AttendanceSheetLine(models.Model):
             if line.employee_id and line.employee_id.contract_id and line.date:
                 start_of_month = date_utils.start_of(line.date, 'month')
                 end_of_month = date_utils.end_of(line.date, 'month')
-                month_days = (end_of_month - start_of_month).days + 1
+                month_days = self._get_month_days_divisor(line.date)
                 net_salary_amount = line.employee_id.contract_id.gross_amount
                 day_amount = net_salary_amount / month_days
                 line.day_amount = day_amount
@@ -1299,7 +1313,7 @@ class AttendanceSheetLine(models.Model):
             if line.employee_id and line.date and line.late_in > 0:
                 start_of_month = date_utils.start_of(line.date, 'month')
                 end_of_month = date_utils.end_of(line.date, 'month')
-                month_days = (end_of_month - start_of_month).days + 1
+                month_days = self._get_month_days_divisor(line.date)
                 net_salary_amount = line.employee_id.contract_id.gross_amount
                 day_amount = net_salary_amount / month_days
                 # hours_per_day = line.pl_sign_out - line.pl_sign_in
@@ -1337,7 +1351,7 @@ class AttendanceSheetLine(models.Model):
         for line in self:
             start_of_month = date_utils.start_of(line.date, 'month')
             end_of_month = date_utils.end_of(line.date, 'month')
-            month_days = (end_of_month - start_of_month).days + 1
+            month_days = self._get_month_days_divisor(line.date)
             net_salary_amount = line.employee_id.contract_id.gross_amount
             day_amount = net_salary_amount / month_days
             if line.status == "ab":
@@ -1361,7 +1375,7 @@ class AttendanceSheetLine(models.Model):
             if line.worked_hours > 0:
                 start_of_month = date_utils.start_of(line.date, 'month')
                 end_of_month = date_utils.end_of(line.date, 'month')
-                month_days = (end_of_month - start_of_month).days + 1
+                month_days = self._get_month_days_divisor(line.date)
                 # net_salary_amount = line.employee_id.contract_id.gross_amount
                 net_salary_amount = line.employee_id.contract_id.wage
                 day_amount = net_salary_amount / month_days
@@ -1370,7 +1384,7 @@ class AttendanceSheetLine(models.Model):
 
                 if line.pl_sign_in > 0 and line.ac_sign_in > 0:
                     line.overtime_amount = (((
-                                                         line.worked_hours - 1) - line.employee_id.resource_calendar_id.hours_per_day) * 1.5 * day_amount) / hours_per_day
+                                                     line.worked_hours - 1) - line.employee_id.resource_calendar_id.hours_per_day) * 1.5 * day_amount) / hours_per_day
                 elif line.pl_sign_in == 0 and line.ac_sign_in > 0:
                     line.overtime_amount = ((line.worked_hours - 1) * 1.5 * day_amount) / hours_per_day
 

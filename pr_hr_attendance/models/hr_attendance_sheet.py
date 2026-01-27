@@ -11,7 +11,6 @@ import logging
 from datetime import datetime, timedelta
 import pandas as pd
 
-
 _logger = logging.getLogger(__name__)
 
 
@@ -25,10 +24,10 @@ class HrAttendanceSheet(models.Model):
     # region [Fields]
 
     att_notification_id = fields.Many2one(comodel_name='pr.hr.attendance.notification',
-                               string='Attendance Notification')
+                                          string='Attendance Notification')
     tot_late_in_minutes = fields.Float(compute="_compute_sheet_total",
-                                      string="Total Late In Minutes",
-                                      readonly=True, store=True)
+                                       string="Total Late In Minutes",
+                                       readonly=True, store=True)
     tot_early_checkout = fields.Float(compute="_compute_sheet_total",
                                       string="Total Early Check Out",
                                       readonly=True, store=True)
@@ -36,13 +35,11 @@ class HrAttendanceSheet(models.Model):
                                        string="No of Early Check Out",
                                        readonly=True, store=True)
     tot_early_checkout_amount = fields.Float(compute="_compute_sheet_total",
-                                      string="Total Early Check Out Amount",
-                                      readonly=True, store=True)
+                                             string="Total Early Check Out Amount",
+                                             readonly=True, store=True)
     early_check_out_minutes = fields.Float(compute="_compute_sheet_total",
-                                      string="Total Early Checkout Minutes",
-                                      readonly=True, store=True)
-
-
+                                           string="Total Early Checkout Minutes",
+                                           readonly=True, store=True)
 
     # endregion [Fields]
 
@@ -77,7 +74,6 @@ class HrAttendanceSheet(models.Model):
             sheet.early_check_out_minutes = sum(early_lines.mapped("early_check_out_minutes")) if early_lines else 0
         return res
 
-
     def get_attendances(self):
         res = super().get_attendances()
         for att_sheet in self:
@@ -95,22 +91,24 @@ class HrAttendanceSheet(models.Model):
                                 line.early_check_out_minutes = early_check_out * 60
                             # Compute Overtime
                             elif line.ac_sign_out > pl_sign_out_custom and line.employee_id.add_overtime:
-                                line.act_overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (line.ac_sign_out - pl_sign_out_custom) > 2 else 0
-                                line.overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (line.ac_sign_out - pl_sign_out_custom) > 2 else 0
+                                line.act_overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (
+                                                                                                           line.ac_sign_out - pl_sign_out_custom) > 2 else 0
+                                line.overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (
+                                                                                                       line.ac_sign_out - pl_sign_out_custom) > 2 else 0
 
-                    # # Ramadan
-                    # if line.pl_sign_in >= line.ac_sign_in:
-                    #     line.late_in = 0
-                    #     line.late_in_minutes = 0
-                    #     if line.ac_sign_out < line.pl_sign_out:
-                    #         early_check_out = line.pl_sign_out - line.ac_sign_out
-                    #         line.early_check_out = early_check_out
-                    #         line.early_check_out_minutes = early_check_out * 60
-                    #     # Compute Overtime
-                    #     elif line.ac_sign_out > line.pl_sign_out and line.employee_id.add_overtime:
-                    #         line.act_overtime = line.ac_sign_out - line.pl_sign_out - 2
-                    #         line.overtime = line.ac_sign_out - line.pl_sign_out - 2
-                    # elif line.ac_sign_in > (line.pl_sign_in + 1):
+                        # # Ramadan
+                        # if line.pl_sign_in >= line.ac_sign_in:
+                        #     line.late_in = 0
+                        #     line.late_in_minutes = 0
+                        #     if line.ac_sign_out < line.pl_sign_out:
+                        #         early_check_out = line.pl_sign_out - line.ac_sign_out
+                        #         line.early_check_out = early_check_out
+                        #         line.early_check_out_minutes = early_check_out * 60
+                        #     # Compute Overtime
+                        #     elif line.ac_sign_out > line.pl_sign_out and line.employee_id.add_overtime:
+                        #         line.act_overtime = line.ac_sign_out - line.pl_sign_out - 2
+                        #         line.overtime = line.ac_sign_out - line.pl_sign_out - 2
+                        # elif line.ac_sign_in > (line.pl_sign_in + 1):
                         elif line.ac_sign_in > line.pl_sign_in + 1:
                             line.late_in = line.ac_sign_in - (line.pl_sign_in + 1)
                             line.late_in_minutes = (line.ac_sign_in - (line.pl_sign_in + 1)) * 60
@@ -123,11 +121,13 @@ class HrAttendanceSheet(models.Model):
                                 line.early_check_out_minutes = early_check_out * 60
                             # Compute Overtime
                             elif line.ac_sign_out > pl_sign_out_custom and line.employee_id.add_overtime:
-                                line.act_overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (line.ac_sign_out - pl_sign_out_custom) > 2 else 0
-                                line.overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (line.ac_sign_out - pl_sign_out_custom) > 2 else 0
+                                line.act_overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (
+                                                                                                           line.ac_sign_out - pl_sign_out_custom) > 2 else 0
+                                line.overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (
+                                                                                                       line.ac_sign_out - pl_sign_out_custom) > 2 else 0
 
 
-                    #############
+                        #############
                         elif line.ac_sign_in < line.pl_sign_in - 1:
                             line.late_in = 0
                             line.late_in_minutes = 0
@@ -139,14 +139,17 @@ class HrAttendanceSheet(models.Model):
                                 line.early_check_out_minutes = early_check_out * 60
                             # Compute Overtime
                             elif line.ac_sign_out > pl_sign_out_custom and line.employee_id.add_overtime:
-                                line.act_overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (line.ac_sign_out - pl_sign_out_custom) > 2 else 0
-                                line.overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (line.ac_sign_out - pl_sign_out_custom) > 2 else 0
+                                line.act_overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (
+                                                                                                           line.ac_sign_out - pl_sign_out_custom) > 2 else 0
+                                line.overtime = (line.ac_sign_out - pl_sign_out_custom - 2) if (
+                                                                                                       line.ac_sign_out - pl_sign_out_custom) > 2 else 0
 
                     # Compute Overtime If Employee Work In Weekend Or In Public Holiday
                     if line.ac_sign_in and line.pl_sign_in == 0:
-                        line.act_overtime = line.ac_sign_out - line.ac_sign_in if (line.ac_sign_out - line.ac_sign_in) > 0 else 0
-                        line.overtime = line.ac_sign_out - line.ac_sign_in if (line.ac_sign_out - line.ac_sign_in) > 0 else 0
-
+                        line.act_overtime = line.ac_sign_out - line.ac_sign_in if (
+                                                                                          line.ac_sign_out - line.ac_sign_in) > 0 else 0
+                        line.overtime = line.ac_sign_out - line.ac_sign_in if (
+                                                                                      line.ac_sign_out - line.ac_sign_in) > 0 else 0
 
                 # Check Absence Before Weekend
                 # if line.status == "weekend":
@@ -217,6 +220,9 @@ class HrAttendanceSheet(models.Model):
             'number_of_days': self.no_overtime,
             'number_of_hours': self.tot_overtime,
         }]
+        # if not self.overtime_approved:
+        #     overtime = []
+
         absence = [{
             'name': "Absence",
             'code': 'ABS',
@@ -334,7 +340,6 @@ class HrAttendanceSheet(models.Model):
             self.write({'state': 'done'})
 
 
-
 class AttendanceSheetLine(models.Model):
     # region [Initial]
     _inherit = 'attendance.sheet.line'
@@ -345,7 +350,8 @@ class AttendanceSheetLine(models.Model):
     late_in_minutes = fields.Float("Late In Minutes", readonly=True)
     early_check_out_minutes = fields.Float("Early Checkout Minutes", readonly=True)
     early_check_out = fields.Float("Early Checkout", readonly=True)
-    early_check_out_amount = fields.Float("Early Checkout Amount", readonly=True, compute="_compute_early_check_out_amount", store=True)
+    early_check_out_amount = fields.Float("Early Checkout Amount", readonly=True,
+                                          compute="_compute_early_check_out_amount", store=True)
 
     # endregion [Fields]
 
@@ -373,9 +379,6 @@ class AttendanceSheetLine(models.Model):
                 line.early_check_out_amount = (line.early_check_out * day_amount) / hours_per_day
             else:
                 line.early_check_out_amount = 0
-
-
-
 
                 # early_check_out_policy = line.att_sheet_id.att_policy_id.early_rule_id if (line.att_sheet_id.att_policy_id and line.att_sheet_id.att_policy_id.early_rule_id) else False
                 # if early_check_out_policy:

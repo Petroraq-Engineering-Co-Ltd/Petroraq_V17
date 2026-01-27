@@ -22,9 +22,9 @@ class HrPayslipRun(models.Model):
         ('submitted', 'Submitted to HR'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
-    ], string='Approval Status', default='draft', copy=False,tracking=True)
+    ], string='Approval Status', default='draft', copy=False, tracking=True)
 
-    rejection_reason = fields.Text(string="Rejection Reason", readonly=True,tracking=True)
+    rejection_reason = fields.Text(string="Rejection Reason", readonly=True, tracking=True)
 
     @api.depends("state")
     def _compute_approval_state(self):
@@ -172,23 +172,27 @@ class HrPayslipRun(models.Model):
 
     def action_validate(self):
         res = super().action_validate()
+        journal = self.env.ref('pr_account.journal_journal_voucher')
+
         for rec in self:
+            pay_slips = rec.slip_ids.filtered(lambda s: not s.hold_salary)
+
             move_line_ids = []
-            for slip in rec.slip_ids:
+            for slip in pay_slips:
                 move_line_ids += slip.prepare_payslip_entry_vals_lines()
             salary_journal_entry_id = self.env['account.move'].sudo().with_context(check_move_validity=False,
                                                                                    skip_invoice_sync=True).create({
-                'ref': f"Salary For Month {rec.date_end.month} year {rec.date_end.year}",
+                'ref': f"Payslip Batch of PETRORAQ Company for {rec.date_end.strftime('%B')} {rec.date_end.year}",
                 'date': fields.Date.today(),
                 'move_type': 'entry',
+                'journal_id': journal.id,
+
                 'line_ids': move_line_ids,
             })
             if salary_journal_entry_id:
                 rec.salary_journal_entry_id = salary_journal_entry_id.id
-                for slip_sa in rec.slip_ids:
-                    slip_sa.sudo().write({
-                        'salary_journal_entry_id': salary_journal_entry_id.id,
-                    })
+                for slip_sa in pay_slips:
+                    slip_sa.sudo().write({'salary_journal_entry_id': salary_journal_entry_id.id})
             rec.write({'state': 'close'})
         return res
 
@@ -198,7 +202,7 @@ class HrPayslipRun(models.Model):
                 rec.salary_journal_entry_id.sudo().with_context(check_move_validity=False,
                                                                 skip_invoice_sync=True).action_post()
             for slip_sa in rec.slip_ids.filtered(
-                    lambda s: s.salary_journal_entry_id.id == rec.salary_journal_entry_id.id):
+                    lambda s: s.salary_journal_entry_id.id == rec.salary_journal_entry_id.id and not s.hold_salary):
                 slip_sa.sudo().write({
                     'state': 'paid',
                     'paid_date': fields.Date.today(),

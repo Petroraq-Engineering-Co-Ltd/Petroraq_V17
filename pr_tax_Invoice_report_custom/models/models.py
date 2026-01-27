@@ -4,8 +4,6 @@ from odoo.tools.misc import formatLang
 from collections import defaultdict
 from contextlib import ExitStack, contextmanager
 
-
-
 from odoo import models, fields, api, Command
 from odoo.exceptions import UserError
 import qrcode
@@ -20,6 +18,7 @@ try:
 except ImportError:
     _logger.warning("The num2words python library is not installed, amount-to-text features won't be fully available.")
     num2words = None
+
 
 class generateQrCode():
 
@@ -102,7 +101,7 @@ class AccountMove(models.Model):
 
         return f"{int_words_english} And {fractional_words_english} Halala"
 
-# ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     # conivert string value to hexa value
     def _string_to_hex(self, value):
@@ -152,12 +151,8 @@ class AccountMove(models.Model):
         qr_info = base64.b64encode(bytes.fromhex(qr_hex)).decode()
         self.custom_qr_image = generateQrCode.generate_qr_code(qr_info)
 
-
-
-
-
-
-
-
-
-
+    def _get_mail_template(self):
+        self.ensure_one()
+        if self.move_type in ("out_invoice", "out_refund"):
+            return "pr_tax_Invoice_report_custom.petroraq_invoice_send_template"
+        return super()._get_mail_template()
