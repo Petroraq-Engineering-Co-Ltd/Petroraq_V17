@@ -12,6 +12,11 @@ class SaleOrder(models.Model):
         readonly=True,
         help="Cost center linked to this project / work order."
     )
+    inquiry_type = fields.Selection(
+        [('construction', 'Contracting'), ('trading', 'Trading')],
+        string="Inquiry Type",
+        default="trading",
+    )
 
     def action_create_work_order(self):
         """Create Work Order + Project and copy BOQ lines from SO"""
