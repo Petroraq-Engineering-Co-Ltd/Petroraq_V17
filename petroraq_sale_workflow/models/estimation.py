@@ -57,6 +57,34 @@ class PetroraqEstimation(models.Model):
         "estimation_id",
         string="Estimation Lines",
     )
+
+
+    material_line_ids = fields.One2many(
+        "petroraq.estimation.line",
+        "estimation_id",
+        string="Material Lines",
+        domain=[("section_type", "=", "material")],
+    )
+    labor_line_ids = fields.One2many(
+        "petroraq.estimation.line",
+        "estimation_id",
+        string="Labor Lines",
+        domain=[("section_type", "=", "labor")],
+    )
+    equipment_line_ids = fields.One2many(
+        "petroraq.estimation.line",
+        "estimation_id",
+        string="Equipment Lines",
+        domain=[("section_type", "=", "equipment")],
+    )
+    subcontract_line_ids = fields.One2many(
+        "petroraq.estimation.line",
+        "estimation_id",
+        string="Sub Contract / TPS Lines",
+        domain=[("section_type", "=", "subcontract")],
+    )
+
+
     sale_order_id = fields.Many2one("sale.order", string="Quotation", readonly=True, copy=False)
 
     material_total = fields.Monetary(
@@ -155,6 +183,12 @@ class PetroraqEstimation(models.Model):
                     "petroraq_sale_workflow.group_sale_approval_md"))
             )
 
+    @api.onchange("partner_id")
+    def _onchange_partner_company(self):
+        for record in self:
+            if record.partner_id.company_id and record.partner_id.company_id != record.company_id:
+                record.company_id = record.partner_id.company_id
+
     @api.depends(
         "line_ids.subtotal",
         "line_ids.section_type",
@@ -164,23 +198,15 @@ class PetroraqEstimation(models.Model):
     )
     def _compute_totals(self):
         for record in self:
-            totals = {
-                "material": 0.0,
-                "labor": 0.0,
-                "equipment": 0.0,
-                "subcontract": 0.0,
-            }
-            for line in record.line_ids:
-                # When a user adds a new line in the editable list, the line may exist
-                # in-memory before `section_type` is set. Avoid crashing totals.
-                if not line.section_type:
-                    continue
-                totals[line.section_type] += line.subtotal
-            record.material_total = totals["material"]
-            record.labor_total = totals["labor"]
-            record.equipment_total = totals["equipment"]
-            record.subcontract_total = totals["subcontract"]
-            base_total = sum(totals.values())
+            material_total = sum(record.line_ids.filtered(lambda l: l.section_type == "material").mapped("subtotal"))
+            labor_total = sum(record.line_ids.filtered(lambda l: l.section_type == "labor").mapped("subtotal"))
+            equipment_total = sum(record.line_ids.filtered(lambda l: l.section_type == "equipment").mapped("subtotal"))
+            subcontract_total = sum(record.line_ids.filtered(lambda l: l.section_type == "subcontract").mapped("subtotal"))
+            record.material_total = material_total
+            record.labor_total = labor_total
+            record.equipment_total = equipment_total
+            record.subcontract_total = subcontract_total
+            base_total = material_total + labor_total + equipment_total + subcontract_total
             overhead_amount = base_total * (record.overhead_percent or 0.0) / 100.0
             risk_amount = base_total * (record.risk_percent or 0.0) / 100.0
             buffer_total = base_total + overhead_amount + risk_amount
@@ -229,16 +255,23 @@ class PetroraqEstimation(models.Model):
             }
 
         term = self.env.ref("petroraq_sale_workflow.payment_term_immediate", raise_if_not_found=False)
+        company = self.company_id
+        if self.partner_id.company_id:
+            company = self.partner_id.company_id
+        partner = self.partner_id.with_company(company)
+        addresses = partner.address_get(["invoice", "delivery"])
         order_vals = {
             "partner_id": self.partner_id.id,
-            "company_id": self.company_id.id,
-            "currency_id": self.currency_id.id,
+            "company_id": company.id,
+            "currency_id": company.currency_id.id,
             "inquiry_type": "construction",
             "payment_term_id": term.id if term else False,
+            "partner_invoice_id": addresses.get("invoice"),
+            "partner_shipping_id": addresses.get("delivery"),
         }
         if self.order_inquiry_id:
             order_vals["order_inquiry_id"] = self.order_inquiry_id.id
-        order = self.env["sale.order"].create(order_vals)
+        order = self.env["sale.order"].with_company(company).create(order_vals)
 
         self.sale_order_id = order.id
 
@@ -293,43 +326,58 @@ class PetroraqEstimationLine(models.Model):
         required=True,
         ondelete="cascade",
     )
+
     section_type = fields.Selection(
         SECTION_TYPES,
         string="Section",
         required=True,
         default=lambda self: self.env.context.get("default_section_type"),
     )
+
     product_id = fields.Many2one("product.product", string="Product")
     name = fields.Char(string="Description")
-    # For Labor/Equipment the business wants: (count) * (days) * (8 hours/day) = qty (hours)
+
+    # For Labor/Equipment the business wants:
+    # (count) * (days) * (8 hours/day) = qty (hours)
     resource_count = fields.Float(string="Count", default=1.0)
     days = fields.Float(string="Days", default=1.0)
     hours_per_day = fields.Float(string="Hours/Day", default=8.0)
+
     quantity_hours = fields.Float(
         string="Total Hours",
         compute="_compute_quantity_hours",
         store=False,
         readonly=True,
     )
+
     quantity = fields.Float(
         string="Quantity",
         default=1.0,
         help="Used for Material/Subcontract. For Labor/Equipment the quantity is computed as Total Hours.",
     )
+
     uom_id = fields.Many2one("uom.uom", string="Unit of Measure")
+
     currency_id = fields.Many2one(
         "res.currency",
-        related="estimation_id.currency_id",
+        compute="_compute_currency_id",
         store=True,
         readonly=True,
     )
+
     unit_cost = fields.Monetary(string="Unit Cost", currency_field="currency_id")
+
     subtotal = fields.Monetary(
         string="Subtotal",
         currency_field="currency_id",
         compute="_compute_subtotal",
         store=False,
     )
+
+    @api.depends("estimation_id.currency_id")
+    def _compute_currency_id(self):
+        for line in self:
+            line.currency_id = line.estimation_id.currency_id if line.estimation_id else False
 
     @api.onchange("product_id")
     def _onchange_product_id(self):
