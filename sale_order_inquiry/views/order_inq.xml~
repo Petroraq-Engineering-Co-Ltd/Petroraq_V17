@@ -130,14 +130,6 @@
 
                         </group>
                     </group>
-                    <group col="2" invisible="not estimation_id">
-                        <group>
-                            <field name="estimation_id" readonly="1" options="{'no_create': True}"/>
-                        </group>
-                        <group>
-                            <field name="estimation_id" readonly="1" invisible="1"/>
-                        </group>
-                    </group>
 
 
                 </sheet>

@@ -32,6 +32,9 @@ class OrderInquiry(models.Model):
     sale_order_ids = fields.Many2many('sale.order', string="Sale Order's")
     multi_order = fields.Boolean('Multi Orders')
     sale_count = fields.Integer(compute="compute_sale_count", store=True)
+    estimation_id = fields.Many2one("petroraq.estimation", string="Estimation")
+    estimation_ids = fields.One2many("petroraq.estimation", "order_inquiry_id", string="Estimations")
+    estimation_count = fields.Integer(compute="_compute_estimation_count", store=False)
 
     date_order = fields.Datetime(string="Inquiry Date", required=True, readonly=False, copy=False, help="Inquiry Date",
                                  default=fields.Datetime.now)
@@ -261,12 +264,43 @@ class OrderInquiry(models.Model):
             'target': 'current',
         }
 
+    def view_estimation(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Estimation",
+            "res_model": "petroraq.estimation",
+            "domain": [("id", "in", self.estimation_ids.ids)],
+            "view_mode": "tree,form",
+            "target": "current",
+        }
+
     def action_create_quotation(self):
         self.ensure_one()
-        if self.inquiry_type == "trading":
-            term = self.env.ref("petroraq_sale_workflow.payment_term_trading_advance", raise_if_not_found=False)
-        else:
-            term = self.env.ref("petroraq_sale_workflow.payment_term_immediate", raise_if_not_found=False)
+        if self.inquiry_type == "construction":
+            if self.estimation_id:
+                return {
+                    "type": "ir.actions.act_window",
+                    "name": "Estimation",
+                    "res_model": "petroraq.estimation",
+                    "view_mode": "form",
+                    "res_id": self.estimation_id.id,
+                }
+            estimation = self.env["petroraq.estimation"].create({
+                "partner_id": self.partner_id.id,
+                "order_inquiry_id": self.id,
+                "company_id": self.company_id.id,
+            })
+            self.estimation_id = estimation.id
+            return {
+                "type": "ir.actions.act_window",
+                "name": "Estimation Created",
+                "res_model": "petroraq.estimation",
+                "view_mode": "form",
+                "res_id": estimation.id,
+            }
+
+        term = self.env.ref("petroraq_sale_workflow.payment_term_trading_advance", raise_if_not_found=False)
 
         contact = self._get_or_create_contact_partner()
 
@@ -282,19 +316,6 @@ class OrderInquiry(models.Model):
 
         self.sale_order_id = sale_order.id
         self.sale_order_ids = [(4, sale_order.id)]
-
-        if self.inquiry_type == 'construction':
-            SaleOrderLine = self.env['sale.order.line']
-            seq = 10
-            for title in self._inq_default_construction_sections():
-                SaleOrderLine.create({
-                    'order_id': sale_order.id,
-                    'display_type': 'line_section',
-                    'name': title,
-                    'sequence': seq,
-                    'is_locked_section': True
-                })
-                seq += 10
 
         return {
             'type': 'ir.actions.act_window',
@@ -315,6 +336,11 @@ class OrderInquiry(models.Model):
                 'default_inquiry_id': self.id,
             }
         }
+
+    @api.depends("estimation_ids")
+    def _compute_estimation_count(self):
+        for record in self:
+            record.estimation_count = len(record.estimation_ids)
 
     def action_open_reject_wizard(self):
         self.ensure_one()
