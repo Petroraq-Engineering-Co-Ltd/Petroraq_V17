@@ -146,8 +146,7 @@ class AccountCashPayment(models.Model):
                 cash_payment.journal_entry_id.unlink()
 
             for line in cash_payment.cash_payment_line_ids:
-                line.sudo().write({"state": "draft","reject_reason": ""})
-
+                line.sudo().write({"state": "draft", "reject_reason": ""})
 
             cash_payment.state = "draft"
             cash_payment.accounting_manager_state = "draft"
@@ -309,8 +308,6 @@ class AccountCashPayment(models.Model):
     # endregion [Analytic Distribution Methods]
 
     # region [Crud]
-
-
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -474,6 +471,10 @@ class AccountCashPaymentLine(models.Model):
 
         # detect model by prefix
         model = None
+        domain = [("name", "=", ref)]
+        journal_voucher = self.env.ref(
+            "pr_account.journal_journal_voucher", raise_if_not_found=False
+        )
         if ref.startswith("CPV"):
             model = "pr.account.cash.payment"
         elif ref.startswith("BPV"):
@@ -482,11 +483,17 @@ class AccountCashPaymentLine(models.Model):
             model = "pr.account.bank.receipt"
         elif ref.startswith("CRV"):
             model = "pr.account.cash.receipt"
+        elif ref.startswith("JV"):
+            model = "account.move"
+        elif ref.startswith("JJV"):
+            model = "account.move"
+            if journal_voucher:
+                domain.append(("journal_id", "=", journal_voucher.id))
 
         if not model:
             return
 
-        record = self.env[model].search([('name', '=', ref)], limit=1)
+        record = self.env[model].search(domain, limit=1)
         if not record:
             return
 
