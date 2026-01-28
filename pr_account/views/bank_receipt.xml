@@ -215,7 +215,14 @@
                                    force_save="1"
                                    options="{'no_create':True,'no_create_edit':True,'no_quick_create':True}"/>
 
+
                             <field name="description"/>
+                            <button name="action_open_reference_record"
+                                    type="object"
+                                    icon="fa-external-link"
+                                    class="oe_link"
+                                    invisible="not reference_number"
+                                    help="Open Linked Document"/>
                             <field name="reference_number"/>
 
                             <field name="amount"
