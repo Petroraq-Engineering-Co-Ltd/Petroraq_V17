@@ -659,17 +659,14 @@ class SaleOrder(models.Model):
                 currency = order.currency_id or order.company_id.currency_id
                 estimation_total = currency.round(order.estimation_id.total_with_profit or 0.0)
                 quotation_total = currency.round(order.amount_untaxed or 0.0)
-                if float_compare(
-                        estimation_total,
-                        quotation_total,
-                        precision_rounding=currency.rounding,
-                ) != 0:
-                    raise UserError(
-                        _("The quotation total must match the estimation total before submission.")
-                    )
-        self.approval_state = "to_manager"
-        self.state = "draft"
-        self.approval_comment = False
+                if float_compare(estimation_total, quotation_total, precision_rounding=currency.rounding) != 0:
+                    raise UserError(_("The quotation total must match the estimation total before submission."))
+
+        self.write({
+            "approval_state": "to_manager",
+            "approval_comment": False,
+        })
+        return True
 
     def action_md_approve(self):
         for order in self:

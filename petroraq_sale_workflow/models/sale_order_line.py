@@ -108,6 +108,7 @@ class SaleOrderLine(models.Model):
         for line in self:
             line.final_price_unit = line.price_unit or 0.0
 
+
     def _prepare_invoice_line(self, **optional_values):
         vals = super()._prepare_invoice_line(**optional_values)
 
