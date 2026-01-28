@@ -396,6 +396,47 @@ class AccountBankReceiptLine(models.Model):
             if bank_receipt_line.amount <= 0:
                 raise ValidationError("Amount Must Be Greater Than 0 ( Zero ) !!")
 
+    def action_open_reference_record(self):
+        self.ensure_one()
+        ref = self.reference_number
+
+        if not ref:
+            return
+        # detect model by prefix
+        model = None
+        domain = [("name", "=", ref)]
+        journal_voucher = self.env.ref(
+            "pr_account.journal_journal_voucher", raise_if_not_found=False
+        )
+        if ref.startswith("CPV"):
+            model = "pr.account.cash.payment"
+        elif ref.startswith("BPV"):
+            model = "pr.account.bank.payment"
+        elif ref.startswith("BRV"):
+            model = "pr.account.bank.receipt"
+        elif ref.startswith("CRV"):
+            model = "pr.account.cash.receipt"
+        elif ref.startswith("JV"):
+            model = "account.move"
+        elif ref.startswith("JJV"):
+            model = "account.move"
+            if journal_voucher:
+                domain.append(("journal_id", "=", journal_voucher.id))
+
+        if not model:
+            return
+
+        record = self.env[model].search(domain, limit=1)
+        if not record:
+            return
+
+        # OPEN IN NEW TAB
+        return {
+            "type": "ir.actions.act_url",
+            "target": "new",
+            "url": f"/web#id={record.id}&model={model}&view_type=form"
+        }
+
     # endregion [Constrains]
 
     # region [Compute Methods]
