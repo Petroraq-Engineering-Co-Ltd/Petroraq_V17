@@ -475,9 +475,12 @@ class AccountBankPaymentLine(models.Model):
 
         if not ref:
             return
-
         # detect model by prefix
         model = None
+        domain = [("name", "=", ref)]
+        journal_voucher = self.env.ref(
+            "pr_account.journal_journal_voucher", raise_if_not_found=False
+        )
         if ref.startswith("CPV"):
             model = "pr.account.cash.payment"
         elif ref.startswith("BPV"):
@@ -486,11 +489,17 @@ class AccountBankPaymentLine(models.Model):
             model = "pr.account.bank.receipt"
         elif ref.startswith("CRV"):
             model = "pr.account.cash.receipt"
+        elif ref.startswith("JV"):
+            model = "account.move"
+        elif ref.startswith("JJV"):
+            model = "account.move"
+            if journal_voucher:
+                domain.append(("journal_id", "=", journal_voucher.id))
 
         if not model:
             return
 
-        record = self.env[model].search([('name', '=', ref)], limit=1)
+        record = self.env[model].search(domain, limit=1)
         if not record:
             return
 
