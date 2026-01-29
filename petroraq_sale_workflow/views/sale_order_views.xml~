@@ -236,11 +236,6 @@
                             <field name="section_type" column_invisible="1"/>
                             <field name="product_id"/>
                             <field name="name"/>
-                            <field name="section_subtotal_display"
-                                   widget="html"
-                                   readonly="1"
-                                   invisible="1"
-                                   column_invisible="True"/>
                             <field name="quantity"/>
                             <field name="quantity_hours"/>
                             <field name="uom_id"/>
