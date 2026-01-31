@@ -7,14 +7,14 @@
         <field name="arch" type="xml">
             <xpath expr="//div[@name='button_box']" position="inside">
                 <div class="oe_stat_button"
-                     invisible="move_type not in ('out_invoice', 'out_refund') or retention_amount == 0">
+                     attrs="{'invisible': ['|', ('move_type', 'not in', ('out_invoice', 'out_refund')), ('retention_amount', '=', 0)]}">
                     <field name="retention_amount" widget="statinfo" string="Retention"/>
                 </div>
             </xpath>
             <xpath expr="//field[@name='invoice_payment_term_id']" position="after">
                 <field name="retention_amount"
                        readonly="1"
-                       invisible="move_type not in ('out_invoice', 'out_refund')"/>
+                       attrs="{'invisible': [('move_type', 'not in', ('out_invoice', 'out_refund'))]}"/>
             </xpath>
         </field>
     </record>
