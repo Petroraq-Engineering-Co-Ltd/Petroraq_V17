@@ -17,24 +17,23 @@
                         <style>
                             @font-face {
                             font-family: 'DroidArabicNaskh';
-                            src: url('tax_Invoice_report/static/src/font/droid-arabic-naskh-regular/Droid Arabic Naskh
-                            Regular/Droid Arabic Naskh Regular.ttf');
+                            src: url('tax_Invoice_report/static/src/font/droid-arabic-naskh-regular/Droid Arabic Naskh Regular/Droid Arabic Naskh Regular.ttf');
                             }
                             html {
-                            margin: 0;
-                            padding: 0;
+                                margin: 0;
+                                padding: 0;
                             }
                             body {
-                            font-family: 'DroidArabicNaskh', sans-serif;
-                            margin: 0;
-                            padding: 0;
+                                font-family: 'DroidArabicNaskh', sans-serif;
+                                margin: 0;
+                                padding: 0;
                             html, body, .page, .content, main, div#wrapwrap {
-                            margin: 0 !important;
-                            padding: 0 !important;
-                            width: 100% !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                                width: 100% !important;
                             }
                             body {
-                            font-family: 'DroidArabicNaskh', sans-serif;
+                                font-family: 'DroidArabicNaskh', sans-serif;
                             }
 
                         </style>
@@ -57,7 +56,7 @@
                                         <span t-esc="o.partner_id.name"/>
                                     </td>
                                     <td style="text-align:right">
-                                        <!--                                            <span t-esc="o.translate_to_arabic(o.partner_id.arabic_name)"/>-->
+<!--                                            <span t-esc="o.translate_to_arabic(o.partner_id.arabic_name)"/>-->
                                         <span t-esc="o.partner_id.arabic_name"/>
                                     </td>
                                     <td style="text-align:right;">
@@ -94,12 +93,12 @@
                                 <tr>
                                     <td style="text-align:left;">Supplier:</td>
                                     <td style="text-align:left">
-                                        <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.invoice_date"/>-->
+<!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.invoice_date"/>-->
                                         <span t-if="o.move_type == 'out_invoice'">Petroraq Engineering Co. Ltd</span>
                                         <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.name"/>
                                     </td>
                                     <td style="text-align:right">
-                                        <!--                                            <span t-esc="o.convert_to_eastern_arabic_numerals(o.invoice_date)"/>-->
+<!--                                            <span t-esc="o.convert_to_eastern_arabic_numerals(o.invoice_date)"/>-->
                                         <span t-if="o.move_type == 'out_invoice'">شركة بيتروراق انجنيرنج المحدودة</span>
                                         <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.arabic_name"/>
                                     </td>
@@ -110,33 +109,26 @@
                                 <tr>
                                     <td style="text-align:left">Address:</td>
                                     <td style="text-align:left">
-                                        <span t-if="o.move_type == 'out_invoice'">Al-Majd, King Faisal Street (West), Al
-                                            Jubail
-                                        </span>
-                                        <br/>
+                                        <span t-if="o.move_type == 'out_invoice'">Al-Majd, King Faisal Street (West), Al Jubail</span><br/>
                                         <span t-if="o.move_type == 'out_invoice'">Kingdom of Saudi Arabia</span>
-                                        <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.company_id.city"/><br/>-->
-                                        <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.company_id.country_id.name"/>-->
+<!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.company_id.city"/><br/>-->
+<!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.company_id.country_id.name"/>-->
 
-                                        <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.street"/>
-                                        <br/>
+                                        <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.street"/><br/>
                                         <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.street2"/>
-                                        <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.city"/><br/>-->
-                                        <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.country_id.name"/>-->
+<!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.city"/><br/>-->
+<!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.country_id.name"/>-->
                                     </td>
                                     <td style="text-align:right">
-                                        <span t-if="o.move_type == 'out_invoice'">المجد شارع الملك فيصل (غربي) الجبيل
-                                        </span>
-                                        <br/>
+                                        <span t-if="o.move_type == 'out_invoice'">المجد شارع الملك فيصل (غربي) الجبيل</span><br/>
                                         <span t-if="o.move_type == 'out_invoice'">المملكة العربية السعودية</span>
-                                        <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.translate_to_arabic(o.company_id.city)"/><br/>-->
-                                        <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.translate_to_arabic(o.company_id.country_id.name)"/>-->
+<!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.translate_to_arabic(o.company_id.city)"/><br/>-->
+<!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.translate_to_arabic(o.company_id.country_id.name)"/>-->
 
-                                        <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.arabic_street"/>
-                                        <br/>
+                                        <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.arabic_street"/><br/>
                                         <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.arabic_street2"/>
-                                        <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.partner_id.city)"/><br/>-->
-                                        <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.partner_id.country_id.name)"/>-->
+<!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.partner_id.city)"/><br/>-->
+<!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.partner_id.country_id.name)"/>-->
                                     </td>
                                     <td style="text-align:right;">
                                         : العنوان
@@ -152,10 +144,8 @@
                                         <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.phone"/>
                                     </td>
                                     <td style="text-align:right">
-                                        <span t-if="o.move_type == 'out_invoice'"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals('+966133614446')"/>
-                                        <span t-if="o.move_type == 'in_invoice'"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.phone)"/>
+                                        <span t-if="o.move_type == 'out_invoice'" t-esc="o.convert_phone_to_eastern_arabic_numerals('+966133614446')"/>
+                                        <span t-if="o.move_type == 'in_invoice'" t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.phone)"/>
                                     </td>
                                     <td style="text-align:right;">
                                         : الهاتف
@@ -182,10 +172,8 @@
                                         <span t-if="o.move_type == 'in_invoice'" t-esc="o.partner_id.vat"/>
                                     </td>
                                     <td style="text-align:right">
-                                        <span t-if="o.move_type == 'out_invoice'"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals('311428741500003')"/>
-                                        <span t-if="o.move_type == 'in_invoice'"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.vat)"/>
+                                        <span t-if="o.move_type == 'out_invoice'" t-esc="o.convert_phone_to_eastern_arabic_numerals('311428741500003')"/>
+                                        <span t-if="o.move_type == 'in_invoice'" t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.vat)"/>
                                     </td>
                                     <td style="text-align:right;">
                                         : الرقم الضريبي للمورد
@@ -194,16 +182,12 @@
                                 <tr>
                                     <td style="text-align:left;">Supplier CR #:</td>
                                     <td style="text-align:left">
-                                        <span t-if="o.move_type == 'out_invoice' and o.company_id.l10n_sa_additional_identification_number"
-                                              t-esc="o.company_id.l10n_sa_additional_identification_number"/>
-                                        <span t-if="o.move_type == 'in_invoice' and o.partner_id.l10n_sa_additional_identification_number"
-                                              t-esc="o.partner_id.l10n_sa_additional_identification_number"/>
+                                        <span t-if="o.move_type == 'out_invoice' and o.company_id.l10n_sa_additional_identification_number" t-esc="o.company_id.l10n_sa_additional_identification_number"/>
+                                        <span t-if="o.move_type == 'in_invoice' and o.partner_id.l10n_sa_additional_identification_number" t-esc="o.partner_id.l10n_sa_additional_identification_number"/>
                                     </td>
                                     <td style="text-align:right">
-                                        <span t-if="o.move_type == 'out_invoice' and o.company_id.l10n_sa_additional_identification_number"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals(o.company_id.l10n_sa_additional_identification_number)"/>
-                                        <span t-if="o.move_type == 'in_invoice' and o.partner_id.l10n_sa_additional_identification_number"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.l10n_sa_additional_identification_number)"/>
+                                        <span t-if="o.move_type == 'out_invoice' and o.company_id.l10n_sa_additional_identification_number" t-esc="o.convert_phone_to_eastern_arabic_numerals(o.company_id.l10n_sa_additional_identification_number)"/>
+                                        <span t-if="o.move_type == 'in_invoice' and o.partner_id.l10n_sa_additional_identification_number" t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.l10n_sa_additional_identification_number)"/>
                                     </td>
                                     <td style="text-align:right;">
                                         : سجل التجاري للمورد
@@ -227,33 +211,26 @@
                                 <tr>
                                     <td style="text-align:left">Address:</td>
                                     <td style="text-align:left">
-                                        <span t-if="o.move_type == 'in_invoice'">Al-Majd, King Faisal Street (West), Al
-                                            Jubail
-                                        </span>
-                                        <br/>
+                                        <span t-if="o.move_type == 'in_invoice'">Al-Majd, King Faisal Street (West), Al Jubail</span><br/>
                                         <span t-if="o.move_type == 'in_invoice'">Kingdom of Saudi Arabia</span>
-                                        <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.company_id.city"/><br/>-->
-                                        <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.company_id.country_id.name"/>-->
+<!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.company_id.city"/><br/>-->
+<!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.company_id.country_id.name"/>-->
 
-                                        <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.street"/>
-                                        <br/>
+                                        <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.street"/><br/>
                                         <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.street2"/>
-                                        <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.city"/><br/>-->
-                                        <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.country_id.name"/>-->
+<!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.city"/><br/>-->
+<!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.country_id.name"/>-->
                                     </td>
                                     <td style="text-align:right">
-                                        <span t-if="o.move_type == 'in_invoice'">المجد شارع الملك فيصل (غربي) الجبيل
-                                        </span>
-                                        <br/>
+                                        <span t-if="o.move_type == 'in_invoice'">المجد شارع الملك فيصل (غربي) الجبيل</span><br/>
                                         <span t-if="o.move_type == 'in_invoice'">المملكة العربية السعودية</span>
-                                        <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.company_id.city)"/><br/>-->
-                                        <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.company_id.country_id.name)"/>-->
+<!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.company_id.city)"/><br/>-->
+<!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.company_id.country_id.name)"/>-->
 
-                                        <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.arabic_street"/>
-                                        <br/>
+                                        <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.arabic_street"/><br/>
                                         <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.arabic_street2"/>
-                                        <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.translate_to_arabic(o.partner_id.city)"/><br/>-->
-                                        <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.translate_to_arabic(o.partner_id.country_id.name)"/>-->
+<!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.translate_to_arabic(o.partner_id.city)"/><br/>-->
+<!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.translate_to_arabic(o.partner_id.country_id.name)"/>-->
                                     </td>
                                     <td style="text-align:right;">
                                         : العنوان
@@ -268,10 +245,8 @@
                                         <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.phone"/>
                                     </td>
                                     <td style="text-align:right">
-                                        <span t-if="o.move_type == 'in_invoice'"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals('+966133614446')"/>
-                                        <span t-if="o.move_type == 'out_invoice'"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.phone)"/>
+                                        <span t-if="o.move_type == 'in_invoice'" t-esc="o.convert_phone_to_eastern_arabic_numerals('+966133614446')"/>
+                                        <span t-if="o.move_type == 'out_invoice'" t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.phone)"/>
                                     </td>
                                     <td style="text-align:right;">
                                         : الهاتف
@@ -298,10 +273,8 @@
                                         <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.vat"/>
                                     </td>
                                     <td style="text-align:right">
-                                        <span t-if="o.move_type == 'in_invoice'"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals('311428741500003')"/>
-                                        <span t-if="o.move_type == 'out_invoice'"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.vat)"/>
+                                        <span t-if="o.move_type == 'in_invoice'" t-esc="o.convert_phone_to_eastern_arabic_numerals('311428741500003')"/>
+                                        <span t-if="o.move_type == 'out_invoice'" t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.vat)"/>
                                     </td>
                                     <td style="text-align:right;">
                                         : الرقم الضريبي للعميل
@@ -310,16 +283,12 @@
                                 <tr>
                                     <td style="text-align:left;">Customer CR #:</td>
                                     <td style="text-align:left">
-                                        <span t-if="o.move_type == 'in_invoice' and o.company_id.l10n_sa_additional_identification_number"
-                                              t-esc="o.company_id.l10n_sa_additional_identification_number"/>
-                                        <span t-if="o.move_type == 'out_invoice' and o.partner_id.l10n_sa_additional_identification_number"
-                                              t-esc="o.partner_id.l10n_sa_additional_identification_number"/>
+                                        <span t-if="o.move_type == 'in_invoice' and o.company_id.l10n_sa_additional_identification_number" t-esc="o.company_id.l10n_sa_additional_identification_number"/>
+                                        <span t-if="o.move_type == 'out_invoice' and o.partner_id.l10n_sa_additional_identification_number" t-esc="o.partner_id.l10n_sa_additional_identification_number"/>
                                     </td>
                                     <td style="text-align:right">
-                                        <span t-if="o.move_type == 'in_invoice' and o.company_id.l10n_sa_additional_identification_number"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals(o.company_id.l10n_sa_additional_identification_number)"/>
-                                        <span t-if="o.move_type == 'out_invoice' and o.partner_id.l10n_sa_additional_identification_number"
-                                              t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.l10n_sa_additional_identification_number)"/>
+                                        <span t-if="o.move_type == 'in_invoice' and o.company_id.l10n_sa_additional_identification_number" t-esc="o.convert_phone_to_eastern_arabic_numerals(o.company_id.l10n_sa_additional_identification_number)"/>
+                                        <span t-if="o.move_type == 'out_invoice' and o.partner_id.l10n_sa_additional_identification_number" t-esc="o.convert_phone_to_eastern_arabic_numerals(o.partner_id.l10n_sa_additional_identification_number)"/>
                                     </td>
                                     <td style="text-align:right;">
                                         : سجل التجاري للعميل
@@ -340,7 +309,7 @@
                                             </b>
                                         </td>
                                         <td width="30%">
-                                            <b>البند أو الوصف
+                                            <b>                                                    البند أو الوصف
                                                 <br/>
                                                 Description
                                             </b>
@@ -360,13 +329,13 @@
                                             </b>
                                         </td>
                                         <td width="10%">
-                                            <b>معدل الضريبة
+                                            <b>                                                    معدل الضريبة
                                                 <br/>
                                                 TAX RATE (15%)
                                             </b>
                                         </td>
                                         <td width="10%">
-                                            <b>المبلغ الإجمالي
+                                            <b>                                                    المبلغ الإجمالي
                                                 <br/>
                                                 TOTAL AMOUNT
                                             </b>
@@ -398,17 +367,17 @@
                                             <span t-esc="l.quantity"/>
                                         </td>
                                         <td>
-                                            <!--                                                <span t-esc="'{0:,.2f}'.format(l.price_unit)"-->
+<!--                                                <span t-esc="'{0:,.2f}'.format(l.price_unit)"-->
                                             <span t-esc="l.price_unit"
-                                                  t-options='{"widget": "monetary", "display_currency": l.currency_id}'/>
+                                            t-options='{"widget": "monetary", "display_currency": l.currency_id}'/>
                                         </td>
                                         <td>
                                             <span t-esc="l.tax_ids.name"/>
                                         </td>
                                         <td>
-                                            <!--                                                <span t-esc="'{0:,.2f}'.format(l.price_subtotal)"-->
+<!--                                                <span t-esc="'{0:,.2f}'.format(l.price_subtotal)"-->
                                             <span t-esc="l.price_subtotal"
-                                                  t-options='{"widget": "monetary", "display_currency": l.currency_id}'/>
+                                            t-options='{"widget": "monetary", "display_currency": l.currency_id}'/>
                                         </td>
                                     </tr>
                                 </table>
@@ -420,9 +389,9 @@
                                             Untaxed Amount
                                         </td>
                                         <td width="23%" style="text-align:center;border:1px solid #000000">
-                                            <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"-->
+<!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"-->
                                             <span t-esc="o.amount_untaxed"
-                                                  t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                            t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                         <td width="42%" style="text-align:right;border:1px solid #000000">
                                             الإجمالي (باستثناء ضريبة القيمة المضافة)
@@ -434,7 +403,7 @@
                                         </td>
                                         <td width="23%" style="text-align:center;border:1px solid #000000">
                                             <span t-esc="o.amount_tax"
-                                                  t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                            t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                         <td width="42%" style="text-align:right;border:1px solid #000000">
                                             مجموع ضريبة القيمة المضاف
@@ -446,7 +415,7 @@
                                         </td>
                                         <td width="23%" style="text-align:center;border:1px solid #000000">
                                             <span t-esc="o.retention_deduct_amount"
-                                                  t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                            t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                         <td width="42%" style="text-align:right;border:1px solid #000000">
                                             خصم الاستبقاء
@@ -457,9 +426,9 @@
                                             Total Due Amount:
                                         </td>
                                         <td width="23%" style="text-align:center;border:1px solid #000000">
-                                            <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_residual)"-->
+<!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_residual)"-->
                                             <span t-esc="o.amount_residual"
-                                                  t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                            t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                         <td width="42%" style="text-align:right;border:1px solid #000000">
                                             : إجمالي المبلغ المستحق
@@ -482,13 +451,13 @@
                                         </td>
                                     </tr>
                                 </table>
-                                <!--                                    <div class="row">-->
-                                <!--                                        <div class="col-2" style="margin: auto;">-->
-                                <!--                                            <img t-if="o.qr_image"-->
-                                <!--                                                 t-att-src="'/web/image?model=account.move&amp;field=qr_image&amp;id=' + str(o.id)"-->
-                                <!--                                                 style="width: 90%;text-align:right;margin: auto;"/>-->
-                                <!--                                        </div>-->
-                                <!--                                    </div>-->
+<!--                                    <div class="row">-->
+<!--                                        <div class="col-2" style="margin: auto;">-->
+<!--                                            <img t-if="o.qr_image"-->
+<!--                                                 t-att-src="'/web/image?model=account.move&amp;field=qr_image&amp;id=' + str(o.id)"-->
+<!--                                                 style="width: 90%;text-align:right;margin: auto;"/>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
                                 <div class="row">
                                     <div class="col-2" style="margin: auto;">
                                         <img t-if="o.l10n_sa_qr_code_str"
@@ -530,9 +499,9 @@
                                             <td width="25%" style="text-align:left;">
                                                 Alinma Bank
                                             </td>
-                                            <td width="55%" style="text-align:right;">
-                                                بنك : البنك الانماء
-                                            </td>
+                                                                                            <td width="55%" style="text-align:right;">
+                                                                                                بنك : البنك الانماء
+                                                                                            </td>
                                         </tr>
                                         <tr>
                                             <td width="15%" style="text-align:left;">
@@ -541,9 +510,9 @@
                                             <td width="25%" style="text-align:left;">
                                                 68204260514000
                                             </td>
-                                            <td width="55%" style="text-align:right;">
-                                                <span>رقم الحساب: ٦٨٢٠٤٢٦٠٥١٤٠٠٠</span>
-                                            </td>
+                                                                                            <td width="55%" style="text-align:right;">
+                                                                                                <span>رقم الحساب: ٦٨٢٠٤٢٦٠٥١٤٠٠٠</span>
+                                                                                            </td>
                                         </tr>
                                         <tr>
                                             <td width="15%" style="text-align:left;">
@@ -552,11 +521,11 @@
                                             <td width="25%" style="text-align:left;">
                                                 SA0205000068204260514000
                                             </td>
-                                            <td width="55%" style="text-align:right;">
-                                                <!--                                                                                                    <span>رقم الأيبان: SA<span t-esc="o.convert_phone_to_eastern_arabic_numerals('0205000068204260514000')"/> </span>-->
-                                                <!--                                                                                                    <span>SA<span t-esc="o.convert_phone_to_eastern_arabic_numerals('0205000068204260514000')"/> رقم الأيبان: </span>-->
-                                                <span>SA0205000068204260514000 :رقم الأيبان</span>
-                                            </td>
+                                                                                            <td width="55%" style="text-align:right;">
+<!--                                                                                                    <span>رقم الأيبان: SA<span t-esc="o.convert_phone_to_eastern_arabic_numerals('0205000068204260514000')"/> </span>-->
+<!--                                                                                                    <span>SA<span t-esc="o.convert_phone_to_eastern_arabic_numerals('0205000068204260514000')"/> رقم الأيبان: </span>-->
+                                                                                                <span>SA0205000068204260514000 :رقم الأيبان</span>
+                                                                                            </td>
                                         </tr>
                                         <tr>
                                             <td width="15%" style="text-align:left;">
@@ -565,9 +534,9 @@
                                             <td width="25%" style="text-align:left;">
                                                 Al-Jubail
                                             </td>
-                                            <td width="55%" style="text-align:right;">
-                                                فرع - الجبيل
-                                            </td>
+                                                                                            <td width="55%" style="text-align:right;">
+                                                                                                فرع - الجبيل
+                                                                                            </td>
                                         </tr>
                                         <tr>
                                             <td width="15%" style="text-align:left;">
@@ -576,8 +545,8 @@
                                             <td width="25%" style="text-align:left;">
                                                 INMASARI
                                             </td>
-                                            <td width="55%" style="text-align:right;">INMASARI :رقم السويفت
-                                            </td>
+                                                                                            <td width="55%" style="text-align:right;">INMASARI :رقم السويفت
+                                                                                            </td>
                                         </tr>
                                     </table>
                                 </table>
