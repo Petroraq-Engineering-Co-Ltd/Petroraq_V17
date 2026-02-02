@@ -1,5 +1,0 @@
-<odoo>
-     <record id="requisition_menu_invisible" model="res.groups">
-        <field name="name">Invisible</field>
-    </record>
-</odoo>
