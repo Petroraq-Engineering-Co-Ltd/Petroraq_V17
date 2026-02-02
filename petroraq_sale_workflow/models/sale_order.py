@@ -29,6 +29,14 @@ class SaleOrder(models.Model):
         string="Estimation Lines",
         readonly=True,
     )
+    project_attachment_ids = fields.Many2many(
+        "ir.attachment",
+        "sale_order_project_attachment_rel",
+        "sale_order_id",
+        "attachment_id",
+        string="Project Attachments",
+        help="Attachments required for project-type quotations.",
+    )
     estimation_display_line_ids = fields.One2many(
         "petroraq.estimation.display.line",
         compute="_compute_estimation_display_line_ids",
@@ -48,6 +56,14 @@ class SaleOrder(models.Model):
         "order_line.qty_delivered",
         "order_line.product_uom",
     )
+    @api.constrains("inquiry_type", "project_attachment_ids")
+    def _check_project_attachments(self):
+        for order in self:
+            if order.inquiry_type == "construction" and not order.project_attachment_ids:
+                raise ValidationError(
+                    _("Please upload at least one attachment for project-type quotations.")
+                )
+
     def _compute_can_create_remaining_delivery(self):
         Picking = self.env["stock.picking"]
         for order in self:
@@ -179,7 +195,7 @@ class SaleOrder(models.Model):
         help="The amount of Advance payment required upon the order confirmation."
     )
     inquiry_type = fields.Selection(
-        [('construction', 'Contracting'), ('trading', 'Trading')],
+        [('construction', 'Project'), ('trading', 'Trading')],
         string="Inquiry Type",
         default="trading",
     )

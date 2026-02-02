@@ -1,6 +1,5 @@
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
-
+from odoo.exceptions import UserError, ValidationError
 
 class PRWorkOrder(models.Model):
     _name = "pr.work.order"
@@ -66,6 +65,8 @@ class PRWorkOrder(models.Model):
         string="Contract Amount",
         currency_field="currency_id",
         help="Total selling value (from SO).",
+        compute="_compute_budgeted_cost",
+        store=True
     )
     budgeted_cost = fields.Monetary(string="Budgeted Cost", currency_field="currency_id",
                                     compute="_compute_budgeted_cost", store=True)
@@ -76,6 +77,7 @@ class PRWorkOrder(models.Model):
             order.budgeted_cost = sum(
                 order.boq_line_ids.mapped("total")
             )
+            order.contract_amount = order.sale_order_id.amount_total
 
     budgeted_margin = fields.Monetary(
         string="Budgeted Margin",
@@ -182,6 +184,41 @@ class PRWorkOrder(models.Model):
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
     rejected_by = fields.Many2one("res.users", string="Rejected By", tracking=True)
     rejected_date = fields.Datetime(string="Rejected On", tracking=True)
+
+    drawings_attachment_ids = fields.Many2many(
+        "ir.attachment",
+        "pr_work_order_drawings_attachment_rel",
+        "work_order_id",
+        "attachment_id",
+        string="Drawings Attachments",
+        help="Drawings required for this work order.",
+    )
+    scope_attachment_ids = fields.Many2many(
+        "ir.attachment",
+        "pr_work_order_scope_attachment_rel",
+        "work_order_id",
+        "attachment_id",
+        string="Scope of Work Attachments",
+        help="Scope of work documents required for this work order.",
+    )
+    boq_attachment_ids = fields.Many2many(
+        "ir.attachment",
+        "pr_work_order_boq_attachment_rel",
+        "work_order_id",
+        "attachment_id",
+        string="BOQ Attachments",
+        help="BOQ documents required for this work order.",
+    )
+
+    @api.constrains("drawings_attachment_ids", "scope_attachment_ids", "boq_attachment_ids")
+    def _check_required_attachments(self):
+        for rec in self:
+            if not rec.drawings_attachment_ids:
+                raise ValidationError(_("Please upload at least one Drawing attachment."))
+            if not rec.scope_attachment_ids:
+                raise ValidationError(_("Please upload at least one Scope of Work attachment."))
+            if not rec.boq_attachment_ids:
+                raise ValidationError(_("Please upload at least one BOQ attachment."))
 
     @api.depends("contract_amount", "budgeted_cost")
     def _compute_budgeted_margin(self):
