@@ -139,6 +139,8 @@ class CustomPR(models.Model):
             raise ValidationError("Add Unit Price First.")
 
         # Check if an old PR exists for this record name
+
+        # SIDISSUE1
         existing_pr = self.env['purchase.requisition'].sudo().search([('name', '=', rec.name)], limit=1)
         if existing_pr:
             existing_pr.sudo().unlink()

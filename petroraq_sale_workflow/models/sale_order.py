@@ -17,6 +17,24 @@ class SaleOrder(models.Model):
         ("approved", "Approved"),
         ("rejected", "Rejected"),
     ], default="draft", tracking=True, copy=False)
+    estimation_id = fields.Many2one(
+        "petroraq.estimation",
+        string="Estimation",
+        readonly=True,
+        copy=False,
+    )
+    estimation_line_ids = fields.One2many(
+        "petroraq.estimation.line",
+        related="estimation_id.line_ids",
+        string="Estimation Lines",
+        readonly=True,
+    )
+    estimation_display_line_ids = fields.One2many(
+        "petroraq.estimation.display.line",
+        compute="_compute_estimation_display_line_ids",
+        string="Estimation Lines",
+        readonly=True,
+    )
 
     can_create_remaining_delivery = fields.Boolean(
         compute="_compute_can_create_remaining_delivery",
@@ -61,6 +79,20 @@ class SaleOrder(models.Model):
                     break
 
             order.can_create_remaining_delivery = remaining_found
+
+    @api.depends(
+        "estimation_id",
+        "estimation_id.line_ids",
+        "estimation_id.display_line_ids",
+    )
+    def _compute_estimation_display_line_ids(self):
+        for order in self:
+            if not order.estimation_id:
+                order.estimation_display_line_ids = False
+                continue
+            if not order.estimation_id.display_line_ids and order.estimation_id.line_ids:
+                order.estimation_id._rebuild_display_lines()
+            order.estimation_display_line_ids = order.estimation_id.display_line_ids
 
     def action_create_remaining_delivery(self):
         self.ensure_one()
@@ -643,9 +675,18 @@ class SaleOrder(models.Model):
         for order in self:
             if not order.order_line:
                 raise UserError(_("Please add at least one line item to the quotation."))
-        self.approval_state = "to_manager"
-        self.state = "draft"
-        self.approval_comment = False
+            if order.estimation_id:
+                currency = order.currency_id or order.company_id.currency_id
+                estimation_total = currency.round(order.estimation_id.total_with_profit or 0.0)
+                quotation_total = currency.round(order.amount_untaxed or 0.0)
+                if float_compare(estimation_total, quotation_total, precision_rounding=currency.rounding) != 0:
+                    raise UserError(_("The quotation total must match the estimation total before submission."))
+
+        self.write({
+            "approval_state": "to_manager",
+            "approval_comment": False,
+        })
+        return True
 
     def action_md_approve(self):
         for order in self:

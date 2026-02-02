@@ -20,11 +20,14 @@
         "security/groups.xml",
         "security/ir.model.access.csv",
         "views/work_order_views.xml",
+        "views/job_costing_report_views.xml",
+
         "data/sequence.xml",
         "views/menu_views.xml",
         "views/sale_order_views.xml",
         "views/project_views.xml",
         "views/account_move_views.xml",
+        # "views/purchase_request_views.xml",
         "views/work_order_reject_wizard_view.xml",
 
     ],

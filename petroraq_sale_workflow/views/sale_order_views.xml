@@ -223,10 +223,38 @@
                        column_invisible="True"/>
             </xpath>
 
+            <xpath expr="//notebook" position="inside">
+                <page string="Estimation" invisible="not estimation_id">
+                    <group>
+                        <field name="estimation_id" readonly="1"/>
+                    </group>
+                    <field name="estimation_display_line_ids"
+                           readonly="1"
+                           widget="section_and_note_one2many">
+                        <tree>
+                            <field name="display_type" column_invisible="1"/>
+                            <field name="section_type" column_invisible="1"/>
+                            <field name="product_id"/>
+                            <field name="name"/>
+                            <field name="section_subtotal_display"
+                                   widget="html"
+                                   readonly="1"
+                                   invisible="1"
+                                   column_invisible="True"/>
+                            <field name="quantity"/>
+                            <field name="quantity_hours"/>
+                            <field name="uom_id"/>
+                            <field name="unit_cost"/>
+                            <field name="subtotal"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+
             <xpath expr="//group[@name='sale_total']" position="replace">
                 <field name="inquiry_type" readonly="1" invisible="1"/>
                 <group class="oe_subtotal_footer o_petroraq_totals" colspan="2" name="sale_total">
-                    <div class="o_petroraq_total_row o_petroraq_total_plain">
+                    <div class="o_petroraq_total_row o_petroraq_total_plain" invisible="inquiry_type != 'trading'">
                         <span class="o_petroraq_total_label">Total</span>
                         <div class="o_petroraq_total_input"></div>
                         <div class="o_petroraq_total_value">
@@ -234,7 +262,7 @@
                         </div>
                     </div>
 
-                    <div class="o_petroraq_total_row o_petroraq_total_risk">
+                    <div class="o_petroraq_total_row o_petroraq_total_risk" invisible="inquiry_type != 'trading'">
                         <span class="o_petroraq_total_label">Risk(%)</span>
                         <div class="o_petroraq_total_input">
                             <field name="risk_percent" class="o_petroraq_percent_input" nolabel="1" string=""
@@ -244,7 +272,7 @@
                             <field name="risk_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_overhead">
+                    <div class="o_petroraq_total_row o_petroraq_total_overhead" invisible="inquiry_type != 'trading'">
                         <span class="o_petroraq_total_label">Over Head(%)</span>
                         <div class="o_petroraq_total_input">
                             <field name="overhead_percent" class="o_petroraq_percent_input" nolabel="1" string=""
@@ -254,14 +282,14 @@
                             <field name="overhead_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_grand">
+                    <div class="o_petroraq_total_row o_petroraq_total_grand" invisible="inquiry_type != 'trading'">
                         <span class="o_petroraq_total_label">Grand Total:</span>
                         <div class="o_petroraq_total_input"></div>
                         <div class="o_petroraq_total_value">
                             <field name="buffer_total_amount" widget="monetary" readonly="1" nolabel="1" string=""/>
                         </div>
                     </div>
-                    <div class="o_petroraq_total_row o_petroraq_total_profit">
+                    <div class="o_petroraq_total_row o_petroraq_total_profit" invisible="inquiry_type != 'trading'">
                         <span class="o_petroraq_total_label">Profit(%)</span>
                         <div class="o_petroraq_total_input">
                             <field name="profit_percent" class="o_petroraq_percent_input" nolabel="1" string=""
@@ -297,7 +325,7 @@
                     <!--                            <field name="profit_grand_total" widget="monetary" readonly="1" nolabel="1" string=""/>-->
                     <!--                        </div>-->
                     <!--                    </div>-->
-                    <div class="o_petroraq_total_row o_petroraq_total_base">
+                    <div class="o_petroraq_total_row o_petroraq_total_base" invisible="inquiry_type != 'trading'">
                         <span class="o_petroraq_total_label">Before Rounded</span>
                         <div class="o_petroraq_total_input"></div>
                         <div class="o_petroraq_total_value">
