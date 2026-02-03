@@ -13,7 +13,7 @@
         'security/ir.ui.menu.xml',
         'security/ir.model.access.csv',
 
-        'views/templates.xml',
+        # 'views/templates.xml',
         'views/views.xml',
         'views/inventory.xml',
         'views/remarks_popup.xml',

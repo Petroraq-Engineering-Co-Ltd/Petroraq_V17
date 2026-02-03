@@ -12,7 +12,7 @@ CATEGORY_FIELDS = [
 
 CURRENT_ASSET_FIELDS = [
     "cash_equivalents_subcategory", "banks_subcategory", "accounts_receivable_subcategory",
-    "inventory_subcategory", "prepaid_expenses_subcategory",
+    "inventory_subcategory", "prepaid_expenses_subcategory",'current_assets_category_advance_sub_category',
 ]
 FIXED_ASSET_FIELDS = [
     "vehicles_subcategory", "furniture_fixture_subcategory", "computer_printers_subcategory",
@@ -93,7 +93,14 @@ class AccountAccount(models.Model):
         ("account_receivable", "Account Receivable"),
         ("inventory", "Inventory"),
         ("prepaid_expenses", "Prepaid Expenses"),
+        ("advances", "Advances")
+
     ], string="Current Assets Category", tracking=True)
+
+    current_assets_category_advance_sub_category = fields.Selection([
+        ("customer_advances", "Customer Advances"),
+        ("supplier_advances", "Supplier Advances")
+    ], string="Advances Sub-Category", tracking=True)
 
     fixed_assets_category = fields.Selection([
         ("vehicles", "Vehicles"),
@@ -351,7 +358,7 @@ class AccountAccount(models.Model):
                     self.current_assets_category and (
                             self.cash_equivalents_subcategory or self.banks_subcategory
                             or self.accounts_receivable_subcategory or self.inventory_subcategory
-                            or self.prepaid_expenses_subcategory
+                            or self.prepaid_expenses_subcategory or self.current_assets_category_advance_sub_category
                     )
                 )
             if self.assets_main_head == "asset_fixed":
