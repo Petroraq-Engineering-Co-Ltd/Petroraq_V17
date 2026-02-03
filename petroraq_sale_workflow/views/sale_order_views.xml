@@ -249,6 +249,14 @@
                         </tree>
                     </field>
                 </page>
+                <page string="Project Attachments" invisible="inquiry_type != 'construction'">
+                    <group>
+                        <field name="project_attachment_ids"
+                               widget="many2many_binary"
+                               context="{'default_res_model': 'sale.order', 'default_res_id': active_id}"
+                               invisible="inquiry_type != 'construction'" required="1"/>
+                    </group>
+                </page>
             </xpath>
 
             <xpath expr="//group[@name='sale_total']" position="replace">

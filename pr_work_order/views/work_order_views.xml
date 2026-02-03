@@ -12,8 +12,8 @@
                 <field name="project_id"/>
                 <field name="analytic_account_id"/>
                 <field name="contract_amount"/>
-                <field name="actual_cost"/>
-                <field name="actual_margin"/>
+                <!--                <field name="actual_cost"/>-->
+                <!--                <field name="actual_margin"/>-->
                 <field name="state"/>
             </tree>
         </field>
@@ -190,6 +190,29 @@
                                     <field name="total" readonly="1"/>
                                 </tree>
                             </field>
+                        </page>
+                        <page string="Attachments">
+                            <group>
+                                <group string="Drawings">
+                                    <field name="drawings_attachment_ids"
+                                           widget="many2many_binary"
+                                           context="{'default_res_model': 'pr.work.order', 'default_res_id': active_id}"
+                                           required="1"
+                                    />
+                                </group>
+                                <group string="Scope of Work">
+                                    <field name="scope_attachment_ids"
+                                           widget="many2many_binary"
+                                           context="{'default_res_model': 'pr.work.order', 'default_res_id': active_id}"
+                                           required="1"/>
+                                </group>
+                                <group string="BOQ">
+                                    <field name="boq_attachment_ids"
+                                           widget="many2many_binary"
+                                           context="{'default_res_model': 'pr.work.order', 'default_res_id': active_id}"
+                                           required="1"/>
+                                </group>
+                            </group>
                         </page>
 
 

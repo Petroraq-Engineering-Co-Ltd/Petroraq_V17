@@ -9,6 +9,7 @@
                 <field name="partner_id"/>
                 <field name="date"/>
                 <field name="total_amount"/>
+                <field name="total_with_profit"/>
                 <field name="sale_order_id"/>
             </tree>
         </field>

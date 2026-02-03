@@ -330,7 +330,7 @@ class PetroraqEstimation(models.Model):
                     "product_id": line.product_id.id,
                     "uom_id": uom.id if uom else False,
                     "qty": qty,
-                    "unit_cost": line.unit_cost or 0.0,
+                    "unit_cost": 0.0,
                     "section_name": section_name,
                 })
         return lines

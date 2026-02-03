@@ -21,7 +21,8 @@ FIXED_ASSET_FIELDS = [
 OTHER_ASSET_FIELDS = ["investment_subcategory", "vat_receivable_subcategory", "suspense_account_subcategory"]
 
 CURRENT_LIABILITY_FIELDS = [
-    "accounts_payable_subcategory", "short_term_loans_subcategory", "other_liabilities_subcategory"
+    "accounts_payable_subcategory", "short_term_loans_subcategory", "other_liabilities_subcategory",
+    "current_liability_advance_sub_category",
 ]
 NON_CURRENT_LIABILITY_FIELDS = ["long_term_loans_subcategory", "lease_obligations_subcategory"]
 
@@ -112,7 +113,13 @@ class AccountAccount(models.Model):
         ("accounts_payable", "Accounts Payable"),
         ("short_term_loans", "Short-Term Loans"),
         ("other_liabilities", "Other Liabilities"),
+        ("advances", "Advances")
     ], string="Current Liabilities Category", tracking=True)
+
+    current_liability_advance_sub_category = fields.Selection([
+        ("customer_advances", "Customer Advances"),
+        ("supplier_advances", "Supplier Advances")
+    ], string="Advances Sub-Category", tracking=True)
 
     liability_non_current_category = fields.Selection([
         ("long_term_loans", "Long-Term Loans"),
@@ -371,7 +378,7 @@ class AccountAccount(models.Model):
                 return bool(
                     self.current_liability_category and (
                             self.accounts_payable_subcategory or self.short_term_loans_subcategory
-                            or self.other_liabilities_subcategory
+                            or self.other_liabilities_subcategory or self.current_liability_advance_sub_category
                     )
                 )
             if self.liability_main_head == "liability_non_current":
