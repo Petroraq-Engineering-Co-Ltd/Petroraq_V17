@@ -122,6 +122,7 @@ class SaleOrder(models.Model):
                 "product_id": line.product_id.id if not line.display_type else False,
                 "uom_id": line.product_uom.id if not line.display_type else False,
                 "qty": line.product_uom_qty if not line.display_type else 0,
+                "unit_cost": 0,
                 "section_name": current_section,
             })
 
