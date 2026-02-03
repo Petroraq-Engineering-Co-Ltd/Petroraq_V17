@@ -112,7 +112,13 @@ class AccountAccount(models.Model):
         ("accounts_payable", "Accounts Payable"),
         ("short_term_loans", "Short-Term Loans"),
         ("other_liabilities", "Other Liabilities"),
+        ("advances","Advances")
     ], string="Current Liabilities Category", tracking=True)
+
+    current_liability_advance_sub_category = fields.Selection([
+        ("customer_advances","Customer Advances"),
+        ("supplier_advances","Supplier Advances")
+    ])
 
     liability_non_current_category = fields.Selection([
         ("long_term_loans", "Long-Term Loans"),
