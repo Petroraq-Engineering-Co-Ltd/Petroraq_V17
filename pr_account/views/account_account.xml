@@ -46,6 +46,10 @@
                                    string="Sub-Category"/>
                             <field name="prepaid_expenses_subcategory"
                                    invisible="current_assets_category != 'prepaid_expenses'" string="Sub-Category"/>
+                            <field name="current_assets_category_advance_sub_category"
+                                   invisible="current_assets_category != 'advances'" string="Sub-Category"/>
+
+
 
                             <!-- Fixed Assets -->
                             <field name="vehicles_subcategory" invisible="fixed_assets_category != 'vehicles'"
