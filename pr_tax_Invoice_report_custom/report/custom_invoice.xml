@@ -81,12 +81,18 @@
                             }
                         </style>
 
+                        <t t-set="regular_lines" t-value="o.invoice_line_ids.filtered(lambda l: not l.is_downpayment)"/>
+                        <t t-set="downpayment_lines" t-value="o.invoice_line_ids.filtered(lambda l: l.is_downpayment)"/>
+
                         <div class="row">
                             <div class="col-12">
                                 <p style="font-size:25px;text-align:center;color:#000000;">
                                     <strong style="font-weight: bolder;">
                                         <b>
-                                            <t t-if="not o.currency_id.is_zero(o.amount_tax)">Tax Invoice / فاتورة
+                                            <t t-if="downpayment_lines and not regular_lines">Proforma Invoice / فاتورة
+                                                مبدئية
+                                            </t>
+                                            <t t-elif="not o.currency_id.is_zero(o.amount_tax)">Tax Invoice / فاتورة
                                                 ضريبية
                                             </t>
                                             <t t-else="">Invoice / فاتورة</t>
@@ -439,8 +445,7 @@
                             <t t-set="is_dp_take" t-value="dp_subtotal &gt; 0"/>
                             <t t-set="is_dp_deduct" t-value="dp_subtotal &lt; 0"/>
 
-                            <t t-set="untaxed_before_downpayment"
-                               t-value="sum(regular_lines.mapped('price_subtotal'))"/>
+
                             <tr t-foreach="regular_lines" t-as="l">
                                 <t t-set="sr_number" t-value="sr_number+1"/>
                                 <t t-set="taxable_amount" t-value="(l.quantity * l.price_unit/100)*15"/>
@@ -537,11 +542,37 @@
                                     Total (Excluding Vat) Without Deduction
                                 </td>
                                 <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <span t-esc="untaxed_before_downpayment"
+                                    <span t-esc="o.untaxed_before_downpayment"
                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
                                     الإجمالي (باستثناء ضريبة القيمة المضافة) قبل الدفعة المقدمة
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="border:1px solid #000000;">
+                                    VAT (15%)
+                                </td>
+                                <td width="23%" style="text-align:center;border:1px solid #000000">
+                                    <span t-esc="o.amount_tax"
+                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                                <td width="42%" style="text-align:right;border:1px solid #000000">
+                                    مجموع ضريبة القيمة المضاف
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td width="35%" style="border:1px solid #000000;">
+                                    Total Taxed
+                                </td>
+                                <td width="23%" style="text-align:center;border:1px solid #000000">
+                                    <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"-->
+                                    <span t-esc="o.untaxed_before_downpayment + o.amount_tax"
+                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                                <td width="42%" style="text-align:right;border:1px solid #000000">
+                                    الإجمالي
                                 </td>
                             </tr>
 
@@ -558,31 +589,6 @@
                                 </td>
                             </tr>
 
-                            <tr>
-                                <td width="35%" style="border:1px solid #000000;">
-                                    Total (Excluding Vat)
-                                </td>
-                                <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"-->
-                                    <span t-esc="o.amount_untaxed"
-                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
-                                </td>
-                                <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    الإجمالي (باستثناء ضريبة القيمة المضافة)
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="35%" style="border:1px solid #000000;">
-                                    VAT (15%)
-                                </td>
-                                <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <span t-esc="o.amount_tax"
-                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
-                                </td>
-                                <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    مجموع ضريبة القيمة المضاف
-                                </td>
-                            </tr>
 
                             <tr>
                                 <td width="35%" style="border:1px solid #000000;">
