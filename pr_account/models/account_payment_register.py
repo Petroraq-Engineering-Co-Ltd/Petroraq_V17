@@ -19,19 +19,19 @@ class AccountPaymentRegister(models.TransientModel):
             else:
                 wiz.received_bank_account_id = False
 
-    def _create_payment_vals_from_wizard(self, batch_result, **kwargs):
-        vals = super()._create_payment_vals_from_wizard(batch_result, **kwargs)
+    # def _create_payment_vals_from_wizard(self, batch_result, **kwargs):
+    #     vals = super()._create_payment_vals_from_wizard(batch_result, **kwargs)
+    #
+    #     # only set when bank journal (optional rule)
+    #     if self.journal_id.type == "bank":
+    #         vals["received_bank_account_id"] = self.received_bank_account_id.id or False
+    #     else:
+    #         vals["received_bank_account_id"] = False
+    #
+    #     return vals
 
-        # only set when bank journal (optional rule)
-        if self.journal_id.type == "bank":
-            vals["received_bank_account_id"] = self.received_bank_account_id.id or False
-        else:
-            vals["received_bank_account_id"] = False
-
-        return vals
-
-    def action_create_payments(self):
-        for wiz in self:
-            if wiz.journal_id.type == "bank" and not wiz.received_bank_account_id:
-                raise ValidationError(_("Please select the bank account where payment was received."))
-        return super().action_create_payments()
+    # def action_create_payments(self):
+    #     for wiz in self:
+    #         if wiz.journal_id.type == "bank" and not wiz.received_bank_account_id:
+    #             raise ValidationError(_("Please select the bank account where payment was received."))
+    #     return super().action_create_payments()
