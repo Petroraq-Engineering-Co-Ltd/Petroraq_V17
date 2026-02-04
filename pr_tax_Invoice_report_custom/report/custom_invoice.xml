@@ -646,7 +646,10 @@
                         </table>
                         <div class="row">
                             <div class="col-2" style="margin: auto;">
-                                <img t-if="o.l10n_sa_qr_code_str and not o.currency_id.is_zero(o.amount_tax)"
+                                <img t-if="o.custom_qr_image"
+                                     style="display:block; width: 200px; height: 200px;"
+                                     t-att-src="'data:image/png;base64,%s' % (o.custom_qr_image.decode('utf-8'))"/>
+                                <img t-if="not o.custom_qr_image and o.l10n_sa_qr_code_str and not o.currency_id.is_zero(o.amount_tax)"
                                      style="display:block;"
                                      t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s'%('QR', quote_plus(o.l10n_sa_qr_code_str), 200, 200)"/>
                             </div>
