@@ -305,6 +305,7 @@ class OrderInquiry(models.Model):
     def action_create_quotation(self):
         self.ensure_one()
         if self.inquiry_type == "construction":
+            self._get_or_create_contact_partner()
             if self.estimation_id:
                 if self.state != "estimation_created":
                     self.state = "estimation_created"

@@ -81,12 +81,18 @@
                             }
                         </style>
 
+                        <t t-set="regular_lines" t-value="o.invoice_line_ids.filtered(lambda l: not l.is_downpayment)"/>
+                        <t t-set="downpayment_lines" t-value="o.invoice_line_ids.filtered(lambda l: l.is_downpayment)"/>
+
                         <div class="row">
                             <div class="col-12">
                                 <p style="font-size:25px;text-align:center;color:#000000;">
                                     <strong style="font-weight: bolder;">
                                         <b>
-                                            <t t-if="not o.currency_id.is_zero(o.amount_tax)">Tax Invoice / فاتورة
+                                            <t t-if="downpayment_lines and not regular_lines">Proforma Invoice / فاتورة
+                                                مبدئية
+                                            </t>
+                                            <t t-elif="not o.currency_id.is_zero(o.amount_tax)">Tax Invoice / فاتورة
                                                 ضريبية
                                             </t>
                                             <t t-else="">Invoice / فاتورة</t>
