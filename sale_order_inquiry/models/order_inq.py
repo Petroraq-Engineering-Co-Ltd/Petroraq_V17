@@ -43,8 +43,13 @@ class OrderInquiry(models.Model):
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
     inquiry_type = fields.Selection([('construction', 'Project'), ('trading', 'Trading')], string="Inquiry Type",
                                     default="trading", required=True)
-    required_file = fields.Binary(string="Required Attachment", attachment=True)
-    required_file_name = fields.Char(string="Filename")
+    required_attachment_ids = fields.Many2many(
+        "ir.attachment",
+        "order_inq_required_attachment_rel",
+        "order_inq_id",
+        "attachment_id",
+        string="Required Attachments",
+    )
 
     currency_id = fields.Many2one(
         "res.currency",
@@ -234,13 +239,27 @@ class OrderInquiry(models.Model):
     def action_accept(self):
         self.state = 'accept'
 
+    def _has_required_attachments(self, vals):
+        commands = vals.get("required_attachment_ids")
+        if not commands:
+            return False
+        if isinstance(commands, (list, tuple)):
+            for command in commands:
+                if not isinstance(command, (list, tuple)) or not command:
+                    continue
+                if command[0] == 6 and command[2]:
+                    return True
+                if command[0] in (0, 1, 4):
+                    return True
+        return False
+
     @api.model
     def create(self, vals):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('order.inq.sequence') or "New"
 
-        if not vals.get("required_file"):
-            raise UserError(_("You must upload the required attachment before creating the inquiry."))
+        if not self._has_required_attachments(vals):
+            raise UserError(_("Please attach at least one file."))
 
         return super().create(vals)
 

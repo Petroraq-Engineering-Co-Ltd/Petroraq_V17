@@ -99,9 +99,7 @@
                                    readonly="state in ('confirm', 'cancel', 'reject', 'expire', 'accept')"/>
                             <field name="deadline_submission" required="1"
                                    readonly="state in ('confirm', 'cancel', 'reject', 'expire', 'accept')"/>
-                            <field name="required_file" filename="required_file_name" required="1"
-                                   readonly="state in ('confirm', 'cancel', 'reject', 'expire', 'accept')"/>
-                            <field name="required_file_name" invisible="1"
+                            <field name="required_attachment_ids" widget="many2many_binary" required="1"
                                    readonly="state in ('confirm', 'cancel', 'reject', 'expire', 'accept')"/>
 
                             <!--                            <field name="sale_order_ids" nolable="1" widget="many2many_tags"  invisible="not multi_order" />-->

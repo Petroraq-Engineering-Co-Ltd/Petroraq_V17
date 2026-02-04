@@ -181,6 +181,21 @@ class PetroraqEstimation(models.Model):
             vals["name"] = self.env["ir.sequence"].next_by_code("petroraq.estimation") or _("New")
         return super().create(vals)
 
+    def _ensure_unlocked(self):
+        if self.env.context.get("allow_estimation_write"):
+            return
+        locked = self.filtered("sale_order_id")
+        if locked:
+            raise UserError(_("This estimation is locked because a quotation has been created."))
+
+    def write(self, vals):
+        self._ensure_unlocked()
+        return super().write(vals)
+
+    def unlink(self):
+        self._ensure_unlocked()
+        return super().unlink()
+
     @api.depends_context("uid")
     @api.depends("approval_state")
     def _compute_show_reject_button(self):
@@ -289,7 +304,7 @@ class PetroraqEstimation(models.Model):
             order_vals["order_inquiry_id"] = self.order_inquiry_id.id
         order = self.env["sale.order"].with_company(company).create(order_vals)
 
-        self.sale_order_id = order.id
+        self.with_context(allow_estimation_write=True).sale_order_id = order.id
         return order
 
     def _prepare_work_order_boq_lines(self, work_order):
@@ -395,7 +410,7 @@ class PetroraqEstimation(models.Model):
             raise UserError(_("You can only create a work order after the quotation is confirmed."))
 
         if order.work_order_id:
-            self.work_order_id = order.work_order_id.id
+            self.with_context(allow_estimation_write=True).work_order_id = order.work_order_id.id
             return {
                 "type": "ir.actions.act_window",
                 "name": _("Work Order"),
@@ -486,8 +501,7 @@ class PetroraqEstimation(models.Model):
             "analytic_account_id": work_order.analytic_account_id.id if work_order.analytic_account_id else False,
         })
 
-        self.work_order_id = work_order.id
-
+        self.with_context(allow_estimation_write=True).work_order_id = work_order.id
         return {
             "type": "ir.actions.act_window",
             "name": _("Work Order"),
@@ -653,17 +667,25 @@ class PetroraqEstimationLine(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        estimations = self.env["petroraq.estimation"]
+        for vals in vals_list:
+            if vals.get("estimation_id"):
+                estimations |= self.env["petroraq.estimation"].browse(vals["estimation_id"])
+        estimations._ensure_unlocked()
+
         records = super().create(vals_list)
         records.mapped("estimation_id")._rebuild_display_lines()
         return records
 
     def write(self, vals):
+        self.mapped("estimation_id")._ensure_unlocked()
         estimations = self.mapped("estimation_id")
         res = super().write(vals)
         (estimations | self.mapped("estimation_id"))._rebuild_display_lines()
         return res
 
     def unlink(self):
+        self.mapped("estimation_id")._ensure_unlocked()
         estimations = self.mapped("estimation_id")
         res = super().unlink()
         estimations._rebuild_display_lines()
