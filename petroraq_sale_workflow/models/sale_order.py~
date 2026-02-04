@@ -115,6 +115,7 @@ class SaleOrder(models.Model):
 
         if self.state in ("cancel",):
             raise UserError(_("Cancelled sale order."))
+
         # Find remaining qty per deliverable line
         remaining_lines = []
         for line in self.order_line:
