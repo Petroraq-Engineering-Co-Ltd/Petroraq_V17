@@ -43,6 +43,18 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     custom_qr_image = fields.Binary("QR Code", compute='_generate_qr_code')
+    untaxed_before_downpayment = fields.Monetary(
+        string="Untaxed Before Downpayment",
+        currency_field="currency_id",
+        compute="_compute_untaxed_before_downpayment",
+        store=True,
+    )
+
+    @api.depends("invoice_line_ids.price_subtotal", "invoice_line_ids.is_downpayment")
+    def _compute_untaxed_before_downpayment(self):
+        for move in self:
+            regular_lines = move.invoice_line_ids.filtered(lambda line: not line.is_downpayment)
+            move.untaxed_before_downpayment = sum(regular_lines.mapped("price_subtotal"))
 
     @api.model
     def translate_to_arabic(self, text, _logger=None):
@@ -142,7 +154,7 @@ class AccountMove(models.Model):
         vat_hex = self._get_hex("02", "0f", seller_vat_no) or ''
         time_stamp = str(self.create_date)
         date_hex = self._get_hex("03", "14", time_stamp) or ''
-        total_with_vat_hex = self._get_hex("04", "0a", str(round(self.amount_total, 2))) or ''
+        total_with_vat_hex = self._get_hex("04", "0a", str(round(self.untaxed_before_downpayment, 2))) or ''
         # total_with_vat_hex = self._get_hex("04", "0a", str(round(self.tax_totals["amount_total"], 2))) or ''
         # total_with_vat_hex = self._get_hex("04", "0a", str(round(self.tax_totals_amount_total, 2))) or ''
         total_vat_hex = self._get_hex("05", "09", str(round(self.amount_tax, 2))) or ''
