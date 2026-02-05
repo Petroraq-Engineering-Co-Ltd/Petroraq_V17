@@ -549,6 +549,19 @@
                                     الإجمالي (باستثناء ضريبة القيمة المضافة) قبل الدفعة المقدمة
                                 </td>
                             </tr>
+                            <tr t-if="not is_dp_deduct">
+                                <td width="35%" style="border:1px solid #000000;">
+                                    Untaxed Total
+                                </td>
+                                <td width="23%" style="text-align:center;border:1px solid #000000">
+                                    <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"-->
+                                    <span t-esc="o.amount_untaxed"
+                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                                <td width="42%" style="text-align:right;border:1px solid #000000">
+                                    الإجمالي
+                                </td>
+                            </tr>
                             <tr>
                                 <td width="35%" style="border:1px solid #000000;">
                                     VAT (15%)
@@ -564,11 +577,11 @@
 
                             <tr>
                                 <td width="35%" style="border:1px solid #000000;">
-                                    Total Taxed
+                                    Net Total
                                 </td>
                                 <td width="23%" style="text-align:center;border:1px solid #000000">
                                     <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"-->
-                                    <span t-esc="o.untaxed_before_downpayment + o.amount_tax"
+                                    <span t-esc="o.untaxed_before_downpayment + o.amount_tax or o.amount_untaxed"
                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
@@ -590,19 +603,19 @@
                             </tr>
 
 
-                            <tr>
-                                <td width="35%" style="border:1px solid #000000;">
-                                    Total Due Amount:
-                                </td>
-                                <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_residual)"-->
-                                    <span t-esc="o.amount_residual"
-                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
-                                </td>
-                                <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    : إجمالي المبلغ المستحق
-                                </td>
-                            </tr>
+                            <!--                            <tr>-->
+                            <!--                                <td width="35%" style="border:1px solid #000000;">-->
+                            <!--                                    Total Due Amount:-->
+                            <!--                                </td>-->
+                            <!--                                <td width="23%" style="text-align:center;border:1px solid #000000">-->
+                            <!--                                    &lt;!&ndash;                                                <span t-esc="'{0:,.2f}'.format(o.amount_residual)"&ndash;&gt;-->
+                            <!--                                    <span t-esc="o.amount_residual"-->
+                            <!--                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>-->
+                            <!--                                </td>-->
+                            <!--                                <td width="42%" style="text-align:right;border:1px solid #000000">-->
+                            <!--                                    : إجمالي المبلغ المستحق-->
+                            <!--                                </td>-->
+                            <!--                            </tr>-->
                             <tr t-if="o.retention_deduct_amount">
                                 <td width="35%" style="border:1px solid #000000;">
                                     Retention
@@ -620,7 +633,7 @@
                                     Total Payable Amount
                                 </td>
                                 <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <span t-esc="o.amount_residual - o.retention_deduct_amount "
+                                    <span t-esc="o.amount_residual - o.retention_deduct_amount"
                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
@@ -629,10 +642,10 @@
                             </tr>
                         </table>
                         <t t-set="total_word"
-                           t-value="o.amount_to_text(o.amount_total)"
+                           t-value="o.amount_to_text(o.amount_residual - o.retention_deduct_amount)"
                         />
                         <t t-set="total_words"
-                           t-value="o.amount_to_world(o.amount_total)"/>
+                           t-value="o.amount_to_world(o.amount_residual - o.retention_deduct_amount)"/>
                         <table class="table table-border"
                                style="border:1px solid #000000;margin-top:-10px;font-family: 'Noto Sans Arabic';font-size: 17px !important;">
                             <tr>
@@ -646,7 +659,7 @@
                         </table>
                         <div class="row">
                             <div class="col-2" style="margin: auto;">
-                                <img t-if="o.custom_qr_image"
+                                <img t-if="o.custom_qr_image and not o.currency_id.is_zero(o.amount_tax)"
                                      style="display:block; width: 200px; height: 200px;"
                                      t-att-src="'data:image/png;base64,%s' % (o.custom_qr_image.decode('utf-8'))"/>
                                 <img t-if="not o.custom_qr_image and o.l10n_sa_qr_code_str and not o.currency_id.is_zero(o.amount_tax)"
