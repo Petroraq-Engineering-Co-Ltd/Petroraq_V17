@@ -119,6 +119,15 @@ class PetroraqEstimation(models.Model):
         string="Quotation Status",
         readonly=True,
     )
+    quotation_approval_state = fields.Selection(
+        related="sale_order_id.approval_state",
+        string="Quotation Approval Status",
+        readonly=True,
+    )
+    is_locked_for_edit = fields.Boolean(
+        compute="_compute_is_locked_for_edit",
+        string="Locked For Edit",
+    )
     work_order_id = fields.Many2one("pr.work.order", string="Work Order", readonly=True, copy=False)
 
     material_total = fields.Monetary(
@@ -218,9 +227,17 @@ class PetroraqEstimation(models.Model):
     def _ensure_unlocked(self):
         if self.env.context.get("allow_estimation_write"):
             return
-        locked = self.filtered("sale_order_id")
+        locked = self.filtered("is_locked_for_edit")
         if locked:
             raise UserError(_("This estimation is locked because a quotation has been created."))
+
+    @api.depends("sale_order_id", "sale_order_id.approval_state")
+    def _compute_is_locked_for_edit(self):
+        locked_states = {"to_manager", "to_md", "approved"}
+        for record in self:
+            record.is_locked_for_edit = bool(
+                record.sale_order_id and record.sale_order_id.approval_state in locked_states
+            )
 
     def write(self, vals):
         self._ensure_unlocked()

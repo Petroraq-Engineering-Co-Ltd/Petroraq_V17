@@ -22,6 +22,8 @@
             <form>
                 <header>
                     <field name="sale_order_state" invisible="1"/>
+                    <field name="quotation_approval_state" invisible="1"/>
+                    <field name="is_locked_for_edit" invisible="1"/>
                     <field name="current_revision_id" invisible="1"/>
                     <field name="has_old_revisions" invisible="1"/>
                     <button name="create_revision"
@@ -58,7 +60,7 @@
                             invisible="not work_order_id"/>
                 </header>
                 <sheet>
-                    <group readonly="sale_order_id">
+                    <group readonly="is_locked_for_edit">
                         <field name="name" readonly="1"/>
                         <field name="partner_id"/>
                         <field name="date"/>
@@ -67,7 +69,8 @@
                     </group>
                     <notebook>
                         <page string="Material">
-                            <field name="material_line_ids" readonly="sale_order_id" context="{'default_section_type':'material'}">
+                            <field name="material_line_ids" readonly="is_locked_for_edit"
+                                   context="{'default_section_type':'material'}">
                                 <tree editable="bottom">
                                     <field name="section_type" column_invisible="1"/>
                                     <field name="product_id"/>
@@ -83,7 +86,8 @@
                             </field>
                         </page>
                         <page string="Labor">
-                            <field name="labor_line_ids" readonly="sale_order_id" context="{'default_section_type':'labor'}">
+                            <field name="labor_line_ids" readonly="is_locked_for_edit"
+                                   context="{'default_section_type':'labor'}">
                                 <tree editable="bottom">
                                     <field name="section_type" column_invisible="1"/>
                                     <field name="product_id"/>
@@ -102,7 +106,8 @@
                             </field>
                         </page>
                         <page string="Equipment">
-                            <field name="equipment_line_ids" readonly="sale_order_id" context="{'default_section_type':'equipment'}">
+                            <field name="equipment_line_ids" readonly="is_locked_for_edit"
+                                   context="{'default_section_type':'equipment'}">
                                 <tree editable="bottom">
                                     <field name="section_type" column_invisible="1"/>
                                     <field name="product_id"/>
@@ -121,7 +126,8 @@
                             </field>
                         </page>
                         <page string="Sub Contract / TPS">
-                            <field name="subcontract_line_ids" readonly="sale_order_id" context="{'default_section_type':'subcontract'}">
+                            <field name="subcontract_line_ids" readonly="is_locked_for_edit"
+                                   context="{'default_section_type':'subcontract'}">
                                 <tree editable="bottom">
                                     <field name="section_type" column_invisible="1"/>
                                     <field name="product_id"/>
@@ -137,7 +143,7 @@
                             </field>
                         </page>
                     </notebook>
-                    <group col="4" class="oe_subtotal_footer" colspan="2" readonly="sale_order_id">
+                    <group col="4" class="oe_subtotal_footer" colspan="2" readonly="is_locked_for_edit">
                         <field name="material_total" readonly="1"/>
                         <field name="labor_total" readonly="1"/>
                         <field name="equipment_total" readonly="1"/>

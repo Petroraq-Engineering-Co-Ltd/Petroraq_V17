@@ -220,6 +220,21 @@ class OrderInquiry(models.Model):
                     _("Contact Person name must contain letters only (no numbers or special characters).")
                 )
 
+    def _relink_required_attachments(self):
+        """
+        When using many2many_binary, attachments are created before the record exists,
+        so they get res_id = 0. Relink them to this order.inq record after create/write.
+        """
+        for rec in self:
+            atts = rec.required_attachment_ids.sudo().filtered(
+                lambda a: a.res_model in (False, rec._name) and (not a.res_id or a.res_id == 0)
+            )
+            if atts:
+                atts.write({
+                    "res_model": rec._name,
+                    "res_id": rec.id,
+                })
+
     @api.constrains('deadline_submission', 'date_order')
     def _check_deadline_date(self):
         for rec in self:
@@ -247,6 +262,15 @@ class OrderInquiry(models.Model):
     def action_accept(self):
         self.state = 'accept'
 
+    def write(self, vals):
+        res = super().write(vals)
+
+        # if attachments changed, relink them
+        if "required_attachment_ids" in vals:
+            self._relink_required_attachments()
+
+        return res
+
     def _has_required_attachments(self, vals):
         commands = vals.get("required_attachment_ids")
         if not commands:
@@ -269,7 +293,11 @@ class OrderInquiry(models.Model):
         if not self._has_required_attachments(vals):
             raise UserError(_("Please attach at least one file."))
 
-        return super().create(vals)
+        rec = super().create(vals)
+
+        # ✅ IMPORTANT: relink uploaded attachments to this new record
+        rec._relink_required_attachments()
+        return rec
 
     def button_cancel(self):
         if self.state == 'pending':
