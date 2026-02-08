@@ -539,7 +539,7 @@
                                style="border:1px solid #000000;margin-top:-10px;font-family: 'DroidArabicNaskh';font-size: 17px !important;">
                             <tr t-if="is_dp_deduct">
                                 <td width="35%" style="border:1px solid #000000;">
-                                    Total (Excluding Vat) Without Deduction
+                                    Total (Excluding Vat)
                                 </td>
                                 <td width="23%" style="text-align:center;border:1px solid #000000">
                                     <span t-esc="o.untaxed_before_downpayment"
@@ -591,7 +591,10 @@
 
                             <tr t-if="is_dp_deduct">
                                 <td width="35%" style="border:1px solid #000000;">
-                                    Down Payment Deduction
+                                    Advance Deduction
+                                    <span t-if="o.downpayment_percent">
+                                        (<span t-esc="'{0:.2f}'.format(o.downpayment_percent)"/>%)
+                                    </span>
                                 </td>
                                 <td width="23%" style="text-align:center;border:1px solid #000000">
                                     <span t-esc="downpayment_subtotal"
@@ -619,10 +622,16 @@
                             <tr t-if="o.retention_deduct_amount">
                                 <td width="35%" style="border:1px solid #000000;">
                                     Retention
+                                    <span t-if="o.retention_percent">
+                                        (<span t-esc="'{0:.2f}'.format(o.retention_percent)"/>%)
+                                    </span>
                                 </td>
                                 <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <span t-esc="o.retention_deduct_amount"
-                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    <span>
+                                        -
+                                        <t t-esc="abs(o.retention_deduct_amount)"
+                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </span>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
                                     خصم الاستبقاء
@@ -630,7 +639,7 @@
                             </tr>
                             <tr>
                                 <td width="35%" style="border:1px solid #000000;">
-                                    Total Payable Amount
+                                    Total Due Amount
                                 </td>
                                 <td width="23%" style="text-align:center;border:1px solid #000000">
                                     <t t-set="fixed_payable"
