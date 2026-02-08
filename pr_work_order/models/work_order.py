@@ -1,6 +1,5 @@
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
-
+from odoo.exceptions import UserError, ValidationError
 
 class PRWorkOrder(models.Model):
     _name = "pr.work.order"
@@ -66,9 +65,11 @@ class PRWorkOrder(models.Model):
         string="Contract Amount",
         currency_field="currency_id",
         help="Total selling value (from SO).",
+        compute="_compute_budgeted_cost",
+        store=True
     )
     budgeted_cost = fields.Monetary(string="Budgeted Cost", currency_field="currency_id",
-                                    compute="_compute_budgeted_cost")
+                                    compute="_compute_budgeted_cost", store=True)
 
     @api.depends("boq_line_ids.total")
     def _compute_budgeted_cost(self):
@@ -76,11 +77,59 @@ class PRWorkOrder(models.Model):
             order.budgeted_cost = sum(
                 order.boq_line_ids.mapped("total")
             )
+            order.contract_amount = order.sale_order_id.amount_total
 
     budgeted_margin = fields.Monetary(
         string="Budgeted Margin",
         currency_field="currency_id",
         compute="_compute_budgeted_margin",
+        store=True,
+    )
+
+    overhead_percent = fields.Float(
+        string="Overhead (%)",
+        default=0.0,
+        digits=(16, 2),
+    )
+    risk_percent = fields.Float(
+        string="Risk (%)",
+        default=0.0,
+        digits=(16, 2),
+    )
+    profit_percent = fields.Float(
+        string="Profit (%)",
+        default=0.0,
+        digits=(16, 2),
+    )
+    overhead_amount = fields.Monetary(
+        string="Overhead Amount",
+        currency_field="currency_id",
+        compute="_compute_cost_buffers",
+        store=True,
+    )
+    risk_amount = fields.Monetary(
+        string="Risk Amount",
+        currency_field="currency_id",
+        compute="_compute_cost_buffers",
+        store=True,
+    )
+    profit_amount = fields.Monetary(
+        string="Profit Amount",
+        currency_field="currency_id",
+        compute="_compute_cost_buffers",
+        store=True,
+    )
+    total_expected_cost = fields.Monetary(
+        string="Total Expected Cost",
+        currency_field="currency_id",
+        compute="_compute_cost_buffers",
+        store=True,
+        help="Budgeted cost plus overhead and risk buffers.",
+    )
+    total_with_profit = fields.Monetary(
+        string="Total With Profit",
+        currency_field="currency_id",
+        compute="_compute_cost_buffers",
         store=True,
     )
 
@@ -136,11 +185,59 @@ class PRWorkOrder(models.Model):
     rejected_by = fields.Many2one("res.users", string="Rejected By", tracking=True)
     rejected_date = fields.Datetime(string="Rejected On", tracking=True)
 
+    drawings_attachment_ids = fields.Many2many(
+        "ir.attachment",
+        "pr_work_order_drawings_attachment_rel",
+        "work_order_id",
+        "attachment_id",
+        string="Drawings Attachments",
+        help="Drawings required for this work order.",
+    )
+    scope_attachment_ids = fields.Many2many(
+        "ir.attachment",
+        "pr_work_order_scope_attachment_rel",
+        "work_order_id",
+        "attachment_id",
+        string="Scope of Work Attachments",
+        help="Scope of work documents required for this work order.",
+    )
+    boq_attachment_ids = fields.Many2many(
+        "ir.attachment",
+        "pr_work_order_boq_attachment_rel",
+        "work_order_id",
+        "attachment_id",
+        string="BOQ Attachments",
+        help="BOQ documents required for this work order.",
+    )
+
+    @api.constrains("drawings_attachment_ids", "scope_attachment_ids", "boq_attachment_ids")
+    def _check_required_attachments(self):
+        for rec in self:
+            if not rec.drawings_attachment_ids:
+                raise ValidationError(_("Please upload at least one Drawing attachment."))
+            if not rec.scope_attachment_ids:
+                raise ValidationError(_("Please upload at least one Scope of Work attachment."))
+            if not rec.boq_attachment_ids:
+                raise ValidationError(_("Please upload at least one BOQ attachment."))
 
     @api.depends("contract_amount", "budgeted_cost")
     def _compute_budgeted_margin(self):
         for rec in self:
             rec.budgeted_margin = (rec.contract_amount or 0.0) - (rec.budgeted_cost or 0.0)
+
+    @api.depends("budgeted_cost", "overhead_percent", "risk_percent", "profit_percent")
+    def _compute_cost_buffers(self):
+        for rec in self:
+            budget = rec.budgeted_cost or 0.0
+            overhead = budget * (rec.overhead_percent or 0.0) / 100.0
+            risk = budget * (rec.risk_percent or 0.0) / 100.0
+            buffer_total = budget + overhead + risk
+            profit = buffer_total * (rec.profit_percent or 0.0) / 100.0
+            rec.overhead_amount = overhead
+            rec.risk_amount = risk
+            rec.total_expected_cost = buffer_total
+            rec.profit_amount = profit
+            rec.total_with_profit = buffer_total + profit
 
     @api.depends("analytic_account_id")
     def _compute_actuals(self):

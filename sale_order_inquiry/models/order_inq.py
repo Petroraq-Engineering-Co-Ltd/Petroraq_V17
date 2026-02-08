@@ -23,15 +23,26 @@ class OrderInquiry(models.Model):
     contact_person_email = fields.Char(string="Contact Person Email", required=True)
     contact_person_phone = fields.Char(string="Contact Person Phone", required=True)
     state = fields.Selection(
-        [('pending', 'Pending'), ('confirm', 'Submitted'), ('accept', 'Accepted'), ('cancel', 'Cancelled'),
-         ('reject', 'Rejected'),
-         ('expire', 'Expired')],
+        [
+            ('pending', 'Pending'),
+            ('confirm', 'Submitted'),
+            ('accept', 'Accepted'),
+            ('estimation_created', 'Estimation Created'),
+            ('quotation_created', 'Quotation Created'),
+            ('closed', 'Closed'),
+            ('cancel', 'Cancelled'),
+            ('reject', 'Rejected'),
+            ('expire', 'Expired'),
+        ],
         default='pending', string='State', tracking=True)
     deadline_submission = fields.Date(string="Deadline", required=True, tracking=True)
     sale_order_id = fields.Many2one('sale.order', string='Sale Order')
     sale_order_ids = fields.Many2many('sale.order', string="Sale Order's")
     multi_order = fields.Boolean('Multi Orders')
     sale_count = fields.Integer(compute="compute_sale_count", store=True)
+    estimation_id = fields.Many2one("petroraq.estimation", string="Estimation")
+    estimation_ids = fields.One2many("petroraq.estimation", "order_inquiry_id", string="Estimations")
+    estimation_count = fields.Integer(compute="_compute_estimation_count", store=False)
 
     date_order = fields.Datetime(string="Inquiry Date", required=True, readonly=False, copy=False, help="Inquiry Date",
                                  default=fields.Datetime.now)
@@ -40,8 +51,13 @@ class OrderInquiry(models.Model):
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
     inquiry_type = fields.Selection([('construction', 'Project'), ('trading', 'Trading')], string="Inquiry Type",
                                     default="trading", required=True)
-    required_file = fields.Binary(string="Required Attachment", attachment=True)
-    required_file_name = fields.Char(string="Filename")
+    required_attachment_ids = fields.Many2many(
+        "ir.attachment",
+        "order_inq_required_attachment_rel",
+        "order_inq_id",
+        "attachment_id",
+        string="Required Attachments",
+    )
 
     currency_id = fields.Many2one(
         "res.currency",
@@ -204,6 +220,21 @@ class OrderInquiry(models.Model):
                     _("Contact Person name must contain letters only (no numbers or special characters).")
                 )
 
+    def _relink_required_attachments(self):
+        """
+        When using many2many_binary, attachments are created before the record exists,
+        so they get res_id = 0. Relink them to this order.inq record after create/write.
+        """
+        for rec in self:
+            atts = rec.required_attachment_ids.sudo().filtered(
+                lambda a: a.res_model in (False, rec._name) and (not a.res_id or a.res_id == 0)
+            )
+            if atts:
+                atts.write({
+                    "res_model": rec._name,
+                    "res_id": rec.id,
+                })
+
     @api.constrains('deadline_submission', 'date_order')
     def _check_deadline_date(self):
         for rec in self:
@@ -231,15 +262,42 @@ class OrderInquiry(models.Model):
     def action_accept(self):
         self.state = 'accept'
 
+    def write(self, vals):
+        res = super().write(vals)
+
+        # if attachments changed, relink them
+        if "required_attachment_ids" in vals:
+            self._relink_required_attachments()
+
+        return res
+
+    def _has_required_attachments(self, vals):
+        commands = vals.get("required_attachment_ids")
+        if not commands:
+            return False
+        if isinstance(commands, (list, tuple)):
+            for command in commands:
+                if not isinstance(command, (list, tuple)) or not command:
+                    continue
+                if command[0] == 6 and command[2]:
+                    return True
+                if command[0] in (0, 1, 4):
+                    return True
+        return False
+
     @api.model
     def create(self, vals):
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('order.inq.sequence') or "New"
 
-        if not vals.get("required_file"):
-            raise UserError(_("You must upload the required attachment before creating the inquiry."))
+        if not self._has_required_attachments(vals):
+            raise UserError(_("Please attach at least one file."))
 
-        return super().create(vals)
+        rec = super().create(vals)
+
+        # ✅ IMPORTANT: relink uploaded attachments to this new record
+        rec._relink_required_attachments()
+        return rec
 
     def button_cancel(self):
         if self.state == 'pending':
@@ -261,12 +319,47 @@ class OrderInquiry(models.Model):
             'target': 'current',
         }
 
+    def view_estimation(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Estimation",
+            "res_model": "petroraq.estimation",
+            "domain": [("id", "in", self.estimation_ids.ids)],
+            "view_mode": "tree,form",
+            "target": "current",
+        }
+
     def action_create_quotation(self):
         self.ensure_one()
-        if self.inquiry_type == "trading":
-            term = self.env.ref("petroraq_sale_workflow.payment_term_trading_advance", raise_if_not_found=False)
-        else:
-            term = self.env.ref("petroraq_sale_workflow.payment_term_immediate", raise_if_not_found=False)
+        if self.inquiry_type == "construction":
+            self._get_or_create_contact_partner()
+            if self.estimation_id:
+                if self.state != "estimation_created":
+                    self.state = "estimation_created"
+                return {
+                    "type": "ir.actions.act_window",
+                    "name": "Estimation",
+                    "res_model": "petroraq.estimation",
+                    "view_mode": "form",
+                    "res_id": self.estimation_id.id,
+                }
+            estimation = self.env["petroraq.estimation"].create({
+                "partner_id": self.partner_id.id,
+                "order_inquiry_id": self.id,
+                "company_id": self.company_id.id,
+            })
+            self.estimation_id = estimation.id
+            self.state = "estimation_created"
+            return {
+                "type": "ir.actions.act_window",
+                "name": "Estimation Created",
+                "res_model": "petroraq.estimation",
+                "view_mode": "form",
+                "res_id": estimation.id,
+            }
+
+        term = self.env.ref("petroraq_sale_workflow.payment_term_trading_advance", raise_if_not_found=False)
 
         contact = self._get_or_create_contact_partner()
 
@@ -282,19 +375,7 @@ class OrderInquiry(models.Model):
 
         self.sale_order_id = sale_order.id
         self.sale_order_ids = [(4, sale_order.id)]
-
-        if self.inquiry_type == 'construction':
-            SaleOrderLine = self.env['sale.order.line']
-            seq = 10
-            for title in self._inq_default_construction_sections():
-                SaleOrderLine.create({
-                    'order_id': sale_order.id,
-                    'display_type': 'line_section',
-                    'name': title,
-                    'sequence': seq,
-                    'is_locked_section': True
-                })
-                seq += 10
+        self.state = "quotation_created"
 
         return {
             'type': 'ir.actions.act_window',
@@ -315,6 +396,11 @@ class OrderInquiry(models.Model):
                 'default_inquiry_id': self.id,
             }
         }
+
+    @api.depends("estimation_ids")
+    def _compute_estimation_count(self):
+        for record in self:
+            record.estimation_count = len(record.estimation_ids)
 
     def action_open_reject_wizard(self):
         self.ensure_one()
@@ -338,6 +424,13 @@ class SaleOrderInherit(models.Model):
     inquiry_contact_person_phone = fields.Char(related='order_inquiry_id.contact_person_phone', store=True)
     inquiry_contact_person_email = fields.Char(related='order_inquiry_id.contact_person_email', store=True)
     inquiry_contact_person_designation = fields.Char(related='order_inquiry_id.designation', store=True)
+
+    def action_confirm(self):
+        res = super().action_confirm()
+        for order in self:
+            if order.order_inquiry_id:
+                order.order_inquiry_id.state = "closed"
+        return res
 
     def _so_renumber_lines_with_gaps(self):
         self.ensure_one()

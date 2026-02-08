@@ -12,8 +12,8 @@
                 <field name="project_id"/>
                 <field name="analytic_account_id"/>
                 <field name="contract_amount"/>
-                <field name="actual_cost"/>
-                <field name="actual_margin"/>
+                <!--                <field name="actual_cost"/>-->
+                <!--                <field name="actual_margin"/>-->
                 <field name="state"/>
             </tree>
         </field>
@@ -139,6 +139,14 @@
                             <field name="date_start" required="1"/>
                             <field name="date_end" required="1"/>
                             <field name="budgeted_cost"/>
+                            <!--                            <field name="overhead_percent"/>-->
+                            <!--                            <field name="overhead_amount" readonly="1"/>-->
+                            <!--                            <field name="risk_percent"/>-->
+                            <!--                            <field name="risk_amount" readonly="1"/>-->
+                            <!--                            <field name="total_expected_cost" readonly="1"/>-->
+                            <!--                            <field name="profit_percent"/>-->
+                            <!--                            <field name="profit_amount" readonly="1"/>-->
+                            <!--                            <field name="total_with_profit" readonly="1"/>-->
                             <!--                            />-->
 
                             <!--                            <field name="budgeted_margin" readonly="1"/>-->
@@ -182,6 +190,29 @@
                                     <field name="total" readonly="1"/>
                                 </tree>
                             </field>
+                        </page>
+                        <page string="Attachments">
+                            <group>
+                                <group string="Drawings">
+                                    <field name="drawings_attachment_ids"
+                                           widget="many2many_binary"
+                                           context="{'default_res_model': 'pr.work.order', 'default_res_id': active_id}"
+                                           required="1"
+                                    />
+                                </group>
+                                <group string="Scope of Work">
+                                    <field name="scope_attachment_ids"
+                                           widget="many2many_binary"
+                                           context="{'default_res_model': 'pr.work.order', 'default_res_id': active_id}"
+                                           required="1"/>
+                                </group>
+                                <group string="BOQ">
+                                    <field name="boq_attachment_ids"
+                                           widget="many2many_binary"
+                                           context="{'default_res_model': 'pr.work.order', 'default_res_id': active_id}"
+                                           required="1"/>
+                                </group>
+                            </group>
                         </page>
 
 

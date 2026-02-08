@@ -6,3 +6,4 @@ from . import sale_order_line
 from . import sale_advance_payment
 from . import stock_picking
 from . import stock_backorder_confirmation
+from . import estimation

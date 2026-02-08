@@ -145,20 +145,20 @@ class PayrollReport(models.AbstractModel):
                      "Fixed Overtime",
                      "Overtime",
 
-                     # "Sick Time Off",
-                     # "Annual Time Off",
+                     "Sick Time Off",
+                     "Annual Time Off",
                      "Late In",
                      "Early Checkout",
                      "Absence",
-                     # //            "GOSI",
+                     "GOSI",
                      "Unpaid Leave",
 
                      "Gross",
                      "HRA",
                      "Advance Allowances",
-                     #
-                     # "Annual Time Off DED",
-                     # "Sick Time Off DED",
+
+                     "Annual Time Off DED",
+                     "Sick Time Off DED",
                      "Net Salary", ]
 
             salary_rule_ids = salary_rule_ids.filtered(lambda s: s.name in order)
@@ -248,16 +248,18 @@ class PayrollReport(models.AbstractModel):
             # ======================
             # Hide GOSI columns (display only, totals unaffected)
             # ======================
-            HIDE_CODES = {"GOSI", "GOSI_COMP_ADD", "GOSI_EMP", "GOSI_COMP_DED"}
+            HIDE_CODES = {
+                # "GOSI_COMP_ADD", "GOSI_EMP", "GOSI_COMP_DED"
+            }
             HIDE_TITLES = {
-                "GOSI",
-                "GOSI Company Contribution",
-                "GOSI Employee Deduction",
-                "GOSI Company Deduction",
-                "Annual Time Off DED",
-                "Sick Time Off DED",
-                "Sick Time Off",
-                "Annual Time Off",
+                # "GOSI",
+                # "GOSI Company Contribution",
+                # "GOSI Employee Deduction",
+                # "GOSI Company Deduction",
+                # "Annual Time Off DED",
+                # "Sick Time Off DED",
+                # "Sick Time Off",
+                # "Annual Time Off",
             }
 
             for r in rules:

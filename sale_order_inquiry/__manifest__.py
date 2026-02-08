@@ -20,11 +20,12 @@
     'website': "https://www.petroraq.com",
     'license': 'LGPL-3',
     'category': 'Sales',
-    'depends': ['base', 'mail', 'sale'],
+    'depends': ['base', 'mail', 'sale','petroraq_sale_workflow'],
     'data': [
         'data/sequence.xml',
         'views/order_inq.xml',
         'views/order_inquiry_extend_deadline_wizard.xml',
+        'views/estimation_views.xml',
         'views/order_inquiry_cron.xml',
 
         'security/ir.model.access.csv',
