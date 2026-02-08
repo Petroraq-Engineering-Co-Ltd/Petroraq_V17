@@ -628,7 +628,7 @@
                                     خصم الاستبقاء
                                 </td>
                             </tr>
-                            <tr t-if="o.retention_deduct_amount">
+                            <tr>
                                 <td width="35%" style="border:1px solid #000000;">
                                     Total Payable Amount
                                 </td>
@@ -644,11 +644,8 @@
                                 </td>
                             </tr>
                         </table>
-                        <t t-set="total_word"
-                           t-value="o.amount_to_text(o.amount_residual - o.retention_deduct_amount)"
-                        />
-                        <t t-set="total_words"
-                           t-value="o.amount_to_world(o.amount_residual - o.retention_deduct_amount)"/>
+                        <t t-set="total_word" t-value="o.amount_to_text(fixed_payable)"/>
+                        <t t-set="total_words" t-value="o.amount_to_world(fixed_payable)"/>
                         <table class="table table-border"
                                style="border:1px solid #000000;margin-top:-10px;font-family: 'Noto Sans Arabic';font-size: 17px !important;">
                             <tr>
