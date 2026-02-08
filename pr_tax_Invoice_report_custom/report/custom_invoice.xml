@@ -633,7 +633,10 @@
                                     Total Payable Amount
                                 </td>
                                 <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <span t-esc="o.amount_residual - o.retention_deduct_amount"
+                                    <t t-set="fixed_payable"
+                                       t-value="o.amount_total - (o.retention_deduct_amount or 0.0)"/>
+
+                                    <span t-esc="fixed_payable"
                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
