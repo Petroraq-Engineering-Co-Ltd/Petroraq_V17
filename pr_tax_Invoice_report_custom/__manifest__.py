@@ -7,7 +7,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['l10n_sa', 'pr_base'],
+    'depends': ['l10n_sa', 'pr_base','petroraq_sale_workflow'],
     'assets': {
         'web.report_assets.common': [
             '/pr_tax_Invoice_report_custom/static/src/scss/custom_font.scss'
