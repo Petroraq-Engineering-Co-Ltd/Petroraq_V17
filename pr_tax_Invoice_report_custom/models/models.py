@@ -76,11 +76,21 @@ class AccountMove(models.Model):
         compute="_compute_retention_percent",
     )
 
-    @api.depends("invoice_line_ids.price_subtotal", "invoice_line_ids.is_downpayment")
+    @api.depends(
+        "amount_untaxed",
+        "invoice_line_ids.price_subtotal",
+        "invoice_line_ids.is_downpayment",
+        "invoice_line_ids.display_type",
+    )
     def _compute_untaxed_before_downpayment(self):
         for move in self:
-            regular_lines = move.invoice_line_ids.filtered(lambda line: not line.is_downpayment)
-            move.untaxed_before_downpayment = sum(regular_lines.mapped("price_subtotal"))
+            dp_lines = move.invoice_line_ids.filtered(
+                lambda l: l.is_downpayment and not l.display_type
+            )
+            dp_deduct_subtotal = sum(
+                dp_lines.filtered(lambda l: l.price_subtotal < 0.0).mapped("price_subtotal")
+            )
+            move.untaxed_before_downpayment = move.amount_untaxed - dp_deduct_subtotal
 
     @api.depends("invoice_line_ids.price_subtotal", "invoice_line_ids.is_downpayment", "invoice_line_ids.tax_ids")
     def _compute_downpayment_no_tax_subtotal(self):
