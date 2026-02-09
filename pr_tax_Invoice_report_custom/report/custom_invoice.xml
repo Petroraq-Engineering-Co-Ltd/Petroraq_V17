@@ -147,7 +147,8 @@
                             <tr>
                                 <td style="text-align:left">Address:</td>
                                 <td style="text-align:left">
-                                    <span t-if="o.move_type == 'in_invoice'">Al-Majd Square, King Faisal Street (West), Al
+                                    <span t-if="o.move_type == 'in_invoice'">Al-Majd Square, King Faisal Street (West),
+                                        Al
                                         Jubail
                                     </span>
                                     <br/>
@@ -162,7 +163,8 @@
                                     <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.country_id.name"/>-->
                                 </td>
                                 <td style="text-align:right">
-                                    <span t-if="o.move_type == 'in_invoice'">ساحة المجد شارع الملك فيصل (غربي) الجبيل</span>
+                                    <span t-if="o.move_type == 'in_invoice'">ساحة المجد شارع الملك فيصل (غربي) الجبيل
+                                    </span>
                                     <br/>
                                     <span t-if="o.move_type == 'in_invoice'">المملكة العربية السعودية</span>
                                     <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.company_id.city)"/><br/>-->
@@ -444,7 +446,7 @@
                             <t t-esc="excluding_vat" t-value="0"/>
                             <t t-esc="total_vat_tax" t-value="0"/>
                             <t t-set="invoice_lines" t-value="o.invoice_line_ids"/>
-                            <t t-set="regular_lines" t-value="invoice_lines.filtered(lambda l: not l.is_downpayment)"/>
+                            <t t-set="regular_lines" t-value="invoice_lines.filtered(lambda l: not l.is_downpayment and not l.display_type=='line_section')"/>
                             <t t-set="downpayment_lines" t-value="invoice_lines.filtered(lambda l: l.is_downpayment)"/>
                             <t t-set="downpayment_subtotal" t-value="sum(downpayment_lines.mapped('price_subtotal'))"/>
                             <t t-set="dp_subtotal" t-value="sum(downpayment_lines.mapped('price_subtotal'))"/>
@@ -583,7 +585,7 @@
                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
-                                     مجموع ضريبة القيمة المضافة(١٥%)
+                                    مجموع ضريبة القيمة المضافة(١٥%)
                                 </td>
                             </tr>
 
@@ -615,13 +617,18 @@
                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    خصم الدفعة المقدمة
                                     <span t-if="o.downpayment_percent">
-                                        (
-                                        <t t-esc="('%g' % (o.downpayment_percent or 0.0)).translate(str.maketrans('0123456789', '٠١٢٣٤٥٦٧٨٩'))"/>
-                                        ٪
-                                        )
+                                        <span dir="ltr">
+                                            (
+                                            <t t-esc="('%g' % (o.downpayment_percent or 0.0))
+            .translate(str.maketrans('0123456789','٠١٢٣٤٥٦٧٨٩'))"/>
+                                            ٪
+                                            )
+                                        </span>
                                     </span>
+                                    خصم الدفعة المقدمة
+
+
                                 </td>
                             </tr>
 
@@ -656,13 +663,17 @@
                                     </span>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    خصم الاستبقاء
                                     <span t-if="o.retention_percent">
-                                        (
-                                        <t t-esc="('%g' % (o.retention_percent or 0.0)).translate(str.maketrans('0123456789', '٠١٢٣٤٥٦٧٨٩'))"/>
-                                        ٪
-                                        )
+                                        <span dir="ltr">
+                                            (
+                                            <t t-esc="('%g' % (o.retention_percent or 0.0))
+            .translate(str.maketrans('0123456789','٠١٢٣٤٥٦٧٨٩'))"/>
+                                            ٪
+                                            )
+                                        </span>
                                     </span>
+                                    خصم الاستبقاء
+
                                 </td>
                             </tr>
                             <tr>
