@@ -18,7 +18,7 @@ class OrderInquiry(models.Model):
     designation = fields.Char(string="Designation")
     user_id = fields.Many2one('res.users', string='Inquiry By',
                               domain=lambda self: self._get_salesperson_domain(), required=True)
-    partner_id = fields.Many2one('res.partner', string='Customer', required=True, domain=[('is_company', '=', 'True')])
+    partner_id = fields.Many2one('res.partner', string='Customer', required=True, )
     email = fields.Char(string="Customer Email", related='partner_id.email')
     contact_person_email = fields.Char(string="Contact Person Email", required=True)
     contact_person_phone = fields.Char(string="Contact Person Phone", required=True)
