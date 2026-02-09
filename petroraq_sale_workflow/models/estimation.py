@@ -163,18 +163,18 @@ class PetroraqEstimation(models.Model):
     overhead_percent = fields.Float(
         string="Over Head (%)",
         default=0.0,
-        digits='Product Price',
+        digits=(16, 2),
 
     )
     risk_percent = fields.Float(
         string="Risk (%)",
         default=0.0,
-        digits='Product Price',
+        digits=(16, 2),
     )
     profit_percent = fields.Float(
         string="Profit (%)",
         default=0.0,
-        digits='Product Price',
+        digits=(16, 2),
     )
     overhead_amount = fields.Monetary(
         string="Over Head Amount",
