@@ -6,7 +6,7 @@
         <record id="sequence_order_enq" model="ir.sequence">
             <field name="name">Order Inquiry Sequence</field>
             <field name="code">pr.work.order</field>
-            <field name="prefix">PEC-WO-%(year)s-</field>
+            <field name="prefix">PEC-WO-%(range_year)s-</field>
             <field name="padding">4</field>
             <field name="use_date_range">True</field>
 
