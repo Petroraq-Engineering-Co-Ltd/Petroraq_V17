@@ -446,7 +446,8 @@
                             <t t-esc="excluding_vat" t-value="0"/>
                             <t t-esc="total_vat_tax" t-value="0"/>
                             <t t-set="invoice_lines" t-value="o.invoice_line_ids"/>
-                            <t t-set="regular_lines" t-value="invoice_lines.filtered(lambda l: not l.is_downpayment and not l.display_type=='line_section')"/>
+                            <t t-set="regular_lines"
+                               t-value="invoice_lines.filtered(lambda l: not l.is_downpayment and not l.display_type=='line_section')"/>
                             <t t-set="downpayment_lines" t-value="invoice_lines.filtered(lambda l: l.is_downpayment)"/>
                             <t t-set="downpayment_subtotal" t-value="sum(downpayment_lines.mapped('price_subtotal'))"/>
                             <t t-set="dp_subtotal" t-value="sum(downpayment_lines.mapped('price_subtotal'))"/>
@@ -585,7 +586,18 @@
                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    مجموع ضريبة القيمة المضافة(١٥%)
+                                    <span dir="ltr">
+
+                                        <span dir="ltr">
+                                            (
+                                            <t t-esc="('%g' % (15))
+            .translate(str.maketrans('0123456789','٠١٢٣٤٥٦٧٨٩'))"/>
+                                            ٪
+                                            )
+                                        </span>
+                                        مجموع ضريبة القيمة المضافة
+
+                                    </span>
                                 </td>
                             </tr>
 
