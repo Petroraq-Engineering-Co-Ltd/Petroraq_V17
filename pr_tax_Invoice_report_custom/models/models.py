@@ -11,6 +11,7 @@ from odoo import models, fields, api
 from io import BytesIO
 import binascii
 from googletrans import Translator
+from decimal import Decimal, ROUND_HALF_UP
 
 try:
     from num2words import num2words
@@ -60,14 +61,15 @@ class AccountMove(models.Model):
     @api.depends("invoice_line_ids.price_subtotal", "invoice_line_ids.is_downpayment")
     def _compute_untaxed_before_downpayment(self):
         for move in self:
-            regular_lines = move.invoice_line_ids.filtered(lambda line: not line.is_downpayment or line.price_subtotal > 0.0)
+            regular_lines = move.invoice_line_ids.filtered(
+                lambda line: not line.is_downpayment or line.price_subtotal > 0.0)
             move.untaxed_before_downpayment = sum(regular_lines.mapped("price_subtotal"))
 
     @api.depends("invoice_line_ids.sale_line_ids.order_id.dp_percent")
     def _compute_downpayment_percent(self):
         for move in self:
             sale_orders = move.invoice_line_ids.sale_line_ids.order_id
-            move.downpayment_percent = sale_orders[:1].dp_percent*100 if sale_orders else 0.0
+            move.downpayment_percent = sale_orders[:1].dp_percent * 100 if sale_orders else 0.0
 
     @api.depends("invoice_line_ids.sale_line_ids.order_id.retention_percent")
     def _compute_retention_percent(self):
@@ -113,24 +115,28 @@ class AccountMove(models.Model):
         else:
             return ''
 
+    def _split_amount(self, amount):
+        # Always work with 2 decimals safely
+        amt = Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        riyal = int(amt)
+        halala = int((amt - Decimal(riyal)) * 100)
+        return riyal, halala
+
     def amount_to_world(self, amount):
-        integer_part, _, fractional_part = str(amount).partition('.')
-        int_words_arabic = num2words(int(integer_part), lang="ar") + ' ريال سعودي'
-        fractional_words_arabic = num2words(int(fractional_part), lang="ar") + ' هللة'
-        if fractional_part != '0':
-            return f"{int_words_arabic} و{fractional_words_arabic}"
-        else:
-            return int_words_arabic
+        riyal, halala = self._split_amount(amount)
+        int_words_ar = num2words(riyal, lang="ar") + " ريال سعودي"
+        if halala:
+            frac_words_ar = num2words(halala, lang="ar") + " هللة"
+            return f"{int_words_ar} و {frac_words_ar}"
+        return int_words_ar
 
     def amount_to_text(self, amount):
-        integer_part, _, fractional_part = str(amount).partition('.')
-        int_words_english = num2words(int(integer_part)).title() + ' Saudi Riyal'
-        fractional_words_english = num2words(int(fractional_part)).title()
-
-        if fractional_words_english == "Five":
-            fractional_words_english = "fifty"
-
-        return f"{int_words_english} And {fractional_words_english} Halala"
+        riyal, halala = self._split_amount(amount)
+        int_words_en = num2words(riyal).title() + " Saudi Riyal"
+        if halala:
+            frac_words_en = num2words(halala).title()
+            return f"{int_words_en} And {frac_words_en} Halala"
+        return int_words_en
 
     # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
