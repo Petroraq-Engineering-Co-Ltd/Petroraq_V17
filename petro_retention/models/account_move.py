@@ -34,8 +34,7 @@ class AccountMove(models.Model):
 
             # ✅ EXCLUDE down payment lines
             valid_lines = move.invoice_line_ids.filtered(
-                lambda l: not l.sale_line_ids.is_downpayment
-            )
+                lambda l: not l.is_downpayment)
 
             base = sum(valid_lines.mapped('price_subtotal'))
 
