@@ -164,6 +164,7 @@ class PetroraqEstimation(models.Model):
         string="Over Head (%)",
         default=0.0,
         digits=(16, 2),
+
     )
     risk_percent = fields.Float(
         string="Risk (%)",

@@ -147,7 +147,8 @@
                             <tr>
                                 <td style="text-align:left">Address:</td>
                                 <td style="text-align:left">
-                                    <span t-if="o.move_type == 'in_invoice'">Al-Majd, King Faisal Street (West), Al
+                                    <span t-if="o.move_type == 'in_invoice'">Al-Majd Square, King Faisal Street (West),
+                                        Al
                                         Jubail
                                     </span>
                                     <br/>
@@ -162,7 +163,8 @@
                                     <!--                                            <span t-if="o.move_type == 'out_invoice'" t-esc="o.partner_id.country_id.name"/>-->
                                 </td>
                                 <td style="text-align:right">
-                                    <span t-if="o.move_type == 'in_invoice'">المجد شارع الملك فيصل (غربي) الجبيل</span>
+                                    <span t-if="o.move_type == 'in_invoice'">ساحة المجد شارع الملك فيصل (غربي) الجبيل
+                                    </span>
                                     <br/>
                                     <span t-if="o.move_type == 'in_invoice'">المملكة العربية السعودية</span>
                                     <!--                                            <span t-if="o.move_type == 'in_invoice'" t-esc="o.translate_to_arabic(o.company_id.city)"/><br/>-->
@@ -407,17 +409,17 @@
                                     </b>
                                 </td>
                                 <td width="10%">
-                                    <b>وحدة السعر
+                                    <b>سعر الوحدة
                                         <br/>
                                         UNIT PRICE
                                     </b>
                                 </td>
                                 <td width="10%">
-                                    <b>الخصمالسعر<br/>Discount Price
+                                    <b>مبلغ الخصم<br/>Discount Price
                                     </b>
                                 </td>
                                 <td width="10%">
-                                    <b>المبلغ الإجمالي
+                                    <b>المبلغ القابل للضريبة
                                         <br/>
                                         TAXABLE AMOUNT
                                     </b>
@@ -444,7 +446,8 @@
                             <t t-esc="excluding_vat" t-value="0"/>
                             <t t-esc="total_vat_tax" t-value="0"/>
                             <t t-set="invoice_lines" t-value="o.invoice_line_ids"/>
-                            <t t-set="regular_lines" t-value="invoice_lines.filtered(lambda l: not l.is_downpayment)"/>
+                            <t t-set="regular_lines"
+                               t-value="invoice_lines.filtered(lambda l: not l.is_downpayment and not l.display_type=='line_section')"/>
                             <t t-set="downpayment_lines" t-value="invoice_lines.filtered(lambda l: l.is_downpayment)"/>
                             <t t-set="downpayment_subtotal" t-value="sum(downpayment_lines.mapped('price_subtotal'))"/>
                             <t t-set="dp_subtotal" t-value="sum(downpayment_lines.mapped('price_subtotal'))"/>
@@ -505,7 +508,7 @@
                             </tr>
                             <tr t-if="downpayment_lines">
                                 <td colspan="9" style="text-align:left;background-color:#f2f2f2;font-weight:bold;">
-                                    Down Payments / دفعات مقدمة
+                                    Down Payments / الدفعات المقدمة
                                 </td>
                             </tr>
                             <tr t-foreach="downpayment_lines" t-as="l">
@@ -558,49 +561,9 @@
                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    الإجمالي (باستثناء ضريبة القيمة المضافة) قبل الدفعة المقدمة
+                                    الإجمالي (باستثناء ضريبة القيمة المضافة)
                                 </td>
                             </tr>
-                            <tr t-if="not is_dp_deduct">
-                                <td width="35%" style="border:1px solid #000000;">
-                                    Untaxed Total
-                                </td>
-                                <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"-->
-                                    <span t-esc="o.amount_untaxed"
-                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
-                                </td>
-                                <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    الإجمالي
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="35%" style="border:1px solid #000000;">
-                                    VAT (15%)
-                                </td>
-                                <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <span t-esc="o.amount_tax"
-                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
-                                </td>
-                                <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    مجموع ضريبة القيمة المضاف
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td width="35%" style="border:1px solid #000000;">
-                                    Net Total
-                                </td>
-                                <td width="23%" style="text-align:center;border:1px solid #000000">
-                                    <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"-->
-                                    <span t-esc="o.untaxed_before_downpayment + o.amount_tax or o.amount_untaxed"
-                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
-                                </td>
-                                <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    الإجمالي
-                                </td>
-                            </tr>
-
                             <tr t-if="is_dp_deduct">
                                 <td width="35%" style="border:1px solid #000000;">
                                     Advance Deduction
@@ -615,12 +578,69 @@
                                           t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    خصم الدفعة المقدمة
                                     <span t-if="o.downpayment_percent">
-                                        (
-                                        <t t-esc="('%g' % (o.downpayment_percent or 0.0)).translate(str.maketrans('0123456789', '٠١٢٣٤٥٦٧٨٩'))"/>٪
-                                        )
+                                        <span dir="ltr">
+                                            (
+                                            <t t-esc="('%g' % (o.downpayment_percent or 0.0))
+            .translate(str.maketrans('0123456789','٠١٢٣٤٥٦٧٨٩'))"/>
+                                            ٪
+                                            )
+                                        </span>
                                     </span>
+                                    خصم الدفعة المقدمة
+
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="border:1px solid #000000;">
+                                    Taxable Amount
+                                </td>
+                                <td width="23%" style="text-align:center;border:1px solid #000000">
+                                    <!--                                                <span t-esc="'{0:,.2f}'.format(o.amount_untaxed)"-->
+                                    <span t-esc="o.amount_untaxed"
+                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                                <td width="42%" style="text-align:right;border:1px solid #000000">
+                                    الإجمالي
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td width="35%" style="border:1px solid #000000;">
+                                    VAT (15%)
+                                </td>
+                                <td width="23%" style="text-align:center;border:1px solid #000000">
+                                    <span t-esc="o.amount_tax"
+                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                                <td width="42%" style="text-align:right;border:1px solid #000000">
+                                    <span dir="ltr">
+
+                                        <span dir="ltr">
+                                            (
+                                            <t t-esc="('%g' % (15))
+            .translate(str.maketrans('0123456789','٠١٢٣٤٥٦٧٨٩'))"/>
+                                            ٪
+                                            )
+                                        </span>
+                                        مجموع ضريبة القيمة المضافة
+
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td width="35%" style="border:1px solid #000000;">
+                                    Total Taxed Amount
+                                </td>
+                                <td width="23%" style="text-align:center;border:1px solid #000000">
+
+
+                                    <span t-esc="o.amount_total"
+                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                                <td width="42%" style="text-align:right;border:1px solid #000000">
+                                    إجمالي المبلغ المستحق
                                 </td>
                             </tr>
 
@@ -655,12 +675,17 @@
                                     </span>
                                 </td>
                                 <td width="42%" style="text-align:right;border:1px solid #000000">
-                                    خصم الاستبقاء
                                     <span t-if="o.retention_percent">
-                                        (
-                                        <t t-esc="('%g' % (o.retention_percent or 0.0)).translate(str.maketrans('0123456789', '٠١٢٣٤٥٦٧٨٩'))"/>٪
-                                        )
+                                        <span dir="ltr">
+                                            (
+                                            <t t-esc="('%g' % (o.retention_percent or 0.0))
+            .translate(str.maketrans('0123456789','٠١٢٣٤٥٦٧٨٩'))"/>
+                                            ٪
+                                            )
+                                        </span>
                                     </span>
+                                    خصم الاستبقاء
+
                                 </td>
                             </tr>
                             <tr>
@@ -694,10 +719,8 @@
                         </table>
                         <div class="row">
                             <div class="col-2" style="margin: auto;">
-                                <img t-if="o.custom_qr_image and not o.currency_id.is_zero(o.amount_tax)"
-                                     style="display:block; width: 200px; height: 200px;"
-                                     t-att-src="'data:image/png;base64,%s' % (o.custom_qr_image.decode('utf-8'))"/>
-                                <img t-if="not o.custom_qr_image and o.l10n_sa_qr_code_str and not o.currency_id.is_zero(o.amount_tax)"
+
+                                <img t-if="o.l10n_sa_qr_code_str and not o.currency_id.is_zero(o.amount_tax)"
                                      style="display:block;"
                                      t-att-src="'/report/barcode/?barcode_type=%s&amp;value=%s&amp;width=%s&amp;height=%s'%('QR', quote_plus(o.l10n_sa_qr_code_str), 200, 200)"/>
                             </div>
